@@ -1,2 +1,2 @@
-# MindNote
-# 笔记和图床专用仓库
+# MindNote - 笔记和图床专用仓库
+Markdown笔记和Drawio图表源文件分别在main分支的notes和charts文件夹，PNG、JPG、SVG等素材在assets分支的bags文件夹。

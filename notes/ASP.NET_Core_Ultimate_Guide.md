@@ -1434,7 +1434,7 @@ app.Run();
 
 ### 5.5.4 路由约束
 
-![2026-03-28-00-20-24](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-03-28-00-20-24.svg)
+![2026-03-28-01-52-50](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-03-28-01-52-50.svg)
 
 #### 5.5.4.1 常规约束
 
@@ -1599,7 +1599,7 @@ app.Run();
 
 ## 5.6 路由端点优先级别
 
-![2026-03-28-00-38-34](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-03-28-00-38-34.svg)
+![2026-03-28-01-53-08](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-03-28-01-53-08.svg)
 
 ## 5.7 WebRoot
 

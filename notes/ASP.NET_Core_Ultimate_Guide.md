@@ -1137,3 +1137,511 @@ var app = builder.Build();
 app.UseHelloCustomMiddleware();
 app.Run();
 ```
+
+# 第5章 路由
+
+## 5.1 路由概念
+
+基于HTTP方法和URL调用相应端点的过程称为路由。ASP.NET Core 路由的本质，是一个“从 URL 到控制器方法”的精准匹配过程，由中间件链驱动。
+
+## 5.2 路由机制
+
+```mermaid
+graph TD
+    A[Client HTTP Request] --> B["HTTP Server (Kestrel)"]
+    B --> C[ASP.NET Core Pipeline]
+    C --> D{Middleware Pipeline}
+    D -->|Authentication| E[Auth Middleware]
+    D -->|Routing| F[Routing Middleware]
+    D -->|Logging| G[Logging Middleware]
+    D -->|CORS| H[CORS Middleware]
+    D -->|Error Handling| I[Exception Handling Middleware]
+
+    F --> J[Route Matching Engine]
+    J --> K{Matched Route?}
+    K -->|Yes| L[Action Selector]
+    K -->|No| M[404 Not Found]
+
+    L --> N[Controller & Action Selection]
+    N --> O[Model Binding]
+    O --> P[Action Execution]
+    P --> Q["Result Execution (e.g., JSON, View)"]
+    Q --> R[Response Sent to Client]
+
+    M --> S[Response: 404 Not Found]
+    S --> T[Client]
+
+    R --> T
+
+    classDef middleware fill:#f9f,stroke:#333,stroke-width:1px;
+    classDef route fill:#88f,stroke:#333,stroke-width:1px;
+    classDef controller fill:#8f8,stroke:#333,stroke-width:1px;
+    classDef response fill:#8ff,stroke:#333,stroke-width:1px;
+
+    class E,F,G,H,I middleware
+    class J,K,L,M route
+    class N,O,P,Q controller
+    class R,S,T response
+```
+
+| 模块 | 功能 |
+|------|------|
+| **Client HTTP Request** | 客户端发起请求（如 `GET /api/users`） |
+| **Kestrel** | 内置 ASP.NET Core Web Server，接收 HTTP 请求 |
+| **Middleware Pipeline** | 通过 `UseRouting`, `UseAuthentication` 等注册的中间件链 |
+| **Routing Middleware** | 核心责任：解析 URL 并匹配路由模板（如 `{controller=Home}/{action=Index}`） |
+| **Route Matching Engine** | 比对路由模板与请求路径，确定目标控制器与动作 |
+| **Action Selector** | 确定具体调用哪个 Action 方法（支持重载、参数绑定） |
+| **Model Binding** | 将 `QueryString`、`FormData`、`Header`、`Body` 绑定到方法参数 |
+| **Action Execution** | 执行 Controller 中的方法（如 `return Ok(users)`） |
+| **Result Execution** | 生成响应内容（`IActionResult` 由 `OkResult`, `ViewResult` 等处理） |
+| **Response Sent** | 返回响应（JSON、HTML、File 等）给客户端 |
+
+
+## 5.3 使用路由
+
+### 5.3.1 UseEndpoints
+```C#
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+// 启用路由，并根据传入请求的 URL 路径和 HTTP 方法选择适当的终结点。如果找到匹配的终结点，则执行相关的请求委托。
+app.UseRouting();
+
+// 根据上面 UseRouting 中间件选择的终结点执行相应的终结点。如果没有选择任何终结点，则返回 404 Not Found 响应。
+app.UseEndpoints(static endpoints =>
+{
+    endpoints.Map("/hello", async context =>
+    {
+        await context.Response.WriteAsync("Hello, World!");
+    });
+    endpoints.MapGet("/goodbye", async context =>
+    {
+        await context.Response.WriteAsync("Goodbye, World!");
+    });
+    endpoints.MapPost("/submit", async context =>
+    {
+        await context.Response.WriteAsync("Form submitted!");
+    });
+});
+
+app.Run();
+
+```
+### 5.3.2 Top Level Route 
+
+```C#
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+// 启用路由
+app.UseRouting();
+
+app.Map("/hello", async context =>
+    {
+        await context.Response.WriteAsync("Hello, World!");
+    });
+app.MapGet("/goodbye", async context =>
+    {
+        await context.Response.WriteAsync("Goodbye, World!");
+    });
+app.MapPost("/submit", async context =>
+   {
+       await context.Response.WriteAsync("Form submitted!");
+   });
+
+app.Run();
+
+```
+
+## 5.4 路由端点
+
+在ASP.NET Core Runtime执行UseRouting()方法时，已编译的代码中已经包含端点的足够信息。这意味着在已编译的代码中，它已经知道对于哪个URL应该执行哪个端点。当你在应用请求管道中调用UseRouting方法时，它才会识别。
+
+```mermaid
+graph LR
+
+ A[Client]
+
+ --> |HTTP Request|B["GetEndPoint()
+  returns null"] 
+ 
+--> C["UseRouting()"]
+
+--> D["GetEndPoint()
+  returns Endpoint object"]
+
+```
+
+> GetEndPoint()方法返回一个 Microsoft.AspNetCore.Http.Endpoint 类型的实例，该实例表示一个终结点。该实例包含两个重要属性：**DisplayName** 和 **RequestDelegate**。
+
+```C#
+using System.Net.Security;
+
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+app.Use(async (HttpContext context, RequestDelegate next) =>
+{
+    Microsoft.AspNetCore.Http.Endpoint? endpoint = context.GetEndpoint();
+    if (endpoint!=null)
+    {
+        await context.Response.WriteAsync($"Endpoint Name: {endpoint.DisplayName}\n");
+    }
+    await next(context);
+});
+
+// 启用路由
+app.UseRouting();
+
+app.Use(async (HttpContext context, RequestDelegate next) =>
+{
+    Microsoft.AspNetCore.Http.Endpoint? endpoint = context.GetEndpoint();
+    if (endpoint != null)
+    {
+        await context.Response.WriteAsync($"Endpoint Name: {endpoint.DisplayName}\n");
+    }
+    await next(context);
+});
+
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapGet("/map1", async (HttpContext context) =>
+    {
+        await context.Response.WriteAsync("In Map 1");
+    });
+
+    endpoints.MapPost("/map2", async (HttpContext context) =>
+    {
+        await context.Response.WriteAsync("In Map 2");
+    });
+});
+
+app.Run(async context =>
+{
+    await context.Response.WriteAsync($"Request received at {context.Request.Path}");
+});
+app.Run();
+
+```
+
+## 5.5 路由参数
+
+URL中会变化的任何部分，都称为路由参数。路由参数名称大小写不敏感，但不允许有空格。
+
+```mermaid
+graph LR
+    A[请求路径: /api/users/1] --> B[尝试匹配路由模板]
+    B --> C{"{controller}/{action}/{id}"}
+    C -->|匹配成功| D["调用 UsersController.Get(int id)"]
+    C -->|失败| E[返回 404]
+```
+
+### 5.5.1 路由参数
+
+```C#
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+// 启用路由
+app.UseRouting();
+
+app.UseEndpoints(endpoints =>
+{
+    // Eg: files/sample.txt
+    endpoints.Map("files/{filename}.{extension}", async context =>
+    {
+        // 获取路由参数值
+        string? fileName = Convert.ToString(context.Request.RouteValues["filename"]);
+        string? extension = Convert.ToString(context.Request.RouteValues["extension"]);
+        await context.Response.WriteAsync($"In Files: {fileName}.{extension}");
+    });
+});
+
+app.Run(async context =>
+{
+    await context.Response.WriteAsync($"No Route Matched at {context.Request.Path}");
+});
+app.Run();
+
+```
+
+### 5.5.2 默认参数
+
+```C#
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+// 启用路由
+app.UseRouting();
+
+app.UseEndpoints(endpoints =>
+{
+    // Eg:employee/profile/tom
+    // 设置路由参数默认值
+    endpoints.Map("employee/profile/{employeename=json}", async context =>
+    {
+        // 获取路由参数值
+        string? employeeName = Convert.ToString(context.Request.RouteValues["employeename"]);
+        await context.Response.WriteAsync($"In Employee Profile: {employeeName}");
+    });
+});
+
+app.Run(async context =>
+{
+    await context.Response.WriteAsync($"No Route Matched at {context.Request.Path}");
+});
+app.Run();
+
+```
+
+### 5.5.3 可选参数
+
+```C#
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+// 启用路由
+app.UseRouting();
+
+app.UseEndpoints(endpoints =>
+{
+    // Eg: products/details/
+    // 设置路由可选参数值
+    endpoints.Map("products/details/{id?}", async context =>
+    {
+        // 获取路由参数值
+        if (context.Request.RouteValues.ContainsKey("id"))
+        {
+            int id = Convert.ToInt32(context.Request.RouteValues.ContainsKey("id"));
+            await context.Response.WriteAsync($"Products Details: {id}");
+        }
+        else
+        {
+            await context.Response.WriteAsync($"Products Details: Id Is Not Supplied");
+        }
+    });
+
+});
+
+app.Run(async context =>
+{
+    await context.Response.WriteAsync($"No Route Matched at {context.Request.Path}");
+});
+app.Run();
+
+```
+
+### 5.5.4 路由约束
+
+![2026-03-28-00-20-24](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-03-28-00-20-24.svg)
+
+#### 5.5.4.1 常规约束
+
+```C#
+var builder = WebApplication.CreateBuilder(args);
+var app = builder.Build();
+
+// 启用路由
+app.UseRouting();
+
+app.UseEndpoints(endpoints =>
+{
+    // Eg:daily-digest-reporte/2020-12-06
+    // 路由参数日期时间约束
+    endpoints.Map("/daily-digest-report/{date:datetime}", async context =>
+    {
+        DateTime date = Convert.ToDateTime(context.Request.RouteValues["date"]);
+        await context.Response.WriteAsync($"Daily Digest Report for {date.ToShortDateString()}");
+    });
+
+    // Eg:products/856D7C80-519C-4D42-8E4F-E93991D73EFC
+    // 路由参数GUID约束
+    endpoints.Map("products/{proid:guid}", async context =>
+    {
+        Guid productId = Guid.Parse(context.Request.RouteValues["proid"].ToString());
+        await context.Response.WriteAsync($"Product ID: {productId}");
+    });
+
+    // Eg:employee/profile/tom
+    // 路由参数字符串长度约束
+    endpoints.Map("employee/profile/{employeename:alpha:length(4,10)=json}", async context =>
+    {
+        string? employeeName = Convert.ToString(context.Request.RouteValues["employeename"]);
+        await context.Response.WriteAsync($"In Employee Profile: {employeeName}");
+    });
+
+    // Eg:sales-report/2024/jan
+    // 路由参数正则约束
+    endpoints.Map("sales-report/{year:int:min(1900)}/{month:regex(^(apr|jul|oct|jan)$)}", async context =>
+    {
+        int year = Convert.ToInt32(context.Request.RouteValues["year"]);
+        string? month = Convert.ToString(context.Request.RouteValues["month"]);
+        if (month=="apr"||month=="jul"||month=="oct"||month=="jan")
+        {
+            await context.Response.WriteAsync($"Sales Report for: {year}-{month}");
+        }
+        else
+        {
+            await context.Response.WriteAsync($"{month} Is Not Allowed For Sales Report.");
+        }
+    });
+
+});
+
+app.Run(async context =>
+{
+    await context.Response.WriteAsync($"No Route Matched at {context.Request.Path}");
+});
+
+app.Run();
+
+```
+
+#### 5.5.4.2 自定义约束
+
+- 步骤1：创建自定义约束类（实现接口IRouteConstraint）
+
+```C#
+using System.Text.RegularExpressions;
+
+namespace RoutingExample.CustomConstraints
+{
+    // Eg:sales-report/{year}/{month}
+    public class MonthsCustomConstraint : IRouteConstraint
+    {
+        public bool Match(HttpContext? httpContext, IRouter? route, string routeKey, RouteValueDictionary values, RouteDirection routeDirection)
+        {
+            // Check if the route value exists for the specified route key
+            // 检查指定路由键对应的路由值是否存在。
+            if (!values.ContainsKey(routeKey))
+            {
+                // If the route value does not exist, return false to indicate that the constraint is not satisfied
+                // 如果路由值不存在，则返回 false，表示不满足该约束条件。
+                return false; 
+            }
+
+            Regex regex = new Regex("^(apr|jul|oct|jan)$", RegexOptions.IgnoreCase);
+            string? month = Convert.ToString(values[routeKey]);
+            if (regex.IsMatch(month))
+            {
+                // If the month value matches the regex pattern, return true to indicate that the constraint is satisfied
+                // 如果月份值匹配正则表达式模式，则返回 true，表示满足该约束条件。
+                return true;
+            }
+            // If the month value does not match the regex pattern, return false to indicate that the constraint is not satisfied
+            // 如果月份值不匹配正则表达式模式，则返回 false，表示不满足该约束条件。
+            return false;
+
+        }
+    }
+}
+
+```
+
+- 步骤2：注册自定义约束服务
+
+```C#
+var builder = WebApplication.CreateBuilder(args);
+
+// 注册路由服务
+builder.Services.AddRouting(options =>
+{
+    options.ConstraintMap.Add("monthsRegex", typeof(RoutingExample.CustomConstraints.MonthsCustomConstraint));
+});
+var app = builder.Build();
+```
+
+- 步骤3：使用自定义约束
+
+```C#
+var builder = WebApplication.CreateBuilder(args);
+
+// 注册路由服务
+builder.Services.AddRouting(options =>
+{
+    options.ConstraintMap.Add("monthsRegex", typeof(RoutingExample.CustomConstraints.MonthsCustomConstraint));
+});
+var app = builder.Build();
+
+// 启用路由
+app.UseRouting();
+
+app.UseEndpoints(endpoints =>
+{
+
+    // Eg:sales-report/2024/jan
+    // 使用自定义路由约束
+    endpoints.Map("sales-report/{year:int:min(1900)}/{month:monthsRegex}", async context =>
+    {
+        int year = Convert.ToInt32(context.Request.RouteValues["year"]);
+        string? month = Convert.ToString(context.Request.RouteValues["month"]);
+        if (month == "apr" || month == "jul" || month == "oct" || month == "jan")
+        {
+            await context.Response.WriteAsync($"Sales Report for: {year}-{month}");
+        }
+        else
+        {
+            await context.Response.WriteAsync($"{month} Is Not Allowed For Sales Report.");
+        }
+    });
+
+});
+
+app.Run(async context =>
+{
+    await context.Response.WriteAsync($"No Route Matched at {context.Request.Path}");
+});
+
+app.Run();
+
+```
+
+## 5.6 路由端点优先级别
+
+![2026-03-28-00-38-34](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-03-28-00-38-34.svg)
+
+## 5.7 WebRoot
+
+默认的WebRoot目录是“wwwroot”，主要用于存放静态文件，你可以自定义该目录名称（此时原wwwroot目录将以虚拟目录的方式继续存在），也可以启用多个WebRoot目录。
+
+![2026-03-28-01-00-08](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-03-28-01-00-08.svg)
+
+### 5.7.1 重命名wwwroot目录名称
+
+```C#
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
+{
+    WebRootPath = "myroot" // 自定义静态文件的根目录为 myroot
+});
+var app = builder.Build();
+
+// 启用静态文件中间件，默认会从 wwwroot 文件夹提供静态文件服务
+app.UseStaticFiles();
+app.MapGet("/", () => "Hello World!");
+
+app.Run();
+
+```
+
+### 5.7.2 启用多个WebRoot目录
+
+```C#
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
+{
+    WebRootPath = "myroot" // 自定义静态文件的根目录为 myroot
+});
+var app = builder.Build();
+
+// 启用静态文件中间件
+app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions()
+{
+    // 配置另一个静态文件目录 mywebroot，并使用 /static 作为访问前缀
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "mywebroot")), 
+    RequestPath = "/static"
+});
+app.MapGet("/", () => "Hello World!");
+
+app.Run();
+```

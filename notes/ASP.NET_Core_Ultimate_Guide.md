@@ -1705,6 +1705,94 @@ app.MapControllers();
 - **准备响应**
 选择要发送给客户端的响应类型，并准备响应（操作结果）。
 
+### 6.1.4 控制器的中枢枢纽 ControllerContext
+
+ControllerContext 是 ASP.NET Core 中用于 封装控制器执行上下文信息的类，它为控制器（Controller）提供了当前 HTTP 请求的完整运行环境。它是 ControllerBase 类的属性，由框架在请求处理过程中自动创建并注入。
+
+#### 6.1.4.1 核心职责
+
+| 职责 | 说明 |
+|------|------|
+| ✅ 请求上下文 | 持有当前 `HttpContext`（请求/响应/会话/用户等） |
+| ✅ 路由信息 | 包含 `RouteData`，可用于获取路由参数、控制器/动作名 |
+| ✅ 控制器实例 | 指向当前执行的 `Controller` 实例 |
+| ✅ 模型绑定上下文 | 支持 `ModelBinder`、`ActionDescriptor` 等绑定机制 |
+| ✅ 跟踪上下文状态 | 用于中间件、异常处理、过滤器、日志等场景 |
+
+#### 6.1.4.2 主要属性（关键字段）
+
+| 属性 | 类型 | 说明 |
+|------|------|------|
+| `HttpContext` | `HttpContext` | 请求/响应流水线的核心对象 |
+| `RouteData` | `RouteData` | 当前请求对应的路由信息（如 `{controller=Home}`, `{action=Index}`） |
+| `Controller` | `Controller` | 当前正在执行的控制器实例 |
+| `ActionDescriptor` | `ActionDescriptor` | 当前调用的方法（Action）的元数据（如参数、路由模板） |
+| `ModelBindingContext` | `ModelBindingContext` | 模型绑定过程的上下文（可自定义绑定逻辑） |
+
+#### 6.1.4.3 一句话总结
+
+ControllerContext 是 ASP.NET Core 中 控制器执行上下文的“中枢枢纽”，承载着 HTTP 请求、路由、控制器实例、动作元数据等关键信息，是实现高级功能（如绑定、过滤、日志、重定向）的基础依赖。
+
+#### 6.1.4.4 使用示例
+
+- 示例1：
+
+```C#
+public class MyController : ControllerBase
+{
+    public IActionResult Index()
+    {
+        var routeId = ControllerContext.RouteData.Values["id"];
+        var userName = ControllerContext.HttpContext.User.Identity.Name;
+
+        return Ok(new { 
+            routeId, 
+            userName,
+            action = ControllerContext.ActionDescriptor.RouteValues["action"]
+        });
+    }
+}
+```
+
+- 示例2：
+
+```C#
+[Controller]
+//Eg: bookstore?bookid=101&isloggedin=true
+public class HomeController : Controller
+{
+    [Route("bookstore")]
+    public IActionResult Index()
+    {
+        if (!Request.Query.ContainsKey("bookid"))
+        {
+            return BadRequest("Book id is not supplied");
+        }
+
+        if (string.IsNullOrEmpty(Convert.ToString(Request.Query["bookid"])))
+        {
+            return BadRequest("Book id is empty");
+        }
+
+        int bookid = Convert.ToInt16(ControllerContext.HttpContext.Request.Query["bookid"]);
+        if (bookid <= 0)
+        {
+            return BadRequest("Book id can't be less than or equal to zero");
+        }
+        if(bookid > 1000)
+        {
+            return BadRequest("Book id can't be greater than 1000");
+        }
+
+        if (Convert.ToBoolean(Request.Query["isloggedin"])==false)
+        {
+            return StatusCode(401);
+        }
+
+        return Content($"Book id is {bookid}");
+    }
+}
+```
 
 ## 6.2 操作结果接口 IActionResult
 
@@ -2025,3 +2113,102 @@ return new RedirectResult("https://example.com",true);
 ```C#
 return RedirectPermanent("https://example.com");
 ```
+
+# 第7章 模型绑定 Model Binding
+
+模型绑定是 ASP.NET Core 的一项功能，它从 HTTP 请求中读取值，并将这些值作为参数传递给操作方法。当URL与映射到特定操作方法的特定路由匹配时，模型绑定在执行控制器的操作方法之前自动执行，它尝试按从上到下的相同顺序取值。
+
+![2026-03-31-21-03-08](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-03-31-21-03-08.svg)
+
+## 7.1 查询字符串VS路由数据
+
+### 7.1.1 默认检索顺序
+
+默认情况下，此过程首先从路由数据中获取值，然后从查询字符串中获取值，如果特定参数值不存在于路由数据中，则仅从该操作方法参数检索查询字符串的值。
+
+![2026-03-31-22-51-25](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-03-31-22-51-25.svg)
+
+```C#
+public class HomeController : Controller
+{
+    [Route("bookstore/{bookid?}/{isloggedin?}")]
+    // 查询字符串（默认低优先级）URL示例: bookstore?bookid=101&isloggedin=true
+    // 路由数据(默认高优先级)URL示例: bookstore/110/false?bookid=101&isloggedin=true
+    public IActionResult Index(int? bookid, bool? isloggedin)
+    {
+        if (bookid.HasValue == false)
+        {
+            return BadRequest("Book id is not supplied or empty.");
+        }
+
+        if (bookid <= 0)
+        {
+            return BadRequest("Book id can't be less than or equal to zero");
+        }
+        if (bookid > 1000)
+        {
+            return BadRequest("Book id can't be greater than 1000");
+        }
+
+        if (isloggedin == false)
+        {
+            return StatusCode(401);
+        }
+
+        return Content($"Book id is {bookid}","text/plain");
+    }
+}
+```
+
+### 7.1.2 自定义检索顺序 FromQuery和FromRoute
+
+如果特别需要从查询字符串而不是从路由数据中检索特定参数值，就得使用FromQuery和FromRoute属性。
+
+- [FromQuery]
+```C#
+//仅从查询字符串中获取值
+public IActionResult ActionMethodName([FromQuery] type parameter){}
+```
+- [FromRoute]
+```C#
+/仅从路由参数中获取值
+public IActionResult ActionMethodName([FromRoute] type parameter){}
+```
+
+```C#
+public class HomeController : Controller
+{
+    [Route("bookstore/{bookid?}/{isloggedin?}")]
+    // 查询字符串（默认低优先级）URL示例: bookstore?bookid=101&isloggedin=true
+    // 路由数据(默认高优先级)URL示例: bookstore/110/false?bookid=101&isloggedin=true
+    public IActionResult Index([FromQuery] int? bookid, [FromQuery] bool? isloggedin)
+    {
+        if (bookid.HasValue == false)
+        {
+            return BadRequest("Book id is not supplied or empty.");
+        }
+
+        if (bookid <= 0)
+        {
+            return BadRequest("Book id can't be less than or equal to zero");
+        }
+        if (bookid > 1000)
+        {
+            return BadRequest("Book id can't be greater than 1000");
+        }
+
+        if (isloggedin == false)
+        {
+            return StatusCode(401);
+        }
+
+        return Content($"Book id is {bookid}","text/plain");
+    }
+}
+```
+
+## 7.2 模型类
+
+在 ASP.NET Core 中，Model 是一个表示你希望从请求中接收和/或发送到响应中的数据结构（作为属性）的类。
+
+![2026-03-31-23-38-44](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-03-31-23-38-44.svg)

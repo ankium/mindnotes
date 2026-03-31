@@ -1650,39 +1650,378 @@ app.Run();
 
 ## 6.1 控制器 Controllers
 
-### 基本定义与继承关系
+### 6.1.1 基本定义与继承关系
+
+控制器是包含一组操作方法的类（简言之，控制器是操作方法的集合），其中每个操作方法充当一个端点，可以根据特定URL进行请求响应。
+
+![2026-03-30-21-21-45](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-03-30-21-21-45.svg)
 
 - 控制器是响应 HTTP 请求的类。
 - 推荐继承：ControllerBase（轻量，无 View 依赖，适合 API）。
 - 继承 Controller 会自动注入 ViewData、TempData 等 MVC 功能（仅用于 Web 应用）。
+- 控制器必须是一个Public类。
+- 控制器类名应以Controller结尾，或者使用[Controller]特性对该类进行标记，以方便ASP.NET Core将其识别为控制器类。
+
+### 6.1.2 控制器的使用
+
+- 步骤1：创建控制器
 
 ```C#
+[Controller]
 public class ProductsController : ControllerBase
 {
-    // ...
+    // actiion methods here
 }
 ```
 > 最佳实践：API 项目使用 ControllerBase，Web 应用可考虑 Controller
 
-## 6.2 动作接口 IActionResult
+- 步骤2：注册控制器
 
-### 6.2.1 动作接口是什么
+```C#
+builder.Services.AddControllers();
+```
+
+将所有控制器添加为IServiceCollection中的服务。这样，当特定的端点需要访问它们时，它们就可以被访问。
+
+- 步骤3：启用控制器
+
+```C#
+app.MapControllers();
+```
+
+将所有操作方法添加为端点。因此，无需使用UseEndPoints()方法亚将操作方法添加为端点。
+
+### 6.1.3 控制器的责任
+
+- **接收请求**
+从请求中提取数据值，例如查询字符串参数、请求体、请求Cookie、请求头等。
+
+- **调用模型**
+调用业务逻辑方法。通常，业务操作以“服务”的形式提供。
+
+- **验证**
+验证传入请求的详细信息（查询字符串参数、请求体、请求Cookie、请求头等）。
+
+- **准备响应**
+选择要发送给客户端的响应类型，并准备响应（操作结果）。
+
+
+## 6.2 操作结果接口 IActionResult
+
+### 6.2.1 操作结果接口是什么
 
 - 所有 Action 方法必须返回 IActionResult。
 - 定义 HTTP 响应行为（状态码、内容、头信息）。
 - 并非具体类型，而是接口，实际由各种实现类提供。
 
-### 6.2.2 动作接口题主要实现类与用途
+### 6.2.2 操作结果接口的主要实现类与用途
 
-| 实现 | HTTP 状态码 | 用途 | 示例 |
-|------|--------------|------|------|
-| `Ok(T)` | 200 | 成功，带响应体 | `return Ok(user);` |
-| `CreatedAtRoute(routeName, routeValues, value)` | 201 | 创建资源，返回 `Location` 头 | `return CreatedAtRoute("GetUser", new { id = 1 }, user);` |
-| `BadRequest()` / `BadRequest(ModelState)` | 400 | 无效输入/模型错误 | `return BadRequest(ModelState);` |
-| `NotFound()` | 404 | 资源不存在 | `return NotFound();` |
-| `Unauthorized()` | 401 | 未认证 | `return Unauthorized();` |
-| `Forbidden()` | 403 | 权限不足 | `return Forbid();` |
-| `NoContent()` | 204 | 无内容响应 | `return NoContent();` |
-| `Problem()` | 自定义（通常是 500） | 统一错误响应（推荐！） | `return Problem("Server error");` |
-| `Redirect()` / `RedirectToAction()` | 302 | 重定向（Web 适用） | `return Redirect("/home");` |
-| `View()` / `Json()` | 200 | 前端视图或 JSON（Web） | `return View(model);` / `return Json(data);` |
+IActionResult是所有操作结果类的父接口。通过将返回类型指定为IActionResult，你可以返回IActionResult的任何子类型。
+
+![2026-03-31-13-11-00](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-03-31-13-11-00.svg)
+
+#### 6.2.2.1 成功响应（Success Responses）
+
+| 类型 | 实现类 | 状态码 | 推荐写法 | 长语法示例 | 安全建议 | 适用场景 |
+|------|--------|--------|-----------|-------------|------------|------------|
+| ✅ 数据返回 | `OkObjectResult` | `200 OK` | `return Ok(data);` | `return new OkObjectResult(data);` | 使用 `Ok()` 而非 `new` | 返回操作成功的数据（如 `UserDto`、`List<Product>`） |
+| ✅ 无内容 | `NoContentResult` | `204 No Content` | `return NoContent();` | `return new NoContentResult();` | 用于无数据返回的操作 | 通常用于 `DELETE /api/users/1` 成功后的响应 |
+| ✅ 空响应 | `EmptyResult` | `200 OK` | `return new EmptyResult();` | `return new EmptyResult();` | ❌ 不推荐使用 | 极少使用，应替换为 `NoContent()` 或 `Ok()` |
+
+#### 6.2.2.2 错误响应（Error Responses）
+
+| 类型 | 实现类 | 状态码 | 推荐写法 | 长语法示例 | 安全建议 | 适用场景 |
+|------|--------|--------|-----------|-------------|------------|------------|
+| ❌ 模型验证失败 | `BadRequestObjectResult` | `400 Bad Request` | `return BadRequest(ModelState);` | `return new BadRequestObjectResult(ModelState);` | ✅ 必须传 `ModelState` | 表单字段缺失、类型不匹配（如 `int Age` 传 `"abc"`） |
+| ❌ 自定义错误 | `ProblemDetailsResult` | `400` / `429` / `500` | `return Problem(title: "Insufficient funds", detail: "Balance: $2.00");` | `return new ProblemDetailsResult(...);` | ✅ 使用 `Problem()`，避免返回纯字符串 | 业务规则错误（如库存不足、余额不足） |
+| ❌ 资源不存在 | `NotFoundResult` | `404 Not Found` | `return NotFound("User not found");` | `return new NotFoundResult();` | ✅ 建议提供明确信息 | 通过 ID 查询资源不存在（如 `GET /api/users/999`） |
+| ❌ 返回对象 | `NotFoundObjectResult` | `404 Not Found` | `return NotFound(new { error = "not found", id });` | `return new NotFoundObjectResult(...);` | ✅ 返回结构化数据 | 适合前端解析错误（避免纯字符串） |
+
+#### 6.2.2.3 创建资源（Created）
+
+| 类型 | 实现类 | 状态码 | 推荐写法 | 长语法示例 | 安全建议 | 适用场景 |
+|------|--------|--------|-----------|-------------|------------|------------|
+| ✅ 创建成功 | `CreatedAtRouteResult` | `201 Created` | `return CreatedAtRoute("GetUser", new { id = 1 }, user);` | `return new CreatedAtRouteResult("GetUser", new { id = 1 }, user);` | ✅ 必须指定路由名 | 新建资源（如 `POST /api/users` 成功后） |
+
+> 💡 适用场景：客户提交注册表单 → 返回 201 Created + Location: /api/users/123
+
+#### 6.2.2.4 文件响应（File Responses）
+
+| 类型 | 实现类 | 状态码 | 推荐写法 | 长语法示例 | 安全建议 | 适用场景 |
+|------|--------|--------|-----------|-------------|------------|------------|
+| ✅ 物理文件 | `PhysicalFileResult` | `200 OK` | `return PhysicalFile(path, "application/pdf");` | `return new PhysicalFileResult(path, "application/pdf");` | ❗ 必须校验路径 | 从服务器文件夹返回 `PDF` / `DOC` / `IMG` 等静态文件 |
+| ✅ 内存文件 | `FileContentResult` | `200 OK` | `return File(bytes, "application/pdf", "report.pdf");` | `return new FileContentResult(bytes, "application/pdf", "report.pdf");` | ✅ 支持中文文件名 | 从内存生成文件（如报表导出、压缩包） |
+| ✅ 流式下载 | `FileStreamResult` | `200 OK` | `return File(stream, "application/zip", "large.zip");` | `return new FileStreamResult(stream, "application/zip");` | ⚠️ 使用 `useAsync: true` | 大文件（>50MB）流式传输（如视频、日志、ZIP 压缩） |
+
+#### 6.2.2.5 重定向（Redirect）
+
+| 类型 | 实现类 | 状态码 | 推荐写法 | 长语法示例 | 安全建议 | 适用场景 |
+|------|--------|--------|-----------|-------------|------------|------------|
+| ✅ 本地跳转 | `LocalRedirectResult` | `302 Found` | `return LocalRedirect("/home/index");` | `return new LocalRedirectResult("/home/index");` | ✅ **唯一推荐** | 表单提交成功后，跳转到本域名页面（如“操作成功”页） |
+| ✅ 跳转 Action | `RedirectToActionResult` | `302 Found` | `return RedirectToAction("Index", "Home");` | `return new RedirectToActionResult("Index", "Home", null);` | ✅ 用 `nameof` 避免硬编码 | 跳转到 MVC 控制器中的 Action 方法 |
+| ✅ 跳转路由 | `RedirectToRouteResult` | `302 Found` | `return RedirectToRoute("UserRoute", new { id = 1 });` | `return new RedirectToRouteResult(...);` | 🎯 适用于复杂路由 | 按路由名跳转（适合路由重构场景） |
+| ✅ 永久重定向 | `RedirectResult` | `301 Moved Permanently` | `return RedirectPermanent("https://example.com");` | `return new RedirectResult("https://example.com", true);` | ✅ 用于永久变更 | 网站迁移、旧域名跳转、SEO 优化场景 |
+
+#### 6.2.2.6 MVC 视图响应（MVC Mode）
+| 类型 | 实现类 | 状态码 | 推荐写法 | 长语法示例 | 安全建议 | 适用场景 |
+|------|--------|--------|-----------|-------------|------------|------------|
+| ✅ 完整视图 | `ViewResult` | `200 OK` | `return View("Index", model);` | `return new ViewResult { ViewName = "Index", Model = model };` | 适用于 MVC 模式 | 返回完整页面（含布局、脚本、CSS） |
+| ✅ 部分视图 | `PartialViewResult` | `200 OK` | `return PartialView("_Card", model);` | `return new PartialViewResult { ViewName = "_Card", Model = model };` | ✅ 用于异步组件加载 | AJAX 动态加载部分内容（如评论列表、分页） |
+
+#### 6.2.2.7 认证与授权 
+
+| 类型 | 实现类 | 状态码 | 推荐写法 | 长语法示例 | 安全建议 | 适用场景 |
+|------|--------|--------|-----------|-------------|------------|------------|
+| ❌ 未认证 | `UnauthorizedResult` | `401 Unauthorized` | `return Unauthorized();` | `return new UnauthorizedResult();` | ✅ 用于未登录状态 | 用户未登录但意图访问受保护接口 |
+| ❌ 无权限 | `ForbidResult` | `403 Forbidden` | `return Forbid();` | `return new ForbidResult();` | ✅ 用于权限不足 | 已登录但权限不足（如普通用户访问管理员接口） |
+| 🔑 身份验证发起 | `ChallengeResult` | `401 Unauthorized` | `return Challenge("Google");` | `return new ChallengeResult("Google");` | ✅ 用于 SSO/OAuth 登录流程 | 触发第三方登录（如“用 Google 登录”） |
+| 🔐 注销用户 | `SignOutResult` | `200 OK` | `return SignOut("Cookies");` | `return new SignOutResult("Cookies");` | ✅ 必须指定方案名 | 用户点击“退出登录”按钮 |
+
+#### 6.2.2.8 通用工具类
+
+| 类型 | 实现类 | 状态码 | 推荐写法 | 长语法示例 | 安全建议 | 适用场景 |
+|------|--------|--------|-----------|-------------|------------|------------|
+| ✅ 纯文本 | `ContentResult` | `200 OK` | `return Content("<h1>Hi</h1>", "text/html");` | `return new ContentResult { ContentType = "text/html", Content = "<h1>Hi</h1>" };` | ✅ 用于返回 HTML / XML | 用于 API 文档、动态响应、调试信息 |
+| 🔴 自定义状态码 | `StatusCodeResult` | `503`（可自定义） | `return StatusCode(503, "Service Unavailable");` | `return new StatusCodeResult(503);` | ⚠️ 建议搭配 `Problem()` 使用 | 用于服务维护、限流、协议级状态反馈 |
+
+#### 6.2.2.9 总结：IActionResult 选型最佳实践（新增）
+
+| 使用场景 | 推荐实现类 | 写法示例 |
+|----------|------------|------------|
+| 返回数据 | `Ok(object)` | `return Ok(user);` |
+| 删除成功无返回 | `NoContent()` | `return NoContent();` |
+| 输入有误 | `BadRequest(ModelState)` | `return BadRequest(ModelState);` |
+| 资源不存在 | `NotFound(message)` | `return NotFound("User not found");` |
+| 新建资源 | `CreatedAtRoute(...)` | `return CreatedAtRoute("GetUser", new { id = 1 }, user);` |
+| 下载文件 | `File(bytes, contentType, fileName)` | `return File(bytes, "application/pdf", "report.pdf");` |
+| 跳转页面 | `LocalRedirect("/path")` | `return LocalRedirect("/home/index");` |
+| 登录入口 | `Challenge("Google")` | `return Challenge("Google");` |
+| 登出操作 | `SignOut("Cookies")` | `return SignOut("Cookies");` |
+| 服务不可用 | `StatusCode(503, "Maintenance")` | `return StatusCode(503, "Service is unavailable");` |
+
+## 6.3 示例：常见 IActionResult 实现类的应用
+
+### 6.3.1 ContentResult
+
+**ContentResult** 可以根据指定的MIME类型表示任何类型的响应。MIME类型表示内容的类型，如text/plain,text/html,application/json,application/xml,application/pdf等。
+
+```C#
+return new ContentResult() { Content = "Hello World", ContentType = "text/plain" };
+```
+
+或
+
+```C#
+return Content("Hello World", "text/plain");
+```
+
+### 6.3.2 JsonResult
+
+**JsonResult** 可以表示为JavaScript对象表示法(JSON)格式的对象。
+
+```C#
+return new JsonResult(new { Message = "Hello World" });
+```
+
+或
+
+```C#
+return Json(new { Message = "Hello World" });
+```
+
+
+### 6.3.3 FileResult
+
+**FileResult** 将文件的内容作为响应发送。
+
+#### 6.3.3.1 VirtualFileResult
+
+表示 WebRoot（默认为 'wwwroot'）文件夹中的一个文件（当文件位于 WebRoot 文件夹中时使用）。
+
+```C#
+return new VirtualFileResult("files/test.pdf", "application/pdf");
+```
+
+或
+
+```C#
+return File("files/test.pdf", "application/pdf");
+```
+ 
+ #### 6.3.3.2 PhysicalFileResult
+
+ 表示不必是项目文件夹的一部分的文件（当文件位于WebRoot文件夹之外时使用）
+
+```C#
+return new PhysicalFileResult(@"C:\files\report.pdf", "application/pdf");
+```
+
+或
+
+```C#
+return PhysicalFile(@"C:\files\report.pdf", "application/pdf");
+```
+
+#### 6.3.3.3 FileContentResult
+
+表示来自 byte[] 的文件（当需要将来自其他数据源的文件或字节数组的一部分作为响应发送时使用）。
+
+```C#
+return new FileContentResult(System.IO.File.ReadAllBytes("files/test.pdf"), "application/pdf");
+```
+
+或
+
+```C#
+return File(System.IO.File.ReadAllBytes("files/test.pdf"), "application/pdf");
+```
+
+### 6.3.4 StatusCodeResult
+
+StatusCodeResult发送具有指定状态代码的空响应。
+
+#### 6.3.4.1 StatusCodeResult
+
+表示使用指定状态码的响应（在希望将特定 HTTP 状态码作为响应时使用）。
+
+```C#
+return new StatusCodeResult(500);
+```
+
+或
+
+```C#
+return StatusCode(500);
+```
+
+#### 6.3.4.2 UnauthoriziedResult
+
+表示使用 HTTP 状态码 '401 Unauthorizied' 的响应（在用户未授权（未登录）时使用）。
+
+```C#
+return new UnauthorizedResult();
+```
+
+或
+
+```C#
+return Unauthorized();
+```
+
+#### 6.3.4.3 BadRequestResult
+
+表示使用 HTTP 状态码 '400 Bad Request' 的响应（在请求值无效（验证错误）时使用）。
+
+```C#
+ return new BadRequestResult();
+```
+
+或
+
+```C#
+return BadRequest();
+```
+
+4. ***NotFoundResult***
+
+表示使用 HTTP 状态码 '404 Not Found' 的响应（在请求的信息在服务器上不可用时使用）。
+
+```C#
+return new NotFoundResult();
+```
+
+或
+
+```C#
+return NotFound();
+```
+
+### 6.3.5 RedirectResults
+
+RedirectResult会向浏览器发送HTTP 302或者HTTP 301响应，以重定向到特定的操作或URL。
+
+#### 6.3.5.1 RedirectToActionResult
+
+表示根据操作名称和控制器名称，从当前操作方法重定向到另一个操作方法的响应。
+即重定向到当前应用内的另一个 Action 方法。
+
+ - 302 - Found
+
+```C#
+return new RedirectToActionResult("Index", "Home", new { id = 1 });
+```
+
+或
+
+```C#
+return RedirectToAction("Index", "Home", new { id = 1 });
+```
+
+- 301 - Moved Permanently
+
+```C#
+return new RedirectToActionResult("Index", "Home", new { id = 1 },true);
+```
+
+或
+
+```C#
+return RedirectToActionPermanent("Index", "Home", new { id = 1 });
+```
+
+#### 6.3.5.2 LocalRedirectResult
+
+表示根据指定的URL，将当前操作方法重定向到另一个操作方法的响应。
+即仅允许重定向到本应用内的 URL（防开放重定向漏洞）。
+
+ - 302 - Found
+
+```C#
+return new LocalRedirectResult("/home");
+```
+
+或
+
+```C#
+return LocalRedirect("/home");
+```
+
+- 301 - Moved Permanently
+
+```C#
+return new LocalRedirectResult("/home",true);
+```
+
+或
+
+```C#
+return LocalRedirectPermanent("/home");
+```
+
+#### 6.3.5.3 RedirectResult
+表示从当前操作方法重定向到另一个URL（可以是同一Web应用程序内部的，也可以是其他Web应用程序的）。
+即重定向到任意 URL（可跨域）。
+
+- 302 - Found
+
+```C#
+return new RedirectResult("https://example.com");
+```
+
+或
+
+```C#
+return Redirect("https://example.com");
+```
+
+- 301 - Moved Permanently
+
+```C#
+return new RedirectResult("https://example.com",true);
+```
+
+或
+
+```C#
+return RedirectPermanent("https://example.com");
+```

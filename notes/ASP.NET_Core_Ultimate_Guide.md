@@ -1605,7 +1605,7 @@ app.Run();
 
 默认的WebRoot目录是“wwwroot”，主要用于存放静态文件，你可以自定义该目录名称（此时原wwwroot目录将以虚拟目录的方式继续存在），也可以启用多个WebRoot目录。
 
-![2026-03-28-01-00-08](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-03-28-01-00-08.svg)
+![2026-03-31-20-27-19](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-03-31-20-27-19.svg)
 
 ### 5.7.1 重命名wwwroot目录名称
 

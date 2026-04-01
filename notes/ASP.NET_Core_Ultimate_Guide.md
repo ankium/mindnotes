@@ -2211,4 +2211,4 @@ public class HomeController : Controller
 
 在 ASP.NET Core 中，Model 是一个表示你希望从请求中接收和/或发送到响应中的数据结构（作为属性）的类。
 
-![2026-03-31-23-38-44](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-03-31-23-38-44.svg)
+![2026-04-01-16-15-47](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-04-01-16-15-47.svg)

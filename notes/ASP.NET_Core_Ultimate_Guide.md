@@ -2211,4 +2211,26 @@ public class HomeController : Controller
 
 在 ASP.NET Core 中，Model 是一个表示你希望从请求中接收和/或发送到响应中的数据结构（作为属性）的类。
 
-![2026-04-01-16-15-47](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-04-01-16-15-47.svg)
+![2026-04-10-11-18-54](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-04-10-11-18-54.svg)
+
+### 7.2.1 form-urlencoded和form-data的区别
+
+| 特性 | `application/x-www-form-urlencoded` | `multipart/form-data` |
+|------|----------------------------------------|------------------------|
+| 内容类型 | `application/x-www-form-urlencoded` | `multipart/form-data` |
+| 编码方式 | URL编码方式，键值对形式 | 分块（part）方式，每个场字段有明确的头和内容 |
+| 是否支持文件传输 | ❌ 不支持 | ✅ 支持 |
+| 是否支持二进制 | ❌ 不支持（只能传输文本） | ✅ 支持 |
+| 数据结构 | 简单的键值对 | 多个字段可以有相同名称，支持内容类型（如 `image/png`） |
+| 使用场景 | 不需要文件上传的表单 | 需要上传文件的表单 |
+| 传输数据量 | 受URL长度限制 | 无数据限制（使用流式传输） |
+| 添加文件字段是否需要特殊处理 | ❌ 不需要 | ✅ 需要，通常通过 `<input type="file">` 提交 |
+| 编码是否兼容ASCII | ✅ 只能发送ASCII文本 | ✅ 可以发送任意编码的文本和二进制数据（如UTF-8） |
+
+### 7.2.2 模型验证
+
+执行模型验证时，它会考虑模型类中添加的所有验证属性。作为操作方法的一部分，你可以获取由模型绑定生成的模型对象，以及由模型验证生成的模型状态和验证错误。
+
+![2026-04-10-11-19-07](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-04-10-11-19-07.svg)
+
+### 7.2.3 模型状态

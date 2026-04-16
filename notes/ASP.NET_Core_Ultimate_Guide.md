@@ -2227,10 +2227,29 @@ public class HomeController : Controller
 | 添加文件字段是否需要特殊处理 | ❌ 不需要 | ✅ 需要，通常通过 `<input type="file">` 提交 |
 | 编码是否兼容ASCII | ✅ 只能发送ASCII文本 | ✅ 可以发送任意编码的文本和二进制数据（如UTF-8） |
 
-### 7.2.2 模型验证
+### 7.2.2 模型验证 Model Validation
 
 执行模型验证时，它会考虑模型类中添加的所有验证属性。作为操作方法的一部分，你可以获取由模型绑定生成的模型对象，以及由模型验证生成的模型状态和验证错误。
 
 ![2026-04-10-11-19-07](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-04-10-11-19-07.svg)
 
-### 7.2.3 模型状态
+### 7.2.3 模型状态 ModelState
+
+ModelState是ControllerBase的一个属性（ModelStateDictionary类型对象），它保存了从 HTTP 请求中绑定的模型数据的验证状态。在控制器的所有操作方法中都可用，用于检查验证状态。
+
+#### 7.2.3.1 ModelState的关键属性和方法
+
+- ModelState.IsValid:判断模型是否通过所有验证。
+
+- ModelState.ErrorCount:返回错误数量。
+
+- ModelState.Values 或 ModelState.Keys:获取所有模型字段的验证错误信息。
+
+- ModelState.AddModelError():手动为某个字段添加错误信息。
+
+- ModelState.Clear():清除所有的模型状态。通常在后续请求中重置错误信息。
+
+- ModelState.ContainsKey("key"):判断某个字段是否存在验证错误。
+
+
+

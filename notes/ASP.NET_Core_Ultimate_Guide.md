@@ -2116,7 +2116,7 @@ return RedirectPermanent("https://example.com");
 
 # 第7章 模型绑定 Model Binding
 
-模型绑定是 ASP.NET Core 的一项功能，它从 HTTP 请求中读取值，并将这些值作为参数传递给操作方法。当URL与映射到特定操作方法的特定路由匹配时，模型绑定在执行控制器的操作方法之前自动执行，它尝试按从上到下的相同顺序取值。
+模型绑定是 ASP.NET Core 的一项功能，它从 HTTP 请求中读取值，并将这些值作为参数传递给操作方法。当URL与映射到特定操作方法的特定路由匹配时，模型绑定在执行控制器的操作方法之前自动执行，它尝试按表单字段-请求体-路由数据-查询字符串的顺序取值。
 
 ![2026-03-31-21-03-08](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-03-31-21-03-08.svg)
 
@@ -2132,7 +2132,7 @@ return RedirectPermanent("https://example.com");
 public class HomeController : Controller
 {
     [Route("bookstore/{bookid?}/{isloggedin?}")]
-    // 查询字符串（默认低优先级）URL示例: bookstore?bookid=101&isloggedin=true
+    // 查询字符串(默认低优先级)URL示例: bookstore?bookid=101&isloggedin=true
     // 路由数据(默认高优先级)URL示例: bookstore/110/false?bookid=101&isloggedin=true
     public IActionResult Index(int? bookid, bool? isloggedin)
     {
@@ -2174,12 +2174,13 @@ public IActionResult ActionMethodName([FromQuery] type parameter){}
 /仅从路由参数中获取值
 public IActionResult ActionMethodName([FromRoute] type parameter){}
 ```
+#### 7.1.2.1 使用示例
 
 ```C#
 public class HomeController : Controller
 {
     [Route("bookstore/{bookid?}/{isloggedin?}")]
-    // 查询字符串（默认低优先级）URL示例: bookstore?bookid=101&isloggedin=true
+    // 查询字符串(默认低优先级)URL示例: bookstore?bookid=101&isloggedin=true
     // 路由数据(默认高优先级)URL示例: bookstore/110/false?bookid=101&isloggedin=true
     public IActionResult Index([FromQuery] int? bookid, [FromQuery] bool? isloggedin)
     {

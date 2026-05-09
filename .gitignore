@@ -1,3 +1,4 @@
 # 忽略.obsidian文件夹
 .obsidian/
+# 忽略Drawio缓存文件
 charts/*.bkp

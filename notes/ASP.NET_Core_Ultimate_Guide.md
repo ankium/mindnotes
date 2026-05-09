@@ -2232,7 +2232,7 @@ public class HomeController : Controller
 
 执行模型验证时，它会考虑模型类中添加的所有验证属性。作为操作方法的一部分，你可以获取由模型绑定生成的模型对象，以及由模型验证生成的模型状态和验证错误。
 
-![2026-04-10-11-19-07](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-04-10-11-19-07.svg)
+![2026-05-10-00-25-45](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-10-00-25-45.svg)
 
 ### 7.2.3 模型状态 ModelState
 

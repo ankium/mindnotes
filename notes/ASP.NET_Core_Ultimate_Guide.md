@@ -1,4 +1,4 @@
-﻿
+
 
 # <center>ASP.NET Core 入门指南</center>
 
@@ -2240,7 +2240,7 @@ ModelState是ControllerBase的一个属性（ModelStateDictionary类型对象）
 
 #### 7.2.3.1 ModelState的关键属性和方法
 
-- ModelState.IsValid:判断模型是否通过所有验证。
+- ModelState.IsValid:判断模型是否通过所有验证规则。
 
 - ModelState.ErrorCount:返回错误数量。
 
@@ -2252,5 +2252,182 @@ ModelState是ControllerBase的一个属性（ModelStateDictionary类型对象）
 
 - ModelState.ContainsKey("key"):判断某个字段是否存在验证错误。
 
+#### 7.2.3.2 示例代码
 
+```C#
+using Microsoft.AspNetCore.Mvc;
+using ModelValidationsExample.Models;
 
+namespace ModelValidationsExample.Controllers
+{
+	// 控制器类 HomeController
+    public class HomeController : Controller
+    {
+        [Route("/register")]
+        public IActionResult Index(Person person)
+        {
+            if (!ModelState.IsValid)
+            {
+                List<string> errorList = new List<string>();
+                
+                /*
+                foreach (var value in ModelState.Values)
+                {
+                     foreach (var error in value.Errors)
+                     {
+                         errorList.Add(error.ErrorMessage);
+                     }
+                 }
+                */
+                
+                // 上述嵌套foreach循环可以简化为以下LINQ语句
+				errorList = ModelState.Values.SelectMany(value => value.Errors).Select(error => error.ErrorMessage).ToList();
+				
+                string errors = string.Join("\n", errorList);
+                return BadRequest(errors);
+            }
+            return Content($"{person}");
+        }
+
+    }
+}
+```
+
+### 7.2.4 模型属性的验证规则（亦称为验证特性或验证属性）
+
+#### 7.2.4.1 预定义验证规则
+
+```C#
+using System;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+
+namespace ModelValidationsExample.Models;
+
+// 模型类 Person
+public class Person
+{
+    [Required(ErrorMessage = "{0} is required")]
+    [DisplayName("Person Name")]
+    [StringLength(maximumLength: 100, MinimumLength = 3, ErrorMessage = "{0} must be between {2} and {1} characters long")]
+    public string? PersonName { get; set; }
+
+    [Required(ErrorMessage = "{0} is required")]
+    [EmailAddress(ErrorMessage = "{0} is not a valid email address")]
+    public string? Email { get; set; }
+
+    [Required(ErrorMessage = "{0} is required")]
+    [Phone(ErrorMessage = "{0} is not a valid phone number")]
+    public string? Phone { get; set; }
+
+    [Required(ErrorMessage = "{0} is required")]
+    [StringLength(maximumLength: 100, MinimumLength = 6, ErrorMessage = "{0} must be between {2} and {1} characters long")]
+    public string? Password { get; set; }
+
+    [Required(ErrorMessage = "{0} is required")]
+    [Compare("Password", ErrorMessage = "{0} does not match {1}")]
+    [Display(Name = "Confirm Password")]
+    public string? ConfirmPassword { get; set; }
+
+    [Required(ErrorMessage = "{0} is required")]
+    [Range(minimum: 0, maximum: 1000, ErrorMessage = "{0} must be between {1} and {2}")]
+    public double? Price { get; set; }
+
+    [ValidateNever]
+    public int? Size { get; set; }
+
+    public override string ToString()
+    {
+        return $"Person Object - PersonName: {PersonName}, Email: {Email}, Phone: {Phone}, Password: {Password}, ConfirmPassword: {ConfirmPassword}, Price: {Price}, Size: {Size}";
+    }
+}
+
+```
+
+占位符说明：
+- {0}默认表示属性名称本身，如果指定DisplayName，则表示DisplayName名称
+- {1}表示验证规则中的第一个参数
+- {2}表示验证规则中的第二个参数
+#### 7.2.4.2 自定义验证规则
+
+- 定义验证规则
+```C#
+using System;
+using System.ComponentModel.DataAnnotations;
+
+namespace ModelValidationsExample.CustomValidators;
+
+/// <summary>
+/// 自定义验证属性，用于验证年份是否在指定范围内
+/// </summary>
+public class MinimumYearValidatorAttribute : ValidationAttribute
+{
+    public int MinimumYear { get; set; } = 1900;
+    public string DefaultErrorMessage { get; set; } = "The {0} should not be earlier than January 1, {1}";
+
+    // 无参构造函数
+    public MinimumYearValidatorAttribute()
+    {
+
+    }
+
+    // 有参构造函数
+    public MinimumYearValidatorAttribute(int minimumYear)
+    {
+        MinimumYear = minimumYear;
+    }
+
+    /// <summary>
+    /// 继承自基类ValidationAttritube的IsValid方法作为模型验证的一部分会自动调用
+    /// </summary>
+    /// <param name="value">需要验证的请求中传入的实际属性值</param>
+    /// <param name="validationContext">包含验证的附加信息，包括正在验证的属性的引用以及正在验证的模型对象的引用</param>
+    /// <returns>return ValidationResult.Success 或者 return new ValidationResult("error message")</returns>
+    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
+    {
+        if (value != null)
+        {
+            if (value is DateTime dateTime)
+            {
+                if (dateTime.Year < MinimumYear)
+                {
+                    return new ValidationResult(string.Format(ErrorMessage ?? DefaultErrorMessage, validationContext.DisplayName, MinimumYear));
+                }
+                else
+                {
+                    return ValidationResult.Success;
+                }
+            }
+        }
+        return null;
+    }
+}
+
+```
+
+- 使用验证规则
+
+```C#
+using System;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using ModelValidationsExample.CustomValidators;
+
+namespace ModelValidationsExample.Models;
+
+// 模型类 Person
+public class Person
+{
+    [DisplayName("Date of Birth")]
+    [Required(ErrorMessage = "{0} is required")]
+    //使用自定义验证规则MinmumYearValidator
+    [MinimumYearValidator(MinimumYear = 1949, ErrorMessage = "The {0} should not be earlier than January 1, {1}")]
+    public DateTime? DateOfBirth { get; set; }
+
+    public override string ToString()
+    {
+        return $"Person Object - DateOfBirth: {DateOfBirth}";
+    }
+}
+```

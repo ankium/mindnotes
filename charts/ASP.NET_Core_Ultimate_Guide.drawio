@@ -1,4 +1,4 @@
-<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.6 Chrome/144.0.7559.236 Electron/40.8.4 Safari/537.36" version="29.6.6" pages="16">
+<mxfile host="Electron" agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.1 Chrome/142.0.7444.265 Electron/39.8.0 Safari/537.36" version="29.6.1" pages="16">
   <diagram id="Cs9lLZYm1H4D_NVhKqPK" name="Kestrel-and-Other-Server">
     <mxGraphModel dx="2201" dy="500" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
@@ -1169,7 +1169,7 @@
     </mxGraphModel>
   </diagram>
   <diagram name="模型验证" id="qfyGPTYmFFzODPaI14bn">
-    <mxGraphModel dx="1177" dy="792" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+    <mxGraphModel dx="1424" dy="894" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
         <mxCell id="NJlsbNjWmLgt77P386LC-0" />
         <mxCell id="NJlsbNjWmLgt77P386LC-1" parent="NJlsbNjWmLgt77P386LC-0" />
@@ -1233,7 +1233,7 @@
         <mxCell id="NJlsbNjWmLgt77P386LC-16" parent="NJlsbNjWmLgt77P386LC-3" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;rounded=0;fontSize=18;" value="//send response data as model object" vertex="1">
           <mxGeometry height="30" width="307" x="555.5" y="245" as="geometry" />
         </mxCell>
-        <mxCell id="NA0Q5Lu3BNlvpCZ80xu--0" parent="NJlsbNjWmLgt77P386LC-3" style="rounded=1;whiteSpace=wrap;html=1;fontSize=20;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#4D4D4D;" value="Model Binding" vertex="1">
+        <mxCell id="NA0Q5Lu3BNlvpCZ80xu--0" parent="NJlsbNjWmLgt77P386LC-3" style="rounded=1;whiteSpace=wrap;html=1;fontSize=20;fillColor=#fff2cc;strokeColor=#d6b656;fontColor=#4D4D4D;" value="Model Validation" vertex="1">
           <mxGeometry height="80" width="110" x="315" y="84" as="geometry" />
         </mxCell>
       </root>

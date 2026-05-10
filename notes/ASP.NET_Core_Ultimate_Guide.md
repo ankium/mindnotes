@@ -2346,14 +2346,14 @@ public class Person
 ```
 
 占位符说明：
-- {0}默认表示属性名称本身，如果指定DisplayName，则表示DisplayName名称
+- {0}默认表示MemberName，即属性名称本身，如果指定DisplayName，则表示属性的显示名称
 - {1}表示验证规则中的第一个参数
 - {2}表示验证规则中的第二个参数
 #### 7.2.4.2 自定义验证规则
 
-- 定义验证规则
+- 自定义单属性验证规则
 ```C#
-using System;
+using System
 using System.ComponentModel.DataAnnotations;
 
 namespace ModelValidationsExample.CustomValidators;
@@ -2406,7 +2406,61 @@ public class MinimumYearValidatorAttribute : ValidationAttribute
 
 ```
 
-- 使用验证规则
+- 自定义多属性验证规则
+
+```C#
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.Reflection;
+
+namespace ModelValidationsExample.CustomValidators;
+
+public class DateRangeValidatorAttribute : ValidationAttribute
+{
+    public string OtherPropertyName { get; set; }
+    public DateRangeValidatorAttribute(string otherPropertyName)
+    {
+        OtherPropertyName = otherPropertyName;
+    }
+
+    /// <summary>
+    /// 比较两个日期
+    /// </summary>
+    /// <param name="value">需要验证的属性的值</param>
+    /// <param name="validationContext.ObjectType">模型类的类型</param>
+    /// <param name="validationContext.ObjectInstance">模型类的实例</param>
+    /// <param name="validationContext.DisplayName">属性的显示名称</param>
+    /// <param name="validationContext.MemberName">属性的名称</param>
+    /// <returns></returns>
+    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
+    {
+        if (value != null)
+        {
+            DateTime toDate = (DateTime)value;
+            // 在程序运行过程中通过反射动态地获取模型类的属性
+            PropertyInfo? OtherProperty = validationContext.ObjectType.GetProperty(OtherPropertyName);
+            if (OtherProperty == null)
+            {
+                return new ValidationResult(string.Format("Invalid other property name: {0}", OtherPropertyName));
+            }
+            // 通过反射动态获取属性的值
+            var fromDate = OtherProperty.GetValue(validationContext.ObjectInstance);
+            if (fromDate == null)
+            {
+                return new ValidationResult("From date is required");
+            }
+            if (toDate < (DateTime)fromDate)
+            {
+                return new ValidationResult(string.Format(ErrorMessage ?? "{0} must be after {1}", validationContext.DisplayName, OtherPropertyName));
+            }
+        }
+        return ValidationResult.Success;
+    }
+}
+
+```
+
+- 使用自定义验证规则
 
 ```C#
 using System;
@@ -2425,9 +2479,18 @@ public class Person
     [MinimumYearValidator(MinimumYear = 1949, ErrorMessage = "The {0} should not be earlier than January 1, {1}")]
     public DateTime? DateOfBirth { get; set; }
 
+    [Required(ErrorMessage = "{0} is required")]
+    [DisplayName("From Date")]
+    public DateTime? FromDate { get; set; }
+
+    [Required(ErrorMessage = "{0} is required")]
+    [DisplayName("To Date")]
+    [DateRangeValidator("FromDate", ErrorMessage = "{0} must be after {1}")]
+    public DateTime? ToDate { get; set; }
+
     public override string ToString()
     {
-        return $"Person Object - DateOfBirth: {DateOfBirth}";
+        return $"Person Object - DateOfBirth: {DateOfBirth}, FromDate: {FromDate}, ToDate: {ToDate}";
     }
 }
 ```

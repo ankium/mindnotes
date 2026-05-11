@@ -2351,7 +2351,7 @@ public class Person
 - {2}表示验证规则中的第二个参数
 #### 7.2.4.2 自定义验证规则
 
-- 自定义单属性验证规则
+##### 7.2.4.2.1 自定义单属性验证规则
 ```C#
 using System
 using System.ComponentModel.DataAnnotations;
@@ -2406,7 +2406,7 @@ public class MinimumYearValidatorAttribute : ValidationAttribute
 
 ```
 
-- 自定义多属性验证规则
+##### 7.2.4.2.2 自定义多属性验证规则
 
 ```C#
 using System;
@@ -2460,7 +2460,7 @@ public class DateRangeValidatorAttribute : ValidationAttribute
 
 ```
 
-- 使用自定义验证规则
+##### 7.2.4.2.3 自定义针对特定模型类的验证规则
 
 ```C#
 using System;
@@ -2471,7 +2471,7 @@ using ModelValidationsExample.CustomValidators;
 namespace ModelValidationsExample.Models;
 
 // 模型类 Person
-public class Person
+public class Person : IValidatableObject
 {
     [DisplayName("Date of Birth")]
     [Required(ErrorMessage = "{0} is required")]
@@ -2485,12 +2485,25 @@ public class Person
 
     [Required(ErrorMessage = "{0} is required")]
     [DisplayName("To Date")]
+    //使用自定义验证规则DateRangeValidator
     [DateRangeValidator("FromDate", ErrorMessage = "{0} must be after {1}")]
     public DateTime? ToDate { get; set; }
 
+    [Required(ErrorMessage = "{0} is required")]
+    public int? Age { get; set; }
+
     public override string ToString()
     {
-        return $"Person Object - DateOfBirth: {DateOfBirth}, FromDate: {FromDate}, ToDate: {ToDate}";
+        return $"Person Object - DateOfBirth: {DateOfBirth}, FromDate: {FromDate}, ToDate: {ToDate}, Age: {Age}";
+    }
+
+    //自定义特定模型类的属性验证（实现IValidatableObject的Validate方法）
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+    {
+        if (DateOfBirth.HasValue == false && Age.HasValue == false)
+        {
+            yield return new ValidationResult("Either Date of Birth or Age must be provided.", new[] { nameof(DateOfBirth), nameof(Age) });
+        }
     }
 }
 ```

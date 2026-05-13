@@ -2116,17 +2116,17 @@ return RedirectPermanent("https://example.com");
 
 # 第7章 模型绑定 Model Binding
 
-模型绑定是 ASP.NET Core 的一项功能，它从 HTTP 请求中读取值，并将这些值作为参数传递给操作方法。当URL与映射到特定操作方法的特定路由匹配时，模型绑定在执行控制器的操作方法之前自动执行，它尝试按表单字段-请求体-路由数据-查询字符串的顺序取值。
+模型绑定的默认检索顺序：模型绑定是 ASP.NET Core 的一项功能，它从 HTTP 请求中读取值，并将这些值作为参数传递给操作方法。当URL与映射到特定操作方法的特定路由匹配时，模型绑定在执行控制器的操作方法之前自动执行，它尝试按表单字段-请求体-路由数据-查询字符串的顺序取值。
 
 ![2026-03-31-21-03-08](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-03-31-21-03-08.svg)
 
-## 7.1 查询字符串VS路由数据
+## 7.1 查询字符串 VS 路由数据 
 
-### 7.1.1 默认检索顺序
-
-默认情况下，此过程首先从路由数据中获取值，然后从查询字符串中获取值，如果特定参数值不存在于路由数据中，则仅从该操作方法参数检索查询字符串的值。
+FromRoute和FromQuery的优先级：在不考虑A表单字段和B请求体的情况下（后面介绍），模型绑定首先从C路由数据FromRoute中获取值，然后从D查询字符串FromQuery中获取值，如果特定参数值不存在于路由数据中，则仅从该操作方法参数检索查询字符串的值。
 
 ![2026-03-31-22-51-25](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-03-31-22-51-25.svg)
+
+*代码示例*
 
 ```C#
 public class HomeController : Controller
@@ -2160,9 +2160,9 @@ public class HomeController : Controller
 }
 ```
 
-### 7.1.2 自定义检索顺序 FromQuery和FromRoute
+### 7.1.1 自定义检索顺序 
 
-如果特别需要从查询字符串而不是从路由数据中检索特定参数值，就得使用FromQuery和FromRoute属性。
+如果特别需要从查询字符串FromQuery而不是从路由数据FromRoute中检索特定参数值，就得使用FromQuery和FromRoute属性。
 
 - [FromQuery]
 ```C#
@@ -2171,10 +2171,11 @@ public IActionResult ActionMethodName([FromQuery] type parameter){}
 ```
 - [FromRoute]
 ```C#
-/仅从路由参数中获取值
+//仅从路由参数中获取值
 public IActionResult ActionMethodName([FromRoute] type parameter){}
 ```
-#### 7.1.2.1 使用示例
+
+*代码示例*
 
 ```C#
 public class HomeController : Controller
@@ -2208,13 +2209,11 @@ public class HomeController : Controller
 }
 ```
 
-## 7.2 模型类
+## 7.2 表单字段 Form Fields
 
-在 ASP.NET Core 中，Model 是一个表示你希望从请求中接收和/或发送到响应中的数据结构（作为属性）的类。
+表单字段是模型绑定过程中的第一优先级。通常，当我们在HTML表单中点击提交按钮时，我们会使用这些表单字段。通常这些字段以两种格式之一添加到请求体中，即form-urlencoded和form-data，其中form-urlencoded是默认格式，比较简单，但form-data则比较复杂。
 
-![2026-04-10-11-18-54](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-04-10-11-18-54.svg)
-
-### 7.2.1 form-urlencoded和form-data的区别
+**form-urlencoded和form-data的区别：**
 
 | 特性 | `application/x-www-form-urlencoded` | `multipart/form-data` |
 |------|----------------------------------------|------------------------|
@@ -2228,31 +2227,37 @@ public class HomeController : Controller
 | 添加文件字段是否需要特殊处理 | ❌ 不需要 | ✅ 需要，通常通过 `<input type="file">` 提交 |
 | 编码是否兼容ASCII | ✅ 只能发送ASCII文本 | ✅ 可以发送任意编码的文本和二进制数据（如UTF-8） |
 
-### 7.2.2 模型验证 Model Validation
+## 7.3 模型类
+
+在 ASP.NET Core 中，模型 Model 是一个表示你希望从请求中接收和/或发送到响应中的数据结构（作为属性）的类。
+
+![2026-04-10-11-18-54](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-04-10-11-18-54.svg)
+
+### 7.3.1 模型验证 Model Validation
 
 执行模型验证时，它会考虑模型类中添加的所有验证属性。作为操作方法的一部分，你可以获取由模型绑定生成的模型对象，以及由模型验证生成的模型状态和验证错误。
 
 ![2026-05-10-00-25-45](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-10-00-25-45.svg)
 
-### 7.2.3 模型状态 ModelState
+### 7.3.2 模型状态 ModelState
 
 ModelState是ControllerBase的一个属性（ModelStateDictionary类型对象），它保存了从 HTTP 请求中绑定的模型数据的验证状态。在控制器的所有操作方法中都可用，用于检查验证状态。
 
-#### 7.2.3.1 ModelState的关键属性和方法
+**ModelState 的关键属性和方法：**
 
-- ModelState.IsValid:判断模型是否通过所有验证规则。
+- ModelState.IsValid: 判断模型是否通过所有验证规则。
 
-- ModelState.ErrorCount:返回错误数量。
+- ModelState.ErrorCount: 返回错误数量。
 
-- ModelState.Values 或 ModelState.Keys:获取所有模型字段的验证错误信息。
+- ModelState.Values 或 ModelState.Keys: 获取所有模型字段的验证错误信息。
 
-- ModelState.AddModelError():手动为某个字段添加错误信息。
+- ModelState.AddModelError(): 手动为某个字段添加错误信息。
 
-- ModelState.Clear():清除所有的模型状态。通常在后续请求中重置错误信息。
+- ModelState.Clear(): 清除所有的模型状态。通常在后续请求中重置错误信息。
 
-- ModelState.ContainsKey("key"):判断某个字段是否存在验证错误。
+- ModelState.ContainsKey("key"): 判断某个字段是否存在验证错误。
 
-#### 7.2.3.2 示例代码
+*示例代码*
 
 ```C#
 using Microsoft.AspNetCore.Mvc;
@@ -2293,9 +2298,11 @@ namespace ModelValidationsExample.Controllers
 }
 ```
 
-### 7.2.4 模型属性的验证规则（亦称为验证特性或验证属性）
+## 7.4 模型属性的验证规则
 
-#### 7.2.4.1 预定义验证规则
+模型属性的验证规则，亦称为验证特性或验证属性，本质是一组实现了ValidationAttribute特性的自定义特性类。
+
+### 7.4.1 预定义验证规则
 
 ```C#
 using System;
@@ -2345,13 +2352,16 @@ public class Person
 
 ```
 
-占位符说明：
+**占位符说明：**
+
 - {0}默认表示MemberName，即属性名称本身，如果指定DisplayName，则表示属性的显示名称
 - {1}表示验证规则中的第一个参数
 - {2}表示验证规则中的第二个参数
-#### 7.2.4.2 自定义验证规则
 
-##### 7.2.4.2.1 自定义单属性验证规则
+### 7.4.2 自定义验证规则
+
+#### 7.4.2.1 自定义单属性验证规则
+
 ```C#
 using System
 using System.ComponentModel.DataAnnotations;
@@ -2406,7 +2416,7 @@ public class MinimumYearValidatorAttribute : ValidationAttribute
 
 ```
 
-##### 7.2.4.2.2 自定义多属性验证规则
+#### 7.4.2.2 自定义多属性验证规则
 
 ```C#
 using System;
@@ -2460,7 +2470,9 @@ public class DateRangeValidatorAttribute : ValidationAttribute
 
 ```
 
-##### 7.2.4.2.3 自定义针对特定模型类的验证规则
+#### 7.4.2.3 自定义针对特定模型类的验证规则
+
+自定义针对特定模型类的验证规则，需要模型类实现IValidatableObject接口的Validate方法。
 
 ```C#
 using System;
@@ -2508,9 +2520,9 @@ public class Person : IValidatableObject
 }
 ```
 
-### 7.2.5 Bind和BindNever
+## 7.5 Bind和BindNever
 
-#### 7.2.5.1 Bind
+### 7.5.1 过滤绑定 Bind
 
 过滤绑定：默认情况下，在模型绑定中，模型类的所有属性都会被绑定，但是，如果你使用Bind并指定要绑定的属性列表，只有这些属性会被包含在绑定中，而其余属性将被跳过。Bind属性的好处是你可以避免过度提交不需要的属性。
 
@@ -2531,7 +2543,6 @@ namespace ModelValidationsExample.Controllers
             {
                 List<string> errorList = new List<string>();
                 
-                // 上述嵌套foreach循环可以简化为以下LINQ语句
 				errorList = ModelState.Values.SelectMany(value => value.Errors).Select(error => error.ErrorMessage).ToList();
 				
                 string errors = string.Join("\n", errorList);
@@ -2544,7 +2555,7 @@ namespace ModelValidationsExample.Controllers
 }
 ```
 
-#### 7.2.5.2 BindNever
+### 7.5.2 豁免绑定 BindNever
 
 豁免绑定：有时我们需要绑定模型类中除个别属性外的其余所有属性，此时可以在模型类中使用BindNever特性。
 
@@ -2593,6 +2604,128 @@ public class Person
     public override string ToString()
     {
         return $"Person Object - PersonName: {PersonName}, Email: {Email}, Phone: {Phone}, Password: {Password}, ConfirmPassword: {ConfirmPassword}, Price: {Price}, Size: {Size}";
+    }
+}
+```
+
+## 7.6 请求体模型绑定 FromBody
+
+当我们主要想接收JSON数据或者XML数据以及其他自定义数据格式时，必须在操作方法的模型参数上使用FromBody属性，以便启用**输入格式化器**将请求体解析为指定的模型对象。
+
+### 7.6.1 输入格式化程序 Input Formatters
+
+输入格式化器是ASP.NET Core中的内部类，用于将请求体转换或转换为模型对象。例如请求体包含JSON数据且请求头中的内容类型为application/json时，JSON输入格式化器将自动启用，它从请求体读取JSON数据并将其转换为模型对象。同样，如果请求体包含XML数据且请求头中的内容类型为application/xml，则XML序列化输入格式化器将自动启用，然后它读取XML数据将将其转换为模型对象。
+
+
+### 7.6.2 JSON序列化输入格式化器
+
+#### 7.6.2.1 启用JSON格式化器
+
+默认情况下，ASP.NET 控制器仅有一种输入格式化器，即JSON输入格式化器，因此无需手动将JSON输入格式化器添加到控制器，它默认就能读取请求体中的JSON数据。
+
+#### 7.6.2.2 JSON数据
+
+```JSON
+{
+  "PersonName": "ankium",
+  "Email": "sudons@msn.cn",
+  "Phone": "15083829025",
+  "Password": "123456",
+  "Confirmpassword": "123456",
+  "price": 188,
+  "Size": 1225
+}
+```
+
+#### 7.6.2.3 JSON解析
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+using ModelValidationsExample.Models;
+
+namespace ModelValidationsExample.Controllers
+{
+	// 控制器类 HomeController
+    public class HomeController : Controller
+    {
+        [Route("/register")]
+        // 向模型参数添加FromBody属性，启用JSON输入格式化器以将JSON数据解析为模型对象
+        public IActionResult Index([FromBody]Person person)
+        {
+            if (!ModelState.IsValid)
+            {
+                List<string> errorList = new List<string>();
+                
+				errorList = ModelState.Values.SelectMany(value => value.Errors).Select(error => error.ErrorMessage).ToList();
+				
+                string errors = string.Join("\n", errorList);
+                return BadRequest(errors);
+            }
+            return Content($"{person}");
+        }
+
+    }
+}
+```
+
+#### 7.6.3 XML序列化输入格式化器
+
+如果想要使XML正常工作，即我们要从请求体中读取XML数据，则必须手动为控制器添加XML序列化输入格式化器。
+
+#### 7.6.3.1 启用XML格式化器
+```C#
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllers();
+// 添加XML序列化格式化器
+builder.Services.AddControllers().AddXmlSerializerFormatters();
+var app = builder.Build();
+
+app.UseStaticFiles();
+app.UseRouting();
+app.MapControllers();
+
+app.Run();
+```
+
+#### 7.6.3.2 XML数据
+
+```XML
+<Person>
+  <PersonName>John Doe</PersonName>
+  <Email>john.doe@example.com</Email>
+  <Phone>123-456-7890</Phone>
+  <Password>momo123</Password>
+  <ConfirmPassword>momo123</ConfirmPassword>
+</Person>
+```
+
+#### 7.6.3.3 XML解析
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+using ModelValidationsExample.Models;
+
+namespace ModelValidationsExample.Controllers
+{
+	// 控制器类 HomeController
+    public class HomeController : Controller
+    {
+        [Route("/register")]
+        // 向模型参数添加FromBody属性，启用XML输入格式化器以将XML数据解析为模型对象
+        public IActionResult Index([FromBody]Person person)
+        {
+            if (!ModelState.IsValid)
+            {
+                List<string> errorList = new List<string>();
+                
+				errorList = ModelState.Values.SelectMany(value => value.Errors).Select(error => error.ErrorMessage).ToList();
+				
+                string errors = string.Join("\n", errorList);
+                return BadRequest(errors);
+            }
+            return Content($"{person}");
+        }
+
     }
 }
 ```

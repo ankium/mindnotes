@@ -2507,3 +2507,92 @@ public class Person : IValidatableObject
     }
 }
 ```
+
+### 7.2.5 Bind和BindNever
+
+#### 7.2.5.1 Bind
+
+过滤绑定：默认情况下，在模型绑定中，模型类的所有属性都会被绑定，但是，如果你使用Bind并指定要绑定的属性列表，只有这些属性会被包含在绑定中，而其余属性将被跳过。Bind属性的好处是你可以避免过度提交不需要的属性。
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+using ModelValidationsExample.Models;
+
+namespace ModelValidationsExample.Controllers
+{
+	// 控制器类 HomeController
+    public class HomeController : Controller
+    {
+        [Route("/register")]
+        //Bind指定模型类属性
+        public IActionResult Index([Bind(nameof(Person.PersonName),nameof(Person.Email),nameof(Person.Phone),nameof(Person.Password),nameof(Person.ConfirmPassword))]Person person)
+        {
+            if (!ModelState.IsValid)
+            {
+                List<string> errorList = new List<string>();
+                
+                // 上述嵌套foreach循环可以简化为以下LINQ语句
+				errorList = ModelState.Values.SelectMany(value => value.Errors).Select(error => error.ErrorMessage).ToList();
+				
+                string errors = string.Join("\n", errorList);
+                return BadRequest(errors);
+            }
+            return Content($"{person}");
+        }
+
+    }
+}
+```
+
+#### 7.2.5.2 BindNever
+
+豁免绑定：有时我们需要绑定模型类中除个别属性外的其余所有属性，此时可以在模型类中使用BindNever特性。
+
+```C#
+using System;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+
+namespace ModelValidationsExample.Models;
+
+// 模型类 Person
+public class Person
+{
+    [Required(ErrorMessage = "{0} is required")]
+    [DisplayName("Person Name")]
+    [StringLength(maximumLength: 100, MinimumLength = 3, ErrorMessage = "{0} must be between {2} and {1} characters long")]
+    public string? PersonName { get; set; }
+
+    [Required(ErrorMessage = "{0} is required")]
+    [EmailAddress(ErrorMessage = "{0} is not a valid email address")]
+    public string? Email { get; set; }
+
+    [Required(ErrorMessage = "{0} is required")]
+    [Phone(ErrorMessage = "{0} is not a valid phone number")]
+    public string? Phone { get; set; }
+
+    [Required(ErrorMessage = "{0} is required")]
+    [StringLength(maximumLength: 100, MinimumLength = 6, ErrorMessage = "{0} must be between {2} and {1} characters long")]
+    public string? Password { get; set; }
+
+    [Required(ErrorMessage = "{0} is required")]
+    [Compare("Password", ErrorMessage = "{0} does not match {1}")]
+    [Display(Name = "Confirm Password")]
+    public string? ConfirmPassword { get; set; }
+
+    [Required(ErrorMessage = "{0} is required")]
+    [Range(minimum: 0, maximum: 1000, ErrorMessage = "{0} must be between {1} and {2}")]
+    public double? Price { get; set; }
+
+	//豁免绑定或者排除绑定
+    [ValidateNever]
+    public int? Size { get; set; }
+
+    public override string ToString()
+    {
+        return $"Person Object - PersonName: {PersonName}, Email: {Email}, Phone: {Phone}, Password: {Password}, ConfirmPassword: {ConfirmPassword}, Price: {Price}, Size: {Size}";
+    }
+}
+```

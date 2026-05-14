@@ -1,7 +1,4 @@
 
-
-# <center>ASP.NET Core 入门指南</center>
-
 # 第1章 简介 Introduction
 
 ## 1.1 ASP.NET Core 简介
@@ -2612,10 +2609,13 @@ public class Person
 
 当我们主要想接收JSON数据或者XML数据以及其他自定义数据格式时，必须在操作方法的模型参数上使用FromBody属性，以便启用**输入格式化器**将请求体解析为指定的模型对象。
 
+![2026-05-14-22-26-12](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-14-22-26-12.svg)
+
 ### 7.6.1 输入格式化程序 Input Formatters
 
 输入格式化器是ASP.NET Core中的内部类，用于将请求体转换或转换为模型对象。例如请求体包含JSON数据且请求头中的内容类型为application/json时，JSON输入格式化器将自动启用，它从请求体读取JSON数据并将其转换为模型对象。同样，如果请求体包含XML数据且请求头中的内容类型为application/xml，则XML序列化输入格式化器将自动启用，然后它读取XML数据将将其转换为模型对象。
 
+![2026-05-14-22-26-27](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-14-22-26-27.svg)
 
 ### 7.6.2 JSON序列化输入格式化器
 
@@ -3008,6 +3008,8 @@ public class Person
 
 ## 7.9 请求头模型绑定 FromHeader
 
+![2026-05-14-22-27-02](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-14-22-27-02.svg)
+
 ### 7.9.1 读取请求头的传统方式
 ```C#
 using Microsoft.AspNetCore.Mvc;
@@ -3071,3 +3073,45 @@ namespace ModelValidationsExample.Controllers
     }
 }
 ```
+
+# 第8章 视图 Razor 
+
+## 8.1 MVC架构模式
+
+MVC（Model-View-Controller）架构模式是一种将应用程序分为模型（数据处理）、视图（用户界面）和控制器（业务逻辑处理）三个相互分离的部分的设计模式，以实现清晰的职责划分和更好的可维护性。
+
+![2026-05-14-22-27-26](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-14-22-27-26.svg)
+
+### 8.1.1 MVC的职责
+
+1. Controller
+
+    - 接收HTTP请求数据
+    - 调用业务模型以执行业务逻辑
+
+2. Business Model
+
+    - 接收来自控制器的输入数据
+    - 执行诸如从数据库中检索/插入数据等业务操作
+    - 将数据库数据发送回控制器
+
+3. Controller
+
+    - 创建ViewModel对象并将其数据填充到其属性中
+    - 选择一个视图并调用它，同时将ViewModel的对象传递给视图
+
+4. View
+
+    - 从控制器接收ViewModel对象
+    - 访问ViewModel的属性以在HTML代码中渲染数据
+    - 视图渲染完成后，渲染后的视图结果将作为响应发送
+
+### 8.1.2 MVC架构模式的优势/目标
+
+清晰的职责分离：
+
+- 每个组件（模型、视图和控制器）都只负责一项职责。
+- 识别和修复错误将会变得容易。
+- 每个组件（模型、视图和控制器）都可以独立开发。
+- 在实际应用中，视图和控制器都依赖于模型。模型并不依赖于视图或控制器。这是“干净分离”模式的关键优势之一，这种分离使得模型能够独立构建和测试。
+- 单元测试每个单独的组件会更容易。

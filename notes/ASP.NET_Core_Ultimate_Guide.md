@@ -2729,3 +2729,164 @@ namespace ModelValidationsExample.Controllers
     }
 }
 ```
+
+## 7.7 自定义模型绑定器
+
+当你需要在模型绑定期间执行某些复杂的逻辑时，尤其是对内置数据类型以外的数据类型执行复杂操作时，必须创建自定义模型绑定器 Custom Model Binder。这意味着你将创建自己的模型绑定，而不是使用默认的模型绑定，并且可以在整个项目的多个地方重用它。例如，当用户在请求中提交了名字和姓氏时，我们需要将其连接成一个字符串，即放入PersonName属性中时，或者用户分别提交了年、月、日，我们需要将其组合成一个日期值时，对于这种类型的复杂操作，在实际项目中必须创建自定义的模型绑定器。
+
+
+
+### 7.7.1 自定义模型类
+
+```C#
+using System;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using ModelValidationsExample.CustomValidators;
+
+namespace ModelValidationsExample.Models;
+
+// 模型类 Person
+public class Person
+{
+    [Required(ErrorMessage = "{0} is required")]
+    [DisplayName("Person Name")]
+    [StringLength(maximumLength: 100, MinimumLength = 3, ErrorMessage = "{0} must be between {2} and {1} characters long")]
+    public string? PersonName { get; set; }
+
+    [Required(ErrorMessage = "{0} is required")]
+    [EmailAddress(ErrorMessage = "{0} is not a valid email address")]
+    public string? Email { get; set; }
+
+    [Required(ErrorMessage = "{0} is required")]
+    [Phone(ErrorMessage = "{0} is not a valid phone number")]
+    public string? Phone { get; set; }
+
+    [Required(ErrorMessage = "{0} is required")]
+    [StringLength(maximumLength: 100, MinimumLength = 6, ErrorMessage = "{0} must be between {2} and {1} characters long")]
+    public string? Password { get; set; }
+
+    [Required(ErrorMessage = "{0} is required")]
+    [Compare("Password", ErrorMessage = "{0} does not match {1}")]
+    [Display(Name = "Confirm Password")]
+    public string? ConfirmPassword { get; set; }
+
+    [Required(ErrorMessage = "{0} is required")]
+    [Range(minimum: 0, maximum: 1000, ErrorMessage = "{0} must be between {1} and {2}")]
+    public double? Price { get; set; }
+
+    [BindNever]
+    public int Size { get; set; }
+
+    public override string ToString()
+    {
+        return $"Person Object - Name: {PersonName}, Email: {Email}, Phone: {Phone}";
+    }
+
+}
+```
+
+### 7.7.2 自定义模型绑定器
+
+```C#
+using System;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using ModelValidationsExample.Models;
+
+namespace ModelValidationsExample.CustomModelBinders;
+
+public class PersonModelBinder : IModelBinder
+{
+    public Task BindModelAsync(ModelBindingContext bindingContext)
+    {
+        // 创建模型对象
+        Person person = new Person();
+
+        // FirstName and LastName
+        if (bindingContext.ValueProvider.GetValue("FirstName").Length > 0)
+        {
+            // 在用户提交的请求中可能会有多个同名参数标签，因此需要提取FirstValue
+            person.PersonName = bindingContext.ValueProvider.GetValue("FirstName").FirstValue;
+            if (bindingContext.ValueProvider.GetValue("LastName").Length > 0)
+            {
+                person.PersonName += " " + bindingContext.ValueProvider.GetValue("LastName").FirstValue;
+            }
+        }
+
+        //Email
+        if (bindingContext.ValueProvider.GetValue("Email").Length > 0)
+        {
+            person.Email = bindingContext.ValueProvider.GetValue("Email").FirstValue;
+        }
+
+        //Phone
+        if (bindingContext.ValueProvider.GetValue("Phone").Length > 0)
+        {
+            person.Phone = bindingContext.ValueProvider.GetValue("Phone").FirstValue;
+        }
+
+        //Password
+        if (bindingContext.ValueProvider.GetValue("Password").Length > 0)
+        {
+            person.Password = bindingContext.ValueProvider.GetValue("Password").FirstValue;
+        }
+
+        //ConfirmPassword
+        if (bindingContext.ValueProvider.GetValue("ConfirmPassword").Length > 0)
+        {
+            person.ConfirmPassword = bindingContext.ValueProvider.GetValue("ConfirmPassword").FirstValue;
+        }
+
+        //Price
+        if (bindingContext.ValueProvider.GetValue("Price").Length > 0)
+        {
+            person.Price = Convert.ToDouble(bindingContext.ValueProvider.GetValue("Price").FirstValue);
+        }
+
+        // 返回模型对象
+        bindingContext.Result = ModelBindingResult.Success(person);
+        return Task.CompletedTask;
+    }
+}
+```
+
+### 7.7.3 在控制器指定自定义模型绑定器
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+using ModelValidationsExample.Models;
+using ModelValidationsExample.CustomModelBinders;
+
+namespace ModelValidationsExample.Controllers
+{
+	// 控制器类 HomeController
+    public class HomeController : Controller
+    {
+        /// <summary>
+        /// 通过ModelBinder指定自定义模型绑定器PersonModelBinder，这意味着在运行时一旦收到请求，它将自动调用我们的CustomModelBinder，而不是执行默认或者内置的模型绑定功能。
+        /// </summary>
+        /// <param name="FromBody">指示参数应从请求正文中读取</param>
+        /// <param name="ModelBinder">指示应使用自定义模型绑定器</param>
+        /// <param name="BinderType">指定模型绑定器的类型</param>
+        /// <param name="PersonModelBinder">自定义模型绑定器</param>
+        /// <param name="person">模型对象参数</param>
+        /// <returns></returns>
+        [Route("/register")]
+        public IActionResult Index([FromBody][ModelBinder(BinderType = typeof(PersonModelBinder))] Person person)
+        {
+            if (!ModelState.IsValid)
+            {
+                List<string> errorList = new List<string>();
+                
+				errorList = ModelState.Values.SelectMany(value => value.Errors).Select(error => error.ErrorMessage).ToList();
+				
+                string errors = string.Join("\n", errorList);
+                return BadRequest(errors);
+            }
+            return Content($"{person}");
+        }
+
+    }
+}
+```

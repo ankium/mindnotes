@@ -2734,9 +2734,9 @@ namespace ModelValidationsExample.Controllers
 
 当你需要在模型绑定期间执行某些复杂的逻辑时，尤其是对内置数据类型以外的数据类型执行复杂操作时，必须创建自定义模型绑定器 Custom Model Binder。这意味着你将创建自己的模型绑定，而不是使用默认的模型绑定，并且可以在整个项目的多个地方重用它。例如，当用户在请求中提交了名字和姓氏时，我们需要将其连接成一个字符串，即放入PersonName属性中时，或者用户分别提交了年、月、日，我们需要将其组合成一个日期值时，对于这种类型的复杂操作，在实际项目中必须创建自定义的模型绑定器。
 
+### 7.7.1 使用自定义模型绑定器
 
-
-### 7.7.1 自定义模型类
+#### 7.7.1.1 自定义模型类
 
 ```C#
 using System;
@@ -2787,7 +2787,7 @@ public class Person
 }
 ```
 
-### 7.7.2 自定义模型绑定器
+#### 7.7.1.2 自定义模型绑定器
 
 ```C#
 using System;
@@ -2851,7 +2851,7 @@ public class PersonModelBinder : IModelBinder
 }
 ```
 
-### 7.7.3 在控制器指定自定义模型绑定器
+#### 7.7.1.3 在控制器指定自定义模型绑定器
 
 ```C#
 using Microsoft.AspNetCore.Mvc;
@@ -2885,6 +2885,187 @@ namespace ModelValidationsExample.Controllers
                 return BadRequest(errors);
             }
             return Content($"{person}");
+        }
+
+    }
+}
+```
+
+### 7.7.2 模型绑定提供程序
+
+如果我们需要在所有 **使用同一个模型类** 的操作方法中 **使用相同的自定义模型绑定器**，此时可以通过使用绑定器提供程序(Binder Provider)来全局声明它。可以创建一个自定义模型绑定器提供程序，然后返回已经创建的模型绑定器类的类型，这样，只要在操作方法参数中使用了特定类型的模型类，整个项目中都会全局启用此设置。这意味着，任何具有同一个模型类型参数的操作方法都将使用指定的模型绑定器。也就是说，我们不需要在每个操作方法中显式编写模型绑定器[ModelBinder(BinderType=typeof(ModelBinder))]，这才是优势所在。
+
+#### 7.7.2.1 自定义模型绑定器提供程序
+
+```C#
+using System;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
+using ModelValidationsExample.Models;
+
+namespace ModelValidationsExample.CustomModelBinders;
+
+// 用于处理Person模型绑定的自定义模型绑定提供程序
+public class PersonBinderProvider : IModelBinderProvider
+{
+    // 获取模型绑定器
+    public IModelBinder? GetBinder(ModelBinderProviderContext context)
+    {
+        if (context.Metadata.ModelType==typeof(Person))
+        {
+            return new BinderTypeModelBinder(typeof(PersonModelBinder));
+        }
+        return null;
+    }
+}
+
+```
+
+#### 7.7.2.2 注册模型绑定器提供程序
+```C#
+using ModelValidationsExample.CustomModelBinders;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// 注册模型绑定器提供程序
+builder.Services.AddControllers(option =>
+{
+    option.ModelBinderProviders.Insert(0, new PersonBinderProvider());
+});
+var app = builder.Build();
+
+app.UseStaticFiles();
+app.UseRouting();
+app.MapControllers();
+
+app.Run();
+```
+
+#### 7.7.2.3 模型绑定器提供程序自动工作
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+using ModelValidationsExample.Models;
+using ModelValidationsExample.CustomModelBinders;
+
+namespace ModelValidationsExample.Controllers
+{
+	// 控制器类 HomeController
+    public class HomeController : Controller
+    {
+        // 模型绑定器提供程序自动为操作方法中的Person模型类参数全局应用自定义模型绑定器PersonModelBinder
+        [Route("/register")]
+        public IActionResult Index(Person person)
+        {
+            if (!ModelState.IsValid)
+            {
+                List<string> errorList = new List<string>();
+                
+				errorList = ModelState.Values.SelectMany(value => value.Errors).Select(error => error.ErrorMessage).ToList();
+				
+                string errors = string.Join("\n", errorList);
+                return BadRequest(errors);
+            }
+            return Content($"{person}");
+        }
+
+    }
+}
+```
+
+## 7.8 集合绑定
+
+使用集合绑定，内置模型绑定与集合一起工作。在实际项目中，当我们想要接收多个值时，例如多个电话号码或者多个电子邮件，都可以使用集合绑定。在模型类的属性中可以使用列表、集合或者数组以接收数据，但在请求参数提交时则需要以数组下标方式提交数据。
+
+### 7.8.1 请求参数数组
+
+```C#
+Hobbies[0]="Listen To Music"
+Hobbies[1]="Play Basketball"
+```
+
+### 7.8.2 集合绑定属性
+
+```C#
+using System.ComponentModel.DataAnnotations;
+
+namespace ModelValidationsExample.Models;
+
+// 模型类 Person
+public class Person
+{
+    //集合绑定属性
+    [Required(ErrorMessage = "{0} is required")]
+    public List<string?> Hobbies { get; set; } = new List<string?>();
+
+    public override string ToString()
+    {
+        return $"Person Object - Hobbies: {string.Join(", ", Hobbies)}";
+    }
+
+}
+```
+
+## 7.9 请求头模型绑定 FromHeader
+
+### 7.9.1 读取请求头的传统方式
+```C#
+using Microsoft.AspNetCore.Mvc;
+using ModelValidationsExample.Models;
+using ModelValidationsExample.CustomModelBinders;
+
+namespace ModelValidationsExample.Controllers
+{
+    public class HomeController : Controller
+    {
+        [Route("/register")]
+        public IActionResult Index(Person person)
+        {
+            if (!ModelState.IsValid)
+            {
+                List<string> errorList = new List<string>();
+
+                errorList = ModelState.Values.SelectMany(value => value.Errors).Select(error => error.ErrorMessage).ToList();
+
+                string errors = string.Join("\n", errorList);
+                return BadRequest(errors);
+            }
+            //读取请求头的传统方式
+            string? acceptLanguage = ControllerContext.HttpContext.Request.Headers["Accept-Language"];
+            return Content($"{person},{acceptLanguage}");
+        }
+
+    }
+}
+```
+
+### 7.9.2 FromHeader属性从请求头中读取值
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+using ModelValidationsExample.Models;
+using ModelValidationsExample.CustomModelBinders;
+
+namespace ModelValidationsExample.Controllers
+{
+    public class HomeController : Controller
+    {
+        // FromHeader属性从请求头中读取值
+        [Route("/register")]
+        public IActionResult Index(Person person, [FromHeader(Name = "User-Agent")] string? userAgent)
+        {
+            if (!ModelState.IsValid)
+            {
+                List<string> errorList = new List<string>();
+
+                errorList = ModelState.Values.SelectMany(value => value.Errors).Select(error => error.ErrorMessage).ToList();
+
+                string errors = string.Join("\n", errorList);
+                return BadRequest(errors);
+            }
+            //读取请求头的传统方式
+            string? acceptLanguage = ControllerContext.HttpContext.Request.Headers["Accept-Language"];
+            return Content($"{person},{userAgent},{acceptLanguage}");
         }
 
     }

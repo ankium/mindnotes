@@ -3288,6 +3288,22 @@ Razor页面：
 
 #### 8.3.1.1 项目结构
 
+```text
+ViewDataExample/
+├── appsettings.Development.json
+├── appsettings.json
+├── Controllers/
+│   └── HomeController.cs
+├── Program.cs
+├── Properties/
+│   └── launchSettings.json
+├── ViewDataExample.csproj
+└── Views/
+    └── Home/
+        └── Index.cshtml
+
+```
+
 #### 8.3.1.2 控制器
 
 ```C#
@@ -3330,9 +3346,30 @@ namespace ViewsExample.Controlers
 
 强类型视图是绑定到指定模型类的视图。它主要用于在视图中方便地访问**模型对象** 或 **模型集合**。
 
+![2026-05-27-23-50-16](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-27-23-50-16.png)
+
 #### 8.3.2.1 示例代码
 
 ##### 8.3.2.1.1 项目结构
+
+```text
+StrongTypedViewsExample/
+├── appsettings.Development.json
+├── appsettings.json
+├── Controllers/
+│   └── HomeController.cs
+├── Models/
+│   └── PersonModel.cs
+├── Program.cs
+├── Properties/
+│   └── launchSettings.json
+├── StrongTypedViewsExample.csproj
+├── StrongTypedViewsExample.csproj.user
+└── Views/
+    └── Home/
+        └── Index.cshtml
+
+```
 
 ##### 8.3.2.1.2 模型
 

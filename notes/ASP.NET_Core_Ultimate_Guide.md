@@ -3512,14 +3512,148 @@ return View(string ViewName,object Model);
 
 ### 8.3.3 共享视图
 
+如果你将视图放置在"Views"文件夹中的"Shared"文件夹里，那么该视图可以从整个应用程序的任何控制器中访问。这意味着该视图成为共享视图。
+
 ![2026-05-25-23-19-10](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-19-10.png)
 
 ![2026-05-25-23-19-32](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-19-32.png)
+
+共享视图的检索顺序
 
 ![2026-05-25-23-19-46](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-19-46.png)
 
 ![2026-05-25-23-20-05](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-20-05.png)
 
+#### 8.3.3.1 项目结构
+
+```text
+SharedViewsExample/
+├── appsettings.Development.json
+├── appsettings.json
+├── Controllers/
+│   ├── HomeController.cs
+│   └── ProductController.cs
+├── Program.cs
+├── Properties/
+│   └── launchSettings.json
+├── SharedViewsExample.csproj
+└── Views/
+    ├── Home/
+    │   └── Index.cshtml
+    ├── Product/
+    │   └── Index.cshtml
+    └── Shared/
+        └── All.cshtml
+```
+
+#### 8.3.3.2 控制器
+
+Controllers/HomeController.cs
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+
+namespace SharedViewsExample
+{
+    public class HomeController : Controller
+    {
+        [Route("/")]
+        [Route("Home")]
+        [Route("Home/Index")]
+        public ActionResult Index()
+        {
+            return View();
+        }
+
+        [Route("Home/All")]
+        public IActionResult All()
+        {
+            ViewBag.Title = "Home page";
+            return View();
+        }
+
+    }
+}
+
+```
+
+Controllers/ProductController.cs
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+
+namespace SharedViewsExample
+{
+    public class ProductController : Controller
+    {
+        [Route("Product")]
+        [Route("Product/Index")]
+        public ActionResult Index()
+        {
+            return View();
+        }
+
+        [Route("Product/All")]
+        public IActionResult All()
+        {
+            ViewBag.Title= "Product page";
+            return View();
+        }
+
+    }
+}
+
+```
+
+#### 8.3.3.3 视图
+
+Views/Home/Index.cshtml
+
+```HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ViewBag.Title</title>
+</head>
+<body>
+    <h1>All Products in home page</h1>
+</body>
+</html>
+```
+
+Views/Product/Index.cshtml
+
+```HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ViewBag.Title</title>
+</head>
+<body>
+    <h1>All Products in product page</h1>
+</body>
+</html>
+```
+
+Views/Shared/All.cshtml
+
+```HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ViewBag.Title</title>
+</head>
+<body>
+    <h1>All Products in shared page</h1>
+</body>
+</html>
+```
 
 ### 8.3.4 布局视图
 

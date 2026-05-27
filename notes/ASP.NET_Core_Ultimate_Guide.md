@@ -3286,16 +3286,144 @@ Razor页面：
 
 ### 8.3.1 页面视图
 
+#### 8.3.1.1 项目结构
+
+#### 8.3.1.2 控制器
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+
+namespace ViewsExample.Controlers
+{
+    public class HomeController : Controller
+    {
+        [Route("/")]
+        public IActionResult Index()
+        {
+            ViewData["Title"] = "ViewExample";
+            ViewData["CourseName"] = "Math";
+            return View();//Views/Home/Index.cshtml
+            // return View("abc");//Views/Home/abc.cshtml
+            // return new ViewResult() { ViewName = "Index" };
+        }
+    }
+}
+```
+
+#### 8.3.1.3 视图
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+</head>
+<body>
+    <h1>Course: @ViewBag.CourseName</h1>
+</body>
+</html>
+```
 
 ### 8.3.2 强类型视图
 
 强类型视图是绑定到指定模型类的视图。它主要用于在视图中方便地访问**模型对象** 或 **模型集合**。
 
-![2026-05-25-23-12-51](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-12-51.png)
-
 #### 8.3.2.1 示例代码
 
-#### 8.3.2.2 强类型视图的好处
+##### 8.3.2.1.1 项目结构
+
+##### 8.3.2.1.2 模型
+
+```C#
+namespace StrongTypedViewsExample.Models
+{
+    public class PersonModel
+    {
+        public string? Name { get; set; }
+        public DateTime DateOfBirth { get; set; }
+        public Gender Gender { get; set; }
+    }
+
+    public enum Gender
+    {
+        Male,
+        Female,
+        Unknow,
+    }
+}
+
+```
+
+##### 8.3.2.1.3 控制器
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+using StrongTypedViewsExample.Models;
+
+namespace StrongTypedViewsExample.Controllers
+{
+    public class HomeController : Controller
+    {
+        [Route("/")]
+        public IActionResult Index()
+        {
+            List<PersonModel> listPerson = new List<PersonModel>()
+            {
+                new PersonModel(){Name="John", DateOfBirth = new DateTime(1990, 1, 1), Gender =Gender.Male},
+                new PersonModel(){Name="Jane", DateOfBirth = new DateTime(1992, 2, 2), Gender=Gender.Unknow },
+                new PersonModel(){Name="Doe", DateOfBirth = new DateTime(1994, 3, 3), Gender=Gender.Female },
+            };
+            ViewData["Title"] = "StrongTypedViewsExample";
+            // Pass the list of PersonModel to the view
+            return View(listPerson);
+        }
+    }
+}
+
+```
+
+##### 8.2.3.1.4 视图
+
+```HTML
+@using StrongTypedViewsExample.Models
+@model List<PersonModel>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title</title>
+</head>
+<body>
+    <table border="1" align="center">
+        <tr>
+            <th>Name</th>
+            <th>DateOfBirth</th>
+            <th>Gender</th>
+        </tr>
+        @foreach (PersonModel item in Model)
+        {
+            <tr>
+                <td>@item.Name</td>
+                <td>@item.DateOfBirth.Year</td>
+                <td>@item.Gender</td>
+            </tr>
+        }
+    </table>
+</body>
+</html>
+```
+
+#### 8.3.2.2 包装模型
+
+![2026-05-25-23-12-51](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-12-51.png)
+
+在ASP.NET Core中，强类型视图只能绑定到单一模型。但有时确实需要在同一视图中访问来自多个模型的数据，此时可以创建一个包含多个模型数据的包装模型。
+
+#### 8.3.2.3 强类型视图的好处
 
 ![2026-05-25-23-13-11](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-13-11.png)
 
@@ -3307,7 +3435,7 @@ Razor页面：
 
 4. 在视图中可以轻松识别正在访问的模型。
 
-#### 8.3.2.3 控制器中调用视图的辅助方法
+#### 8.3.2.4 控制器中调用视图的辅助方法
 
 ![2026-05-25-23-13-37](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-13-37.png)
 
@@ -3342,6 +3470,8 @@ return View(string ViewName);
 // 视图名称是显式指定的，并且视图可以是强类型视图以接收所提供的模型对象。
 return View(string ViewName,object Model);
 ```
+
+
 
 ### 8.3.3 共享视图
 

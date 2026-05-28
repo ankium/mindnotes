@@ -3291,61 +3291,7 @@ Razor页面：
 
 ### 8.3.1 页面视图
 
-#### 8.3.1.1 项目结构
-
-```text
-ViewDataExample/
-├── appsettings.Development.json
-├── appsettings.json
-├── Controllers/
-│   └── HomeController.cs
-├── Program.cs
-├── Properties/
-│   └── launchSettings.json
-├── ViewDataExample.csproj
-└── Views/
-    └── Home/
-        └── Index.cshtml
-
-```
-
-#### 8.3.1.2 控制器
-
-```C#
-using Microsoft.AspNetCore.Mvc;
-
-namespace ViewsExample.Controlers
-{
-    public class HomeController : Controller
-    {
-        [Route("/")]
-        public IActionResult Index()
-        {
-            ViewData["Title"] = "ViewExample";
-            ViewData["CourseName"] = "Math";
-            return View();//Views/Home/Index.cshtml
-            // return View("abc");//Views/Home/abc.cshtml
-            // return new ViewResult() { ViewName = "Index" };
-        }
-    }
-}
-```
-
-#### 8.3.1.3 视图
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewData["Title"]</title>
-</head>
-<body>
-    <h1>Course: @ViewBag.CourseName</h1>
-</body>
-</html>
-```
+页面视图即控制器中的操作方法所对应的普通视图。
 
 ### 8.3.2 强类型视图
 
@@ -3353,119 +3299,13 @@ namespace ViewsExample.Controlers
 
 ![2026-05-27-23-50-16](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-27-23-50-16.png)
 
-#### 8.3.2.1 示例代码
-
-##### 8.3.2.1.1 项目结构
-
-```text
-StrongTypedViewsExample/
-├── appsettings.Development.json
-├── appsettings.json
-├── Controllers/
-│   └── HomeController.cs
-├── Models/
-│   └── PersonModel.cs
-├── Program.cs
-├── Properties/
-│   └── launchSettings.json
-├── StrongTypedViewsExample.csproj
-├── StrongTypedViewsExample.csproj.user
-└── Views/
-    └── Home/
-        └── Index.cshtml
-
-```
-
-##### 8.3.2.1.2 模型
-
-```C#
-namespace StrongTypedViewsExample.Models
-{
-    public class PersonModel
-    {
-        public string? Name { get; set; }
-        public DateTime DateOfBirth { get; set; }
-        public Gender Gender { get; set; }
-    }
-
-    public enum Gender
-    {
-        Male,
-        Female,
-        Unknow,
-    }
-}
-
-```
-
-##### 8.3.2.1.3 控制器
-
-```C#
-using Microsoft.AspNetCore.Mvc;
-using StrongTypedViewsExample.Models;
-
-namespace StrongTypedViewsExample.Controllers
-{
-    public class HomeController : Controller
-    {
-        [Route("/")]
-        public IActionResult Index()
-        {
-            List<PersonModel> listPerson = new List<PersonModel>()
-            {
-                new PersonModel(){Name="John", DateOfBirth = new DateTime(1990, 1, 1), Gender =Gender.Male},
-                new PersonModel(){Name="Jane", DateOfBirth = new DateTime(1992, 2, 2), Gender=Gender.Unknow },
-                new PersonModel(){Name="Doe", DateOfBirth = new DateTime(1994, 3, 3), Gender=Gender.Female },
-            };
-            ViewData["Title"] = "StrongTypedViewsExample";
-            // Pass the list of PersonModel to the view
-            return View(listPerson);
-        }
-    }
-}
-
-```
-
-##### 8.2.3.1.4 视图
-
-```HTML
-@using StrongTypedViewsExample.Models
-@model List<PersonModel>
-
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title</title>
-</head>
-<body>
-    <table border="1" align="center">
-        <tr>
-            <th>Name</th>
-            <th>DateOfBirth</th>
-            <th>Gender</th>
-        </tr>
-        @foreach (PersonModel item in Model)
-        {
-            <tr>
-                <td>@item.Name</td>
-                <td>@item.DateOfBirth.Year</td>
-                <td>@item.Gender</td>
-            </tr>
-        }
-    </table>
-</body>
-</html>
-```
-
-#### 8.3.2.2 包装模型
+#### 8.3.2.1 包装模型
 
 ![2026-05-25-23-12-51](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-12-51.png)
 
 在ASP.NET Core中，强类型视图只能绑定到单一模型。但有时确实需要在同一视图中访问来自多个模型的数据，此时可以创建一个包含多个模型数据的包装模型。
 
-#### 8.3.2.3 强类型视图的好处
+#### 8.3.2.2 强类型视图的好处
 
 ![2026-05-25-23-13-11](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-13-11.png)
 
@@ -3477,7 +3317,7 @@ namespace StrongTypedViewsExample.Controllers
 
 4. 在视图中可以轻松识别正在访问的模型。
 
-#### 8.3.2.4 控制器中调用视图的辅助方法
+#### 8.3.2.3 控制器中调用视图的辅助方法
 
 ![2026-05-25-23-13-37](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-13-37.png)
 
@@ -3513,174 +3353,333 @@ return View(string ViewName);
 return View(string ViewName,object Model);
 ```
 
-
-
 ### 8.3.3 共享视图
 
 如果你将视图放置在"Views"文件夹中的"Shared"文件夹里，那么该视图可以从整个应用程序的任何控制器中访问。这意味着该视图成为共享视图。
-
-
 
 ![2026-05-25-23-19-46](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-19-46.png)
 
 ![2026-05-25-23-20-05](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-20-05.png)
 
-#### 8.3.3.1 项目结构
-
-```text
-SharedViewsExample/
-├── appsettings.Development.json
-├── appsettings.json
-├── Controllers/
-│   ├── HomeController.cs
-│   └── ProductController.cs
-├── Program.cs
-├── Properties/
-│   └── launchSettings.json
-├── SharedViewsExample.csproj
-└── Views/
-    ├── Home/
-    │   └── Index.cshtml
-    ├── Product/
-    │   └── Index.cshtml
-    └── Shared/
-        └── All.cshtml
-```
-
-#### 8.3.3.2 控制器
-
-Controllers/HomeController.cs
-
-```C#
-using Microsoft.AspNetCore.Mvc;
-
-namespace SharedViewsExample
-{
-    public class HomeController : Controller
-    {
-        [Route("/")]
-        [Route("Home")]
-        [Route("Home/Index")]
-        public ActionResult Index()
-        {
-            return View();
-        }
-
-        [Route("Home/All")]
-        public IActionResult All()
-        {
-            ViewBag.Title = "Home page";
-            return View();
-        }
-
-    }
-}
-
-```
-
-Controllers/ProductController.cs
-
-```C#
-using Microsoft.AspNetCore.Mvc;
-
-namespace SharedViewsExample
-{
-    public class ProductController : Controller
-    {
-        [Route("Product")]
-        [Route("Product/Index")]
-        public ActionResult Index()
-        {
-            return View();
-        }
-
-        [Route("Product/All")]
-        public IActionResult All()
-        {
-            ViewBag.Title= "Product page";
-            return View();
-        }
-
-    }
-}
-
-```
-
-#### 8.3.3.3 视图
-
-Views/Home/Index.cshtml
-
-```HTML
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ViewBag.Title</title>
-</head>
-<body>
-    <h1>All Products in home page</h1>
-</body>
-</html>
-```
-
-Views/Product/Index.cshtml
-
-```HTML
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ViewBag.Title</title>
-</head>
-<body>
-    <h1>All Products in product page</h1>
-</body>
-</html>
-```
-
-Views/Shared/All.cshtml
-
-```HTML
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ViewBag.Title</title>
-</head>
-<body>
-    <h1>All Products in shared page</h1>
-</body>
-</html>
-```
-
 ### 8.3.4 布局视图
 
 ![2026-05-25-23-23-25](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-23-25.png)
+
+在ASP.NET Core中，布局视图是一个负责包含所有视图共用的呈现逻辑的网页。常见于页眉、页脚、侧边栏等。共用内容被放置在布局视图中，并在每个视图中重复使用。建议为所有布局视图添加下划线前缀（区分普通视图），并建议将它们放置在Views的Shared文件夹中（因为Shared文件夹中存在的任何视图都变为全局公共的，这意味着在整个项目中从任何视图全局可访问）。
+
+#### 8.3.4.1 调用布局视图
+
+@RenderBody：RenderBody是一个特殊方法，只能在布局视图内部使用，用于表示视图的实际内容。
+
+#### 8.3.4.2 布局视图中的ViewData
 
 ![2026-05-25-23-23-49](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-23-49.png)
 
 ![2026-05-25-23-24-04](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-24-04.png)
 
+@ViewData：考虑到视图的调用顺序一般为_ViewImport.cshtml-_ViewStart.cshtml-View.cshtml-_Layout.cshtml，因此ViewData值的传递顺序为控制器——视图——布局视图。
+
+#### 8.3.4.3 动态布局视图
+
+动态布局视图本质是根据条件判断调用哪个布局视图。
+
+```C#
+@{
+ ViewData["Title"] = "Search Products";
+ if (ViewBag.ProductID != null)
+ {
+     Layout = "~/Views/Shared/_ProductsLayout.cshtml";
+ }
+}
+```
+
+#### 8.3.4.4 布局视图区域
+
+- 定义布局视图区域
+
+```C#
+@section footer_section
+{
+    <p>Contact support: 98348734873984734</p>
+}
+```
+- 渲染布局视图区域
+
+```C#
+@RenderSection("footer_section", false)
+```
+@RenderSection：在布局页面中，呈现名为 footer_section 的区段的内容。
+
 ![2026-05-25-23-24-45](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-24-45.png)
+
+#### 8.3.4.5 嵌套布局视图
+
+嵌套布局视图的含义是将一个布局视图应用于另一个布局视图。如布局视图_LayoutA.cshtml和布局视图_LayoutB.cshtml共享应用了主布局视图_MasterLayout.cshtml，此时可以通过如下代码在布局视图_LayoutA.cshtml和布局视图_LayoutB.cshtml中指定主布局视图：
+
+```C#
+@{
+    Layout="~/Views/Shared/_MasterLayout.cshtml";
+}
+```
 
 ![2026-05-25-23-24-58](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-24-58.png)
 
 ### 8.3.5 部分视图
 
+部分视图是一个无法由控制器单独调用的 Razor 标记文件（.cshtml），但可以在同一 Web 应用程序中的任何视图中的任何位置调用多次。建议为所有部分视图添加下划线前缀（区分普通视图），并建议将它们放置在Views的Shared文件夹中（因为Shared文件夹中存在的任何视图都变为全局公共的，这意味着在整个项目中从任何视图全局可访问）。
+
 ![2026-05-25-23-25-54](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-25-54.png)
+
+
+#### 8.3.5.1 调用部分视图
 
 ![2026-05-25-23-26-31](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-26-31.png)
 
+我们在创建部分视图(部分视图也是一个视图)后，可以通过以下三种方式调用部分视图：
+
+- 方法1:返回内容（以IHtmlContent形式返回HTML内容）到父视图（在运行时，部分视图的内容将成为上级调用视图的一部分），可用变量接收返回内容。
+
+```HTML
+@addTagHelper "*, Microsoft.AspNetCore.Mvc.TagHelpers"
+
+<partial name="partial view name" />
+```
+
+- 方法2:返回内容（以IHtmlContent形式返回HTML内容）到父视图（在运行时，部分视图的内容将成为上级调用视图的一部分），可用变量接收返回内容。
+
+```C#
+@addTagHelper "*, Microsoft.AspNetCore.Mvc.TagHelpers"
+
+@await Html.PartialAsync("partial view name")
+```
+
+- 方法3:RenderPartialAsync方法应该在代码块中调用，但它不是将部分视图的内容返回到父视图，而是直接将内容流式传输到浏览器。对于大规模代码中的性能优化，建议使用RenderPartialAsync方式以调用部分视图，但其返回类型为Void，不可用变量接收返回内容。
+
+```C#
+@addTagHelper "*, Microsoft.AspNetCore.Mvc.TagHelpers"
+
+@{
+    await Html.RenderPartialAsync("partial view name");
+}
+```
+
+#### 8.3.5.2 带有ViewData的部分视图
+
+- 提供默认ViewData对象
+
 ![2026-05-25-23-26-45](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-26-45.png)
+
+调用部分视图时，可以使用ViewData对象从视图向部分视图提供数据（类似从控制器向视图传递数据），不同的是，**在视图中调用分部视图时，ASP.NET Core 会自动将现有ViewData对象的副本提供给部分视图**。这意味着修改部分视图中的ViewData对象内容，只会影响该部分视图本身，不会影响父视图的中ViewData对象。
+
+- 提供特定ViewData对象
 
 ![2026-05-25-23-27-03](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-27-03.png)
 
+除了提供默认ViewData对象外，还可以在调用部分视图时提供自定义的ViewDataDictionary对象（ViewData的父类），而不是将完整的默认ViewData对象发送到部分视图。
+
+```C#
+@addTagHelper "*, Microsoft.AspNetCore.Mvc.TagHelpers"
+
+@{
+ ViewDataDictionary? myViewData = new ViewDataDictionary(ViewData);
+
+ myViewData["ListTitle"] = "Countries";
+ myViewData["ListItems"] = new List<string>() {
+        "China",
+        "Canada",
+        "USA",
+        "Germany",
+        "India"
+      };
+}
+
+@* Render partial view with ViewData *@
+<div class="box">
+ <partial name="_ListPartialView" view-data="myViewData" />
+</div>
+
+@* Alternative way to render partial view *@
+@{
+ await Html.RenderPartialAsync("_ListPartialView", myViewData);
+}
+```
+
+
+#### 8.3.5.3 强类型部分视图
+
 ![2026-05-25-23-27-32](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-27-32.png)
 
+强类型部分视图是绑定到指定模型类的部分视图。因此，它能够获得强类型视图的所有优点。这意味着，部分视图与特定的模型类或者模型类列表紧密耦合，以便它可以在运行时接收模型类的对象。
+
+- partial标签助手
+
+```C#
+@using PartialViewsExample.Models
+
+<h1>Home</h1>
+
+@{
+    ListModel listModel = new ListModel();
+    listModel.ListTitle = "Countries";
+    listModel.ListItems = new List<string>()
+    {
+    "USA",
+    "Canada",
+    "Japan",
+    "Germany",
+    "India"
+    };
+}
+<partial name="_ListPartialView" model="listModel"></partial>
+
+```
+
+- RenderPartialAsync方法
+
+```C#
+@using PartialViewsExample.Models
+
+<h1>About</h1>
+
+@{
+    ListModel listModel = new ListModel();
+    listModel.ListTitle = "Programming Languages";
+    listModel.ListItems = new List<string>()
+    {
+    "Java",
+    "C#",
+    "Python"
+    };
+    @* 调用部分视图，传递模型 *@
+    await Html.RenderPartialAsync("_ListPartialView", listModel);
+}
+
+```
+
+#### 8.3.5.4 部分视图结果 PartialViewResult
+
 ![2026-05-25-23-27-56](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-27-56.png)
+
+通常，从控制器返回部分视图以响应来自浏览器的异步请求。PartialViewResult 可以表示部分视图的内容。通常用于通过浏览器发起异步请求（XMLHttpRequest / fetch 请求）将部分视图的内容获取到浏览器中。当你想从服务器加载额外内容或附加内容时，可以使用此技术。
+
+- 模型
+
+```C#
+namespace PartialViewsExample.Models
+{
+ public class ListModel
+ {
+    public string ListTitle { get; set; } = "";
+    public List<string> ListItems { get; set; } = new List<string>();
+ }
+}
+
+```
+
+- 控制器
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+using PartialViewsExample.Models;
+
+namespace PartialViewsExample.Controllers
+{
+  public class HomeController : Controller
+  {
+    [Route("/")]
+    public IActionResult Index()
+    {
+      return View();
+    }
+
+    [Route("programming-languages")]
+    public IActionResult ProgrammingLanguages()
+    {
+      ListModel listModel = new ListModel() {
+        ListTitle = "Programming Languages List",
+        ListItems = new List<string>() { 
+          "Python",
+          "C#",
+          "Go"
+        }
+      };
+
+      return PartialView("_ListPartialView", listModel);
+    }
+  }
+}
+
+```
+
+- 视图
+
+```C#
+@{
+ Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Home</h1>
+
+<button class="button button-blue-back" type="button" id="button-load">Load Programming Languages</button>
+
+<div class="box programming-languages-content">
+
+</div>
+
+<script>
+    document.querySelector("#button-load").addEventListener("click", async function() {
+       var response = await fetch("programming-languages");
+       var languages = await response.text();
+       document.querySelector(".programming-languages-content").innerHTML = languages;
+    });
+</script>
+```
+
+- 部分视图
+
+```C#
+@using PartialViewsExample.Models
+@model ListModel
+
+<div class="list-container">
+ <h3>@Model.ListTitle</h3>
+ <ul class="list">
+  @foreach (string item in Model.ListItems)
+  {
+   <li>@item</li>
+  }
+ </ul>
+</div>
+```
+
+- 布局视图
+
+```C#
+<!DOCTYPE html>
+
+<html>
+<head>
+ <meta name="viewport" content="width=device-width" />
+ <title>@ViewBag.Title</title>
+ <link href="~/StyleSheet.css" rel="stylesheet" />
+</head>
+<body>
+ <div class="container">
+  <div class="navbar">
+   <div class="navbar-brand">Asp.Net Core Demo App</div>
+   <ul>
+    <li><a href="~/">Home</a></li>
+    <li><a href="~/about">About</a></li>
+   </ul>
+  </div>
+ </div>
+ <div class="page-content">
+  @RenderBody()
+ </div>
+</body>
+</html>
+
+```
 
 ### 8.3.6 视图组件
 

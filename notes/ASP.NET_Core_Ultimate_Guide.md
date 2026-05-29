@@ -4278,3 +4278,49 @@ namespace ViewComponentsExample.ViewComponents
 </script>
 
 ```
+
+# 第9章 依赖注入 Dependency Injection
+
+## 9.1 服务
+
+业务逻辑：与实际客户业务特定领域相关的逻辑被称为业务逻辑，也称为业务模型，它包括业务计算、业务验证以及调用数据层，通常将其放置在服务中（服务不等于数据层，数据层是一个单独的层或单独的类，我们经常在服务中调用它）。简而言之，在表现层和数据层之间，我们想要执行的与客户业务领域相关的任何流程，都被称为业务逻辑。
+
+![2026-05-29-23-39-05](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-29-23-39-05.png)
+
+服务：从定义上讲，服务是数据层或者领域与表现层之间的抽象层。在服务的下方，有数据访问或实际领域，在服务的上方，有表现层（包括控制器、视图和相应的模型）。
+
+![2026-05-29-23-39-58](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-29-23-39-58.png)
+
+通常情况下，业务逻辑是在控制器中调用（直接在控制器中编写业务逻辑不是良好的编程实践），且应该使用一个称为服务类的单独类（这更有利于单元测试）。至于服务类，你可以将其放置在同一个Web应用程序中，也可以将其分离到一个单独的类为库中（推荐做法）。
+
+## 9.2 依赖倒置原则
+
+![2026-05-30-00-11-09](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-30-00-11-09.png)
+
+![2026-05-30-00-11-22](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-30-00-11-22.png)
+
+![2026-05-30-00-11-38](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-30-00-11-38.png)
+
+![2026-05-30-00-11-58](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-30-00-11-58.png)
+
+![2026-05-30-00-12-10](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-30-00-12-10.png)
+
+![2026-05-30-00-12-24](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-30-00-12-24.png)
+
+## 9.3 控制反转
+
+## 9.4 依赖注入
+
+## 9.5 方法注入
+
+## 9.6 Transient、Scoped、Singleton
+
+## 9.7 服务范围
+
+## 9.8 AddTransient()、AddScoped()、AddSingleton()
+
+## 9.9 视图注入
+
+## 9.10 DI最佳实践
+
+## 9.11 Autofac

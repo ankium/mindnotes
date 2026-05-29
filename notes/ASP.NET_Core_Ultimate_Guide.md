@@ -3431,7 +3431,7 @@ return View(string ViewName,object Model);
 ![2026-05-25-23-25-54](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-25-54.png)
 
 
-#### 8.3.5.1 调用部分视图
+#### 8.3.5.1 创建并调用部分视图
 
 ![2026-05-25-23-26-31](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-26-31.png)
 
@@ -3562,7 +3562,7 @@ return View(string ViewName,object Model);
 
 通常，从控制器返回部分视图以响应来自浏览器的异步请求。PartialViewResult 可以表示部分视图的内容。通常用于通过浏览器发起异步请求（XMLHttpRequest / fetch 请求）将部分视图的内容获取到浏览器中。当你想从服务器加载额外内容或附加内容时，可以使用此技术。
 
-- 模型
+- 模型ListModel
 
 ```C#
 namespace PartialViewsExample.Models
@@ -3576,7 +3576,7 @@ namespace PartialViewsExample.Models
 
 ```
 
-- 控制器
+- 控制器HomeController
 
 ```C#
 using Microsoft.AspNetCore.Mvc;
@@ -3611,7 +3611,24 @@ namespace PartialViewsExample.Controllers
 
 ```
 
-- 视图
+- 部分视图_ListPartialView.cshtml
+
+```C#
+@using PartialViewsExample.Models
+@model ListModel
+
+<div class="list-container">
+ <h3>@Model.ListTitle</h3>
+ <ul class="list">
+  @foreach (string item in Model.ListItems)
+  {
+   <li>@item</li>
+  }
+ </ul>
+</div>
+```
+
+- 按需请求并加载部分视图的普通视图Index.cshtml
 
 ```C#
 @{
@@ -3635,24 +3652,7 @@ namespace PartialViewsExample.Controllers
 </script>
 ```
 
-- 部分视图
-
-```C#
-@using PartialViewsExample.Models
-@model ListModel
-
-<div class="list-container">
- <h3>@Model.ListTitle</h3>
- <ul class="list">
-  @foreach (string item in Model.ListItems)
-  {
-   <li>@item</li>
-  }
- </ul>
-</div>
-```
-
-- 布局视图
+- 布局视图_Layout.cshtml
 
 ```C#
 <!DOCTYPE html>
@@ -3683,22 +3683,598 @@ namespace PartialViewsExample.Controllers
 
 ### 8.3.6 视图组件
 
+部分视图仅涉及UI渲染，意味着在部分视图中放置一些可重用的HTML代码，即呈现逻辑，可以随时调用。但当你想将一些额外的编程逻辑与UI逻辑合并时，视图组件就是你的选择。你可以通过@await Component.InvokeAsync(“view component name”)方法在任何其他视图中的任何位置调用视图组件。
+
 ![2026-05-25-23-29-52](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-29-52.png)
+
+- 定义方式：通过继承 ViewComponent 类以定义视图组件类，必须实现InvokeAsync("组件名")方法。就像控制器类通常以Controller后缀名结尾一样，视图组件类通常以ViewComponent名称结尾或者应用[ViewComponent]特性，二者必选其一。
+
+- 文件结构：视图组件类通常放置在 ViewComponents 文件夹中，与之对应的部分视图通常放在 Views/Shared/Components/组件名/Default.cshtml 或 Views/控制器名/Components/组件名/Default.cshtml
+
+- 优势：可复用、独立、易于测试和维护
+
+#### 8.3.6.1 创建并调用视图组件
 
 ![2026-05-25-23-30-07](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-30-07.png)
 
 ![2026-05-25-23-30-20](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-30-20.png)
 
+- 创建视图组件类GridViewComponent.cs
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+
+namespace ViewComponentsExample.ViewComponents
+{
+  public class GridViewComponent : ViewComponent
+  {
+    public async Task<IViewComponentResult> InvokeAsync()
+    {
+      // invoked a partial view Views/Shared/Components/Grid/Default.cshtml
+      // 视图组件对应的部分视图的默认名称是Default.cshtml，如果修改了相应部分视图的名称，则在调用视图组件时需要特定指定
+      return View("Sample"); 
+    }
+  }
+}
+
+```
+
+- 创建视图组件对应的部分视图Sample.cshtml
+
+```C#
+<div class="box">
+    <h3>Grid</h3>
+    <table class="table w-100">
+        <thead>
+            <tr>
+                <th>Sl. No</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>One</td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td>Two</td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+```
+
+- 调用视图组件的普通视图Index.cshtml
+
+```C#
+@addTagHelper "*, Microsoft.AspNetCore.Mvc.TagHelpers"
+@addTagHelper "*, ViewComponentsExample"
+
+@* Invoke the Grid view component *@
+@await Component.InvokeAsync("Grid")
+
+@* Invoke the Grid view component using tag helper *@
+<vc:grid />
+
+```
+
+#### 8.3.6.2 带有ViewData的视图组件
+
+视图组件类可以将 ViewData 对象共享给与之对应的部分视图（也称为视图组件视图），但该ViewData对象独立于控制器和普通视图的ViewData对象（原理相同，对象数据不同）
+
 ![2026-05-25-23-30-41](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-30-41.png)
 
+- 模型类PersonGridModel.cs
+
+```C#
+namespace ViewComponentsExample.Models
+{
+  public class Person
+  {
+    public string? PersonName { get; set; }
+    public string? JobTitle { get; set; }
+  }
+
+  public class PersonGridModel
+  {
+    public string GridTitle { get; set; } = string.Empty;
+    public List<Person> Persons { get; set; } = new List<Person>();
+  }
+}
+
+```
+
+- 控制器类HomeController.cs
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+
+namespace ViewComponentsExample.Controllers
+{
+  public class HomeController : Controller
+  {
+    [Route("/")]
+    public IActionResult Index()
+    {
+      return View();
+    }
+  }
+}
+
+```
+
+- 视图组件类GridViewComponent.cs
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+using ViewComponentsExample.Models;
+
+namespace ViewComponentsExample.ViewComponents
+{
+  public class GridViewComponent : ViewComponent
+  {
+    public async Task<IViewComponentResult> InvokeAsync()
+    {
+      PersonGridModel personGridModel = new PersonGridModel()
+      {
+        GridTitle = "Persons List",
+        Persons = new List<Person>() {
+          new Person() { PersonName = "John", JobTitle = "Manager" },
+          new Person() { PersonName = "Jones", JobTitle = "Asst. Manager" },
+          new Person() { PersonName = "William", JobTitle = "Clerk" },
+        }
+      };
+      ViewData["Grid"] = personGridModel;
+      return View("Sample"); //invoked a partial view Views/Shared/Components/Grid/Sample.cshtml
+    }
+  }
+}
+
+```
+
+- 视图组件对应的部分视图Sample.cshtml
+
+```C#
+@using ViewComponentsExample.Models
+
+<div class="box">
+    <h3>@ViewBag.Grid.GridTitle</h3>
+    <table class="table w-100">
+        <thead>
+            <tr>
+                <th>Sl. No</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (Person person in ViewBag.Grid.Persons)
+            {
+                <tr>
+                    <td>@person.PersonName</td>
+                    <td>@person.JobTitle</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+```
+
+- 调用视图组件的普通视图Index.cshtml
+
+```C#
+
+@addTagHelper "*, Microsoft.AspNetCore.Mvc.TagHelpers"
+@addTagHelper "*, ViewComponentsExample"
+
+<h1>Home</h1>
+
+@* Invoke the Grid view component *@
+@await Component.InvokeAsync("Grid")
+
+@* Invoke the Grid view component using tag helper *@
+<vc:grid />
+
+```
+
+#### 8.3.6.3 强类型视图组件
+
 ![2026-05-25-23-31-11](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-31-11.png)
+
+正如你可以将视图或部分视图设置为与特定模型类绑定的强类型视图一样，你也可以将视图组件设置为强类型视图组件（本质是视图组件对应的部分视图与特定模型类紧密绑定），以便视图组件类可以向相应的部分视图提供模型对象，然后视图组件的部分视图接收模型对象并在UI中打印它。如果你想向视图组件的部分视图传递一个模型对象，可以使用强类型视图组件它，但如果传递的松散的字符串或者整数，则可以使用ViewData或者ViewBag。
+
+- 模型类PersonGridModel.cs
+
+```C#
+namespace ViewComponentsExample.Models
+{
+  public class Person
+  {
+    public string? PersonName { get; set; }
+    public string? JobTitle { get; set; }
+  }
+
+  public class PersonGridModel
+  {
+    public string GridTitle { get; set; } = string.Empty;
+    public List<Person> Persons { get; set; } = new List<Person>();
+  }
+}
+
+```
+
+- 控制器类HomeController.cs
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+
+namespace ViewComponentsExample.Controllers
+{
+  public class HomeController : Controller
+  {
+    [Route("/")]
+    public IActionResult Index()
+    {
+      return View();
+    }
+  }
+}
+
+```
+
+- 视图组件类GridViewComponent.cs
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+using ViewComponentsExample.Models;
+
+namespace ViewComponentsExample.ViewComponents
+{
+  public class GridViewComponent : ViewComponent
+  {
+    public async Task<IViewComponentResult> InvokeAsync()
+    {
+      PersonGridModel personGridModel = new PersonGridModel()
+      {
+        GridTitle = "Persons List",
+        Persons = new List<Person>() {
+          new Person() { PersonName = "John", JobTitle = "Manager" },
+          new Person() { PersonName = "Jones", JobTitle = "Asst. Manager" },
+          new Person() { PersonName = "William", JobTitle = "Clerk" },
+        }
+      };
+      // 使用模型对象替代ViewData
+      return View("Sample", personGridModel); //invoked a partial view Views/Shared/Components/Grid/Default.cshtml
+    }
+  }
+}
+
+```
+
+- 视图组件对应的部分视图Sample.cshtml
+
+```C#
+@using ViewComponentsExample.Models
+@model PersonGridModel
+
+<div class="box">
+    <h3>@Model.GridTitle</h3>
+    <table class="table w-100">
+        <thead>
+            <tr>
+                <th>Sl. No</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (Person person in Model.Persons)
+            {
+                <tr>
+                    <td>@person.PersonName</td>
+                    <td>@person.JobTitle</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+```
+
+- 调用视图组件的普通视图Index.cshtml
+
+```C#
+
+@addTagHelper "*, Microsoft.AspNetCore.Mvc.TagHelpers"
+@addTagHelper "*, ViewComponentsExample"
+
+<h1>Home</h1>
+
+@* Invoke the Grid view component *@
+@await Component.InvokeAsync("Grid")
+
+@* Invoke the Grid view component using tag helper *@
+<vc:grid />
+
+```
+
+#### 8.3.6.4 带参数的视图组件
 
 ![2026-05-25-23-31-23](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-31-23.png)
 
 ![2026-05-25-23-31-45](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-31-45.png)
 
+在父视图中通过@await Component.InvokeAsync("view component name",new {param1=value1,param2=valu2,...})调用视图组件时，可以提供一个或多个参数，这些参数可以被视图组件的InvokeAsync方法接收，以进一步传递到视图组件对应的部分视图中予以打印或显示。
+
+- 模型类PersonGridModel.cs
+
+```C#
+namespace ViewComponentsExample.Models
+{
+  public class Person
+  {
+    public string? PersonName { get; set; }
+    public string? JobTitle { get; set; }
+  }
+
+  public class PersonGridModel
+  {
+    public string GridTitle { get; set; } = string.Empty;
+    public List<Person> Persons { get; set; } = new List<Person>();
+  }
+}
+
+```
+
+- 控制器HomeController.cs
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+
+namespace ViewComponentsExample.Controllers
+{
+  public class HomeController : Controller
+  {
+    [Route("/")]
+    public IActionResult Index()
+    {
+      return View();
+    }
+  }
+}
+
+```
+
+- 视图组件类GridViewComponent
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+using ViewComponentsExample.Models;
+
+namespace ViewComponentsExample.ViewComponents
+{
+  public class GridViewComponent : ViewComponent
+  {
+    public async Task<IViewComponentResult> InvokeAsync(PersonGridModel grid)
+    {
+      return View("Sample", grid); //invokes a partial view Views/Shared/Components/Grid/Sample.cshtml
+    }
+  }
+}
+
+```
+
+- 视图组件对应的部分视图Sample.cshtml
+
+```C#
+@using ViewComponentsExample.Models
+@model PersonGridModel
+
+<div class="box">
+    <h3>@Model.GridTitle</h3>
+    <table class="table w-100">
+        <thead>
+            <tr>
+                <th>Sl. No</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (Person person in Model.Persons)
+            {
+                <tr>
+                    <td>@person.PersonName</td>
+                    <td>@person.JobTitle</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+```
+
+- 调用视图组件并传递参数的普通视图Index.cshtml
+
+```C#
+
+@addTagHelper "*, Microsoft.AspNetCore.Mvc.TagHelpers"
+@addTagHelper "*, ViewComponentsExample"
+@using ViewComponentsExample.Models
+
+@{
+   ViewBag.Title = "Home";
+}
+
+<h1>Home</h1>
+@{
+   PersonGridModel personGridModel = new PersonGridModel()
+   {
+      GridTitle = "Persons",
+      Persons = new List<Person>()
+        {
+            new Person() { PersonName = "John", JobTitle = "Manager" },
+            new Person() { PersonName = "Jones", JobTitle = "Asst. Manager" },
+            new Person() { PersonName = "William", JobTitle = "Clerk" }
+        }
+   };
+}
+
+@* Invoke the Grid view component *@
+@await Component.InvokeAsync("Grid", new
+{
+   grid = personGridModel
+})
+
+@{
+    PersonGridModel personGridModel2 = new PersonGridModel()
+    {
+        GridTitle = "Employees",
+        Persons = new List<Person>()
+        {
+            new Person() { PersonName = "Sarath", JobTitle = "Developer" },
+            new Person() { PersonName = "Srinivas", JobTitle = "UI Developer" },
+            new Person() { PersonName = "Varun", JobTitle = "Analyst" }
+        }
+    };
+}
+
+@* Invoke the Grid view component using tag helper *@
+<vc:grid grid="personGridModel2" />
+
+```
+
+#### 8.3.6.5 视图组件结果 ViewComponentResult
+
 ![2026-05-25-23-31-58](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-25-23-31-58.png)
 
-- 定义方式：通过继承 ViewComponent 类，或使用 @await Component.InvokeAsync("组件名")
-- 文件结构：通常放在 Views/Shared/Components/组件名/Default.cshtml 或 Views/控制器名/Components/组件名/Default.cshtml
-- 优势：可复用、独立、易于测试和维护
+和部分视图结果类似，有时你希望通过JavaScript异步请求以编程方式按需调用并加载视图组件，这可以通过从控制器操作方法返回视图组件结果来实现。在实际项目中，当你想按需加载某些内容（而非打开页面时加载），可以使用此技术。
+
+执行流程是：1浏览器发出异步请求；2对应请求URL的控制器操作方法执行；3操作方法调用视图组件(根据需求传递参数)；4视图组件接收参数并执行；5视图组件将数据共享至其对应的部分视图；6部分视图渲染UI后作为响应体返回到浏览器；6浏览器在相同现有视图中的某处显示它。
+
+- 模型类PersonGridModel.cs
+
+```C#
+namespace ViewComponentsExample.Models
+{
+  public class Person
+  {
+    public string? PersonName { get; set; }
+    public string? JobTitle { get; set; }
+  }
+
+  public class PersonGridModel
+  {
+    public string GridTitle { get; set; } = string.Empty;
+    public List<Person> Persons { get; set; } = new List<Person>();
+  }
+}
+
+```
+
+- 控制器HomeController.cs
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+using ViewComponentsExample.Models;
+
+namespace ViewComponentsExample.Controllers
+{
+  public class HomeController : Controller
+  {
+    [Route("/")]
+    public IActionResult Index()
+    {
+      return View();
+    }
+
+    [Route("friends-list")]
+    public IActionResult LoadFriendsList()
+    {
+      PersonGridModel personGridModel = new PersonGridModel()
+      {
+        GridTitle = "Friends",
+        Persons = new List<Person>()
+        {
+            new Person() { PersonName = "Mia", JobTitle = "Developer" },
+            new Person() { PersonName = "Emma", JobTitle = "UI Designer" },
+            new Person() { PersonName = "Avva", JobTitle = "QA" }
+        }
+      };
+
+      return ViewComponent("Grid", new { grid = personGridModel });
+    }
+  }
+}
+
+```
+
+- 视图组件类GridViewComponent
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+using ViewComponentsExample.Models;
+
+namespace ViewComponentsExample.ViewComponents
+{
+  public class GridViewComponent : ViewComponent
+  {
+    public async Task<IViewComponentResult> InvokeAsync(PersonGridModel grid)
+    {
+      return View("Sample", grid); //invokes a partial view Views/Shared/Components/Grid/Sample.cshtml
+    }
+  }
+}
+
+```
+
+- 视图组件对应的部分视图Sample.cshtml
+
+```C#
+@using ViewComponentsExample.Models
+@model PersonGridModel
+
+<div class="box">
+    <h3>@Model.GridTitle</h3>
+    <table class="table w-100">
+        <thead>
+            <tr>
+                <th>Sl. No</th>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (Person person in Model.Persons)
+            {
+                <tr>
+                    <td>@person.PersonName</td>
+                    <td>@person.JobTitle</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+```
+
+- 按需请求并调用视图组件的普通视图Index.cshtml
+
+```C#
+@{
+    ViewBag.Title = "Home";
+}
+
+<h1>Home</h1>
+
+<button class="button button-blue-back" id="load-friends-button">Load Friends</button>
+
+<div id="list">
+
+</div>
+<script>
+    document.querySelector("#load-friends-button").addEventListener("click", async function () {
+        var response = await fetch("friends-list", { method: "GET" });
+        var responseBody = await response.text();
+        document.querySelector("#list").innerHTML = responseBody;
+    });
+</script>
+
+```

@@ -4281,7 +4281,15 @@ namespace ViewComponentsExample.ViewComponents
 
 # 第9章 依赖注入 Dependency Injection
 
-## 9.1 服务
+- DIP 是一个设计原则，它决定了如何设计系统结构。
+
+- IoC 是一个架构思想，它描述了程序控制流程的转移。
+
+- DI 是一个实现方式，用于实现 IoC 的具体手段。
+
+> DI 是实现 IoC 的一种方式，而 DIP 是指导我们如何设计代码的更高层次原则。
+
+## 9.1 服务 Services
 
 业务逻辑：与实际客户业务特定领域相关的逻辑被称为业务逻辑，也称为业务模型，它包括业务计算、业务验证以及调用数据层，通常将其放置在服务中（服务不等于数据层，数据层是一个单独的层或单独的类，我们经常在服务中调用它）。简而言之，在表现层和数据层之间，我们想要执行的与客户业务领域相关的任何流程，都被称为业务逻辑。
 
@@ -4293,7 +4301,19 @@ namespace ViewComponentsExample.ViewComponents
 
 通常情况下，业务逻辑是在控制器中调用（直接在控制器中编写业务逻辑不是良好的编程实践），且应该使用一个称为服务类的单独类（这更有利于单元测试）。至于服务类，你可以将其放置在同一个Web应用程序中，也可以将其分离到一个单独的类为库中（推荐做法）。
 
-## 9.2 依赖倒置原则
+## 9.2 依赖倒置原则（Dependency Inversion Principle, DIP）
+
+### 9.2.1 直接依赖
+
+依赖问题：高层模块依赖底层模块，这意味着两者之间耦合紧密。
+
+- 开发更高层模块的开发者应等到开发更低层模块的开发完成后。
+
+- 下层模块的任何更改都会影响上层模块的变化。
+
+- 需要大量代码更改才能替换为其他低层模块。
+
+- 难以测试单个模块，而不会影响或测试其他模块。
 
 ![2026-05-30-00-11-09](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-30-00-11-09.png)
 
@@ -4301,26 +4321,255 @@ namespace ViewComponentsExample.ViewComponents
 
 ![2026-05-30-00-11-38](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-30-00-11-38.png)
 
+
+### 9.2.2 依赖倒置
+
+**依赖倒置原则(DIP)** 是面向对象设计中 SOLID 原则之一，它主张：
+
+- 高层模块不应依赖于低层模块；
+
+- 两者都应该依赖于抽象（接口或抽象类）。
+
 ![2026-05-30-00-11-58](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-30-00-11-58.png)
 
 ![2026-05-30-00-12-10](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-30-00-12-10.png)
 
 ![2026-05-30-00-12-24](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-30-00-12-24.png)
 
-## 9.3 控制反转
+## 9.3 控制反转（Inversion of Control, IoC）
 
-## 9.4 依赖注入
+**控制反转（IOC）** 是一种设计模式，它的核心思想是：控制流程的职责从应用程序转移到框架或容器。
 
-## 9.5 方法注入
+换句话说，控制流程（比如对象的创建、生命周期、调用）不再由程序员手动控制，而是交给某个外部框架或容器（如 ASP.NET Core 的 DI 容器）来管理。
+
+![2026-06-01-21-49-58](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-01-21-49-58.png)
+
+![2026-06-01-21-50-11](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-01-21-50-11.png)
+
+![2026-06-01-21-50-23](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-01-21-50-23.png)
+
+## 9.4 依赖注入（Dependency Injection, DI）
+
+**依赖注入(DI)** 是一种实现控制反转的具体方式。
+
+它的核心思想是：将对象的依赖项通过参数传递进来，而不是在对象内部硬编码。
+
+依赖注入是一种设计模式，它让对象创建它的依赖项由外部提供，而不是自己创建。这使得对象更加灵活、可测试，并且更容易解耦。
+
+![2026-06-01-21-59-13](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-01-21-59-13.png)
+
+![2026-06-01-21-59-30](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-01-21-59-30.png)
+
+![2026-06-01-21-59-41](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-01-21-59-41.png)
+
+![2026-06-01-21-59-54](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-01-21-59-54.png)
+
+## 9.5 方法注入 FromServices
+
+在 ASP.NET Core 中：
+
+DIP：我们通过定义接口（如 IUserService）来实现它。
+
+IoC：ASP.NET Core 使用内置的 IoC 容器来管理对象的生命周期和创建。
+
+DI：我们使用 依赖注入（Constructor Injection） 来将依赖项传入 Controller 或 Services。
+
+依赖注入可以选择构造函数注入（更正式和常见），也可以选择方法注入（使用不多）。假设我认为服务实例仅对特定方法需要，而非同一类的所有方法，在这种情况下，我们可以将服务注入到特定方法中。
+
+![2026-06-01-22-11-40](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-01-22-11-40.png)
 
 ## 9.6 Transient、Scoped、Singleton
 
-## 9.7 服务范围
+依赖注入中的服务生命周期表示该服务对象应在何时创建以及IOC容器应在何时销毁该对象（在依赖注入中，IOC容器或DI容器负责创建服务对象以及释放它们）。在 ASP.NET Core 的依赖注入（DI）系统中，Transient、Scoped、Singleton 是三种常见的服务生命周期（Service Lifetime），用来控制注册的服务在何处创建和销毁。
+
+![2026-06-01-22-23-31](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-01-22-23-31.png)
+
+![2026-06-01-22-23-43](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-01-22-23-43.png)
+
+![2026-06-01-22-23-54](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-01-22-23-54.png)
+
+## 9.7 服务范围 Service Scope
+
+默认情况下，每当应用程序运行，ASP.NET Core中会自动创建一个**根作用域**，并且对于每个请求，ASP.NET Core都会创建一个新的作用域，称之为**请求作用域**，并且在同一个请求作用域内，还可以创建**子作用域**。
+
+![2026-06-01-22-57-01](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-01-22-57-01.png)
+
+作用域的意义：代表作用域服务Scoped以及瞬态服务Transient的生命周期。
+
+瞬态服务Transient在每次注入时都会实例化，在同一个作用域结束时被释放。但可以通过IServiceScopeFactory.CreateScope()方法，在同一个请求作用域内创建一个或多个子作用域。
+
+子作用域的创建时机：创建了一个可释放的服务（实现了IDisposable接口），在使用完毕后，服务应尽快被释放。如数据库连接，它应该在打开后，一旦工作完成，数据库连接就应该关闭。
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+using Services;
+using ServiceContracts;
+
+namespace DIExample.Controllers
+{
+  public class HomeController : Controller
+  {
+    private readonly ICitiesService _citiesService;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
+
+    //constructor
+    public HomeController(ICitiesService citiesService, IServiceScopeFactory serviceScopeFactory)
+    {
+      _citiesService = citiesService;
+      _serviceScopeFactory = serviceScopeFactory;
+    }
+
+
+    [Route("/")]
+    public IActionResult Index()
+    {
+      List<string> cities = _citiesService.GetCities();
+
+      ViewBag.InstanceId_CitiesService_1 = _citiesService.ServiceInstanceId;
+
+      //创建子作用域
+      using (IServiceScope scope = _serviceScopeFactory.CreateScope())
+      {
+        //Inject CitiesService
+        ICitiesService citiesService = scope.ServiceProvider.GetRequiredService<ICitiesService>();
+        //DB work
+
+        ViewBag.InstanceId_CitiesServicece_InScope = citiesService.ServiceInstanceId;
+      } //end of scope; it calls CitiesService.Dispose()
+
+      return View(cities);
+    }
+  }
+}
+
+```
 
 ## 9.8 AddTransient()、AddScoped()、AddSingleton()
 
+### 9.8.1 注册服务的传统方式
+
+通常，我们通过创建ServiceDescriptor类的新对象并使用Add方法将服务添加到服务集合中。
+
+```C#
+builder.Services.Add(new ServiceDescriptor(
+  typeof(ICitiesService),
+  typeof(CitiesService),
+  ServiceLifetime.Scoped
+));
+```
+
+### 9.8.2 注册服务的简化方式
+
+```C#
+builder.Services.AddTransient<ICitiesService,CitiesService>();
+builder.Services.AddScoped<ICitiesService,CitiesService>();
+builder.Services.AddSingleton<ICitiesService,CitiesService>();
+```
+
+![2026-06-01-23-14-35](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-01-23-14-35.png)
+
 ## 9.9 视图注入
+
+在ASP.NET Core中，视图会被编译为对应的类（继承自预定义类Razor）。正如我们可以将服务注入到控制器或者其他服务类中一样，也可以将服务注入到视图中。通过在视图中使用@inject指令即可实现。
+
+![2026-06-01-23-22-07](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-01-23-22-07.png)
 
 ## 9.10 DI最佳实践
 
+在实现依赖注入时，应该遵循某些最佳实践，同时避免一些不良做法。
+
+![2026-06-01-23-34-34](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-01-23-34-34.png)
+
+![2026-06-01-23-34-53](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-01-23-34-53.png)
+
+![2026-06-01-23-35-13](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-01-23-35-13.png)
+
+![2026-06-01-23-35-28](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-01-23-35-28.png)
+
 ## 9.11 Autofac
+
+**[Autofac](https://autofac.readthedocs.io/en/latest/getting-started/index.html)** 是一个开源项目，它是ASP.NET Core内置IOC容器的替代方案，相比内置IOC容器，Autofac提供了增强的功能。
+
+### 9.11.1 Autofac增强功能：
+
+![2026-06-01-23-48-38](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-01-23-48-38.png)
+
+### 9.11.2 Autofac基本用法
+
+- Programs.cs
+
+```C#
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using ServiceContracts;
+using Services;
+
+var builder = WebApplication.CreateBuilder(args);
+
+//用Autofac替换内置依赖注册容器
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+
+builder.Services.AddControllersWithViews();
+
+//将服务添加到Autofac容器内
+builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
+{
+  //containerBuilder.RegisterType<CitiesService>().As<ICitiesService>().InstancePerDependency(); //AddTransient
+
+  containerBuilder.RegisterType<CitiesService>().As<ICitiesService>().InstancePerLifetimeScope(); //AddScoped
+
+  //containerBuilder.RegisterType<CitiesService>().As<ICitiesService>().SingleInstance(); //AddSingleton
+});
+
+var app = builder.Build();
+
+app.UseStaticFiles();
+app.MapControllers();
+
+app.Run();
+
+```
+
+- HomeController.cs
+
+```C#
+using Autofac;
+using Microsoft.AspNetCore.Mvc;
+using ServiceContracts;
+
+namespace DIExample.Controllers
+{
+  public class HomeController : Controller
+  {
+    private readonly ICitiesService _citiesService;
+    private readonly ILifetimeScope _lifeTimeScope;
+
+    //constructor
+    public HomeController(ICitiesService citiesService, ILifetimeScope serviceScopeFactory)
+    {
+      _citiesService = citiesService;
+      _lifeTimeScope = serviceScopeFactory;
+    }
+
+
+    [Route("/")]
+    public IActionResult Index()
+    {
+      List<string> cities = _citiesService.GetCities();
+      ViewBag.InstanceId_CitiesService = _citiesService.ServiceInstanceId;
+
+      using (ILifetimeScope scope = _lifeTimeScope.BeginLifetimeScope())
+      {
+        //Inject CitiesService
+        ICitiesService citiesService = scope.Resolve<ICitiesService>();
+        //DB work
+
+        ViewBag.InstanceId_CitiesService_InScope = citiesService.ServiceInstanceId;
+      } //end of scope; it calls CitiesService.Dispose()
+
+      return View(cities);
+    }
+  }
+}
+
+```

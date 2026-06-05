@@ -4573,3 +4573,155 @@ namespace DIExample.Controllers
 }
 
 ```
+
+# 第10章 环境 Environments
+
+应用程序运行的系统称为环境，ASP.NET Core内置了三个环境：Development、Staging、Production。
+
+![2026-06-05-20-25-42](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-05-20-25-42.png)
+
+## 10.1 配置环境
+
+默认情况下，每当创建一个新的ASP.NET Core Web应用程序时，它会自动创建一个名为launchSettings.json的文件，该文件包含应用程序的运行时配置文件，以便使用其中任何一个来运行应用程序。根据需要，我们可以在launchSettings.json文件中指定内置环境名称或者自定义环境名称。
+
+![2026-06-05-20-25-58](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-05-20-25-58.png)
+
+```JSON
+{
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:59834",
+      "sslPort": 0
+    }
+  },
+  "profiles": {
+    "EnvironmentsExample": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": true,
+      "applicationUrl": "http://localhost:5273",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Beta"
+      }
+    },
+    "IIS Express": {
+      "commandName": "IISExpress",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
+
+```
+
+## 10.2 使用环境
+
+### 10.2.1 在启动设置中使用环境
+
+你可以使用app.Environment的只读属性读取当前工作环境，类型为IWebHostEnvironment。
+
+![2026-06-05-20-51-51](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-05-20-51-51.png)
+
+![2026-06-05-20-46-34](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-05-20-46-34.png)
+
+![2026-06-05-20-46-45](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-05-20-46-45.png)
+
+![2026-06-05-20-46-58](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-05-20-46-58.png)
+
+![2026-06-05-20-47-09](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-05-20-47-09.png)
+
+```C#
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllersWithViews();
+
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment() || app.Environment.IsStaging() || app.Environment.IsEnvironment("Beta"))
+{
+  app.UseDeveloperExceptionPage();
+}
+
+app.UseStaticFiles();
+app.MapControllers();
+
+app.Run();
+
+```
+
+### 10.2.2 在控制器中使用环境
+
+在控制器或者其它服务中访问当前工作环境，可以注入一个预定义的服务，称为IWebHostEnvironment。通过该服务实例，我们可以像在Program.cs文件中的app.Environment一样访问当前工作环境。
+
+![2026-06-05-20-56-45](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-05-20-56-45.png)
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+
+namespace EnvironmentsExample.Controllers
+{
+  public class HomeController : Controller
+  {
+    private readonly IWebHostEnvironment _webHostEnvironment;
+
+    //constructor
+    public HomeController(IWebHostEnvironment webHostEnvironment)
+    {
+      _webHostEnvironment = webHostEnvironment;
+    }
+
+    [Route("/")]
+    public IActionResult Index()
+    {
+      ViewBag.CurrentEnviornment = _webHostEnvironment.EnvironmentName;
+      return View();
+    }
+  }
+}
+
+```
+
+### 10.2.3 环境标签助手
+
+ASP.NET 视图可以在特定环境中显示额外内容或隐藏现有内容。对此，我们可以通过使用一个预定义的标记帮助器environment，它有include和exclude选项。
+
+![2026-06-05-21-03-34](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-05-21-03-34.png)
+
+```HTML
+@addTagHelper “*, Microsoft.Asp.NetCore.Mvc.TagHelpers”
+
+@{
+    ViewBag.Title = "Home";
+}
+
+<h1>Home</h1>
+<div class="box">
+    Environment: @ViewBag.CurrentEnviornment
+</div>
+
+<environment include="Development">
+    <button class="button button-blue-back">Button only for Development Environment</button>
+</environment>
+
+<environment exclude="Development">
+    <button class="button button-green-back">Button only for Except in Development Environment</button>
+</environment>
+
+```
+
+### 10.2.4 进程级环境
+
+launchSettings.json文件仅用于开发服务器，在预发布服务器或生产服务器中，一般不会部署这个文件。因此，在开发机器以外的环境中（如预发布服务器或生产服务器），可以通过命令指定环境变量：
+
+![2026-06-05-21-12-59](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-05-21-12-59.png)
+
+```bash
+dotnet run --no-launch-profile #禁用launchSettings.json文件
+
+$Env:ASPNETCORE_ENVIRONMENT="Staging" #PowerShell命令
+
+set ASPNETCORE_ENVIRONMENT="Staging" #PowerShell以外的常规命令提示符的命令
+```

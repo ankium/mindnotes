@@ -4725,3 +4725,456 @@ $Env:ASPNETCORE_ENVIRONMENT="Staging" #PowerShell命令
 
 set ASPNETCORE_ENVIRONMENT="Staging" #PowerShell以外的常规命令提示符的命令
 ```
+
+# 第11章 配置与HTTP Client
+
+## 11.1 配置基础
+
+ASP.NET Core 有一个称为配置设置的系统，用于存储常量键值对，这些键值对可以从同一应用程序中的任何文件的任何位置读取。
+
+![2026-06-12-22-49-12](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-12-22-49-12.png)
+
+常见配置源有如下几种：appsettings.json、环境变量、文件配置、内存配置、密钥管理器等。
+
+![2026-06-12-22-52-32](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-12-22-52-32.png)
+
+## 11.2 appsettings.json
+
+![2026-06-12-22-49-27](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-12-22-49-27.png)
+
+- appsettings.json文件
+
+```JSON
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "MyKey": "MyValue from appsettings.json updated",
+  "weatherapi":
+  {
+    "ClientID": "ClientID from appsettings.json",
+    "ClientSecret":  "ClientSecret from appsettings.json"
+  }
+}
+```
+
+读取appsettings.json文件中的配置值，主要用到IConfiguration接口的方法。
+
+![2026-06-12-23-17-35](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-12-23-17-35.png)
+
+### 11.2.1 在主程序中使用IConfiguration
+
+在主程序Program.cs中读取appsettings.json的配置(键不区分大小写),可以使用app.Configuration["Key"]或者app.Configuration.GetValue<T>("Key",[Default value])以读取配置值。
+
+![2026-06-12-23-17-10](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-12-23-17-10.png)
+
+```C#
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllersWithViews();
+
+var app = builder.Build();
+
+app.UseStaticFiles();
+app.Map("/", async context =>
+{
+  await context.Response.WriteAsync(app.Configuration["mykEY"] + "\n");
+
+  await context.Response.WriteAsync(app.Configuration.GetValue<string>("MyKey") + "\n");
+
+  await context.Response.WriteAsync(app.Configuration.GetValue<int>("x", 10) + "\n");
+
+});
+
+app.MapControllers();
+
+app.Run();
+
+```
+
+### 11.2.2 在控制器中使用IConfiguration
+
+在控制器方法中注入IConfiguration对象后，可以像在主程序中一样读取配置值。
+
+![2026-06-12-23-27-20](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-12-23-27-20.png)
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+
+namespace ConfigurationExample.Controllers
+{
+  public class HomeController : Controller
+  {
+    //private field
+    private readonly IConfiguration _configuration;
+
+    //constructor
+    public HomeController(IConfiguration configuration)
+    {
+      _configuration = configuration;
+    }
+
+    [Route("/")]
+    public IActionResult Index()
+    {
+      ViewBag.MyKey = _configuration["MyKey"];
+      ViewBag.MyAPIKey = _configuration.GetValue("MyAPIKey", "the default key");
+
+      return View();
+    }
+  }
+}
+
+```
+
+## 11.3 分层配置
+
+分层配置就是当前键对应的不再是简单值，而是另一个包含一组键值对的json对象。读取分层配置的方法是Configuration["主键:子键"]，其中用冒号分隔主键和子键。
+
+![2026-06-12-23-57-27](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-12-23-57-27.png)
+
+另一种读取分层配置的方式是Configuration.GetSection(string key)方法，其返回IConfigurationSection对象。
+
+![2026-06-12-23-57-41](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-12-23-57-41.png)
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+
+namespace ConfigurationExample.Controllers
+{
+  public class HomeController : Controller
+  {
+    //private field
+    private readonly IConfiguration _configuration;
+
+    //constructor
+    public HomeController(IConfiguration configuration)
+    {
+      _configuration = configuration;
+    }
+
+    [Route("/")]
+    public IActionResult Index()
+    {
+      //ViewBag.ClientID = _configuration["weatherapi:ClientID"];
+      //ViewBag.ClientSecret = _configuration.GetValue("weatherapi:ClientSecret", "the default client secret");
+
+      IConfigurationSection wetherapiSection = _configuration.GetSection("weatherapi");
+
+      ViewBag.ClientID = wetherapiSection["ClientID"];
+
+      ViewBag.ClientSecret = wetherapiSection["ClientSecret"];
+
+      return View();
+    }
+  }
+}
+
+```
+
+## 11.4 选项模式
+
+选项模式完全"关于指定你想要从配置中读取的特定属性"。
+
+例如，在你的配置源中有10个属性（即10个键值对），但你只想精确的需要其中一两个，将它们指定为类属性就称为选项模式。
+
+为了实现这一点，你将创建一个具有相同属性的模型类（即选项类），属性名称与键相同，只有这些特定键的值会被加载到这些属性中，其余的则不会。在这种情况下，选项类应该是一个非抽象类，具有无参构造函数，并且所有绑定属性应该是可读写的公共属性，字段不会被绑定（意味着即使你在选项类中创建了一个或多个字段，这些字段也会被忽略）。
+
+![2026-06-12-23-57-58](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-12-23-57-58.png)
+
+![2026-06-12-23-58-11](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-12-23-58-11.png)
+
+- 创建模型类WeatherApiOptions
+
+```C#
+namespace ConfigurationExample
+{
+  public class WeatherApiOptions
+  {
+    public string? ClientID { get; set; }
+    public string? ClientSecret { get; set; }
+  }
+}
+
+```
+
+![2026-06-14-21-12-43](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-14-21-12-43.png)
+
+
+- 使用Get<T>()方法
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+
+namespace ConfigurationExample.Controllers
+{
+  public class HomeController : Controller
+  {
+    //private field
+    private readonly IConfiguration _configuration;
+
+    //constructor
+    public HomeController(IConfiguration configuration)
+    {
+      _configuration = configuration;
+    }
+
+    [Route("/")]
+    public IActionResult Index()
+    {
+      //Get: Loads configuration values into a new Options object
+      //Get: 将配置值加载到新选项类对象中
+      WeatherApiOptions options = _configuration.GetSection("weatherapi").Get<WeatherApiOptions>();
+
+      ViewBag.ClientID = options.ClientID;
+
+      ViewBag.ClientSecret = options.ClientSecret;
+
+      return View();
+    }
+  }
+}
+```
+
+- 使用Bind(object instance)方法
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+
+namespace ConfigurationExample.Controllers
+{
+  public class HomeController : Controller
+  {
+    //private field
+    private readonly IConfiguration _configuration;
+
+    //constructor
+    public HomeController(IConfiguration configuration)
+    {
+      _configuration = configuration;
+    }
+
+    [Route("/")]
+    public IActionResult Index()
+    {
+      //Get: Loads configuration values into a new Options object
+      //Get: 将配置值加载到新选项类对象中
+      //WeatherApiOptions options = _configuration.GetSection("weatherapi").Get<WeatherApiOptions>();
+
+      //Bind: Loads configuration values into existing Options object
+      //Bind: 将配置值加载到现有选项类对象中。
+      WeatherApiOptions options = new WeatherApiOptions();
+      _configuration.GetSection("weatherapi").Bind(options);
+
+      ViewBag.ClientID = options.ClientID;
+      ViewBag.ClientSecret = options.ClientSecret;
+
+      return View();
+    }
+  }
+}
+
+```
+
+## 11.5 将配置作为服务
+
+与其在选项模式中创建选项类WeatherApiOptions的新对象，不如将其作为服务注入， 这样会更好。
+
+![2026-06-13-00-05-29](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-13-00-05-29.png)
+
+![2026-06-13-00-05-44](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-13-00-05-44.png)
+
+- Program.cs
+
+```C#
+using ConfigurationExample;
+
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllersWithViews();
+
+//Supply an object of WeatherApiOptions (with 'weatherapi' section) as a service
+builder.Services.Configure<WeatherApiOptions>(builder.Configuration.GetSection("weatherapi"));
+
+var app = builder.Build();
+
+app.UseStaticFiles();
+
+app.MapControllers();
+
+app.Run();
+
+```
+
+- HomeController.cs
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+
+namespace ConfigurationExample.Controllers
+{
+  public class HomeController : Controller
+  {
+    //private field
+    private readonly WeatherApiOptions _options;
+
+    //constructor
+    public HomeController(IOptions<WeatherApiOptions> weatherApiOptions)
+    {
+      _options = weatherApiOptions.Value;
+    }
+
+    [Route("/")]
+    public IActionResult Index()
+    {
+      ViewBag.ClientID = _options.ClientID;
+      ViewBag.ClientSecret = _options.ClientSecret;
+
+      return View();
+    }
+  }
+}
+
+```
+
+- Index.cshtml
+
+```HTML
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Configuration Demo</title>
+        <meta charset="utf-8" />
+        <link href="~/StyleSheet.css" rel="stylesheet" />
+    </head>
+    <body>
+        <div class="container">
+            <h1>Home</h1>
+
+            <div class="box">
+                <div>@ViewBag.ClientID</div>
+                <div>@ViewBag.ClientSecret</div>
+            </div>
+        </div>
+
+    </body>
+</html>
+
+```
+
+## 11.6 环境特定配置
+
+appsettings.json文件在不同环境下拥有特定的配置文件，其优先级并不相同。当launchSettings.json中的环境为"ASPNETCORE_ENVIRONMENT": "Development"时，则在加载appsettings.json文件中的配置后加载appsettings.Development.json文件中的配置，如果两个文件中具有同名配置，则后加载的优先级更高。同理appsettings.Staging.json和appsettings.Production.json亦是如此。
+
+![2026-06-13-00-10-37](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-13-00-10-37.png)
+
+## 11.7 机密管理器
+
+将敏感数据存储在项目配置文件中并不是安全选择，因为这些配置文件经常会随源代码推送到版本控制系统中（如GitHub），那样的话，存储在些配置文件中的敏感信息将被其他开发者看到。因此，某些敏感配置数据应该存储在项目源代码之外的本地位置。微软针对此问题的解决方案是机密管理器。在.NET Core中，你可以使用机密管理器将敏感信息存储在项目源代码之外的配置中。
+
+**机密管理器仅在开发者模式下工作**，
+
+> 用户机密文件保存路径：
+
+- Windows系统 C:\Users\UserName\AppData\Roaming\Microsoft\UserSecrets\UserSecretsId\secrets.json
+
+- Linux系统 /home/UserName/.microsoft/usersecrets/UserSecretsId/secrets.json
+
+![2026-06-13-00-17-37](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-13-00-17-37.png)
+
+![2026-06-13-00-17-48](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-13-00-17-48.png)
+
+![2026-06-13-00-18-00](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-13-00-18-00.png)
+
+- 创建用户机密文件
+
+```bash
+dotnet user-secrets init
+```
+
+- 在用户机密中存储配置数据
+
+建议在Windows PowerShell或者Developer PowerShell in VS中采用命令的方式设置用户机密文件中的配置数据，不推荐直接编辑用户机密文件。
+
+```bash
+# dotnet user-secrets set "key" "value"
+dotnet user-secrets set "weatherapi:ClientID" "ClientID from user-secrets"
+dotnet user-secrets set "weatherapi:ClientSecret" "ClientSecret from user-secrets"
+```
+
+- 查看用户机密列表
+
+```bash
+dotnet user-secrets list
+```
+
+## 11.8 环境变量配置
+
+在生产服务器上，你不会有Visual Studio或任何其他开发相关工具。你只能访问终端，你需要从终端窗口在生产服务器上调用你的应用程序，在这种情况下，你可以将敏感数据作为环境变量存储在生产服务器的配置中，因为你在终端窗口中设置的环境变量只能在同一终端窗口内访问，面不能从同一机器上的其他终端窗口访问。这样，它是将配置设置存储在环境变量中的一种安全方式。
+
+![2026-06-13-00-19-21](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-13-00-19-21.png)
+
+![2026-06-13-00-19-32](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-13-00-19-32.png)
+
+在Windows PowerShell或者Developer PowerShell in VS以及Linux系统的pwsh(默认bash无法配置$Env环境变量)中设置环境变量(进程级环境)的方式：
+
+```bash
+
+# $Env:ParentKey__ChildKey="value"
+$Env:weatherapi__ClientID="ClientID from environment variables"
+$Env:weatherapi__ClientSecret="ClientSecret from environment variables"
+# dotnet run --no-launch-profile
+```
+
+当我们在开发环境以外的机器上（如预发布服务器或者生产服务器上）运行应用程序时，可以将配置设置为环境变量。Linux系统刻要将bash切换到pwsh。
+
+## 11.9 自定义JSON配置
+
+有时，因为配置数量增加，我们不想在同一个appsettings.json文件中写入太多配置设置，此时，我们可以将常见或者相关的配置设置分组为一个单独的json文件。
+
+自定义配置文件具有最高优先级，因为它是在加载所有默认配置设置后最近加载的。对于中小型应用程序，通常很少使用自定义json文件作为配置源。
+
+![2026-06-13-00-22-18](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-13-00-22-18.png)
+
+
+- 创建自定义JSON配置文件
+
+```JSON
+{
+  "weatherapi":
+  {
+    "ClientID": "ClientID from MyOwnConfig.json",
+    "ClientSecret": "ClientSecret from MyOwnConfig.json"
+  }
+}
+
+```
+
+- 加载自定义JSON配置文件
+
+```C#
+using ConfigurationExample;
+
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllersWithViews();
+
+//Supply an object of WeatherApiOptions (with 'weatherapi' section) as a service
+builder.Services.Configure<WeatherApiOptions>(builder.Configuration.GetSection("weatherapi"));
+
+//Load MyOwnConfig.json
+builder.Configuration.AddJsonFile("MyOwnConfig.json", optional: true, reloadOnChange: true);
+
+var app = builder.Build();
+
+app.UseStaticFiles();
+
+app.MapControllers();
+
+app.Run();
+
+```
+
+## 11.10 HTTP Client

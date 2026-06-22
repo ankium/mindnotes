@@ -5259,3 +5259,222 @@ namespace StocksApp.Services
 }
 
 ```
+
+# 第12章 单元测试xUnit
+
+xUnit 是一个流行的 .NET 单元测试框架，广泛用于 C# 项目中的自动化测试。它是 .NET Core 和 .NET Framework 中的首选单元测试工具之一。下面我将以 ASP.NET Core 项目为背景，为你整理归纳 xUnit 单元测试 的核心知识点、使用方法以及常见注意事项。
+
+![2026-06-22-21-19-09](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-22-21-19-09.png)
+
+## 12.1 xUnit 单元测试简介
+xUnit 是一个基于 .NET 的单元测试框架，它与 .NET Core 有原生支持，不需要额外的 NuGet 包安装（除了 xunit 和 xunit.Abstractions），并且与 Visual Studio 和 Visual Studio Code 集成良好。
+
+> 主要特点
+
+- 简洁、现代的语法
+- 支持并行测试
+- 更轻量，没有 TestFixture、Assert.AreEqual 等旧框架的遗留特性
+- 集成到 Visual Studio Test Explorer，方便查看和运行测试
+- 支持 理论测试（Theory） 和 特性测试（Fact）
+
+## 12.2 如何在 ASP.NET Core 项目中使用 xUnit
+
+安装必要的 NuGet 包
+
+```bash
+dotnet add test YourProject.Tests xunit
+dotnet add test YourProject.Tests xunit.runner.visualstudio
+dotnet add test YourProject.Tests xunit.core
+dotnet add test YourProject.Tests Microsoft.NET.Test.Sdk
+```
+
+或者在 VS 中通过 NuGet 安装。
+
+## 12.3 xUnit 的基本语法和使用方式
+
+### 12.3.1 测试类与测试方法
+
+```C#
+using Xunit;
+
+public class CalculatorTests
+{
+    [Fact]
+    public void Add_TwoPositiveNumbers_ReturnsSum()
+    {
+        // Arrange
+        var calc = new Calculator();
+        
+        // Act
+        var result = calc.Add(2, 3);
+        
+        // Assert
+        Assert.Equal(5, result);
+    }
+}
+```
+
+### 12.3.2 理论测试（Theory）
+
+允许你运行多个测试用例，适合验证多个输入-输出组合。
+
+```C#
+[Theory]
+[InlineData(2, 3, 5)]
+[InlineData(-1, 1, 0)]
+[InlineData(10, 5, 15)]
+public void Add_WithMultipleScenarios_ReturnsCorrectResult(int a, int b, int expected)
+{
+    var calc = new Calculator();
+    var result = calc.Add(a, b);
+    Assert.Equal(expected, result);
+}
+
+```
+
+### 12.3.3 异常处理测试（Assert.Throws）
+
+```C#
+[Fact]
+public void Divide_ByZero_ThrowsException()
+{
+    var calc = new Calculator();
+    var exception = Assert.Throws<DivideByZeroException>(() => calc.Divide(10, 0));
+    Assert.Contains("division by zero", exception.Message);
+}
+```
+
+## 12.4 xUnit 中常用的断言方法
+
+| 断言方法 | 说明 | 示例 |
+|----------|------|------|
+| `Assert.Equal(expected, actual)` | 比较两个值是否相等 | `Assert.Equal(5, calc.Add(2, 3))` |
+| `Assert.NotEqual(expected, actual)` | 比较两个值是否不相等 | `Assert.NotEqual(6, calc.Add(2, 3))` |
+| `Assert.True(condition)` | 检查条件是否为 `true` | `Assert.True(calc.IsEven(4))` |
+| `Assert.False(condition)` | 检查条件是否为 `false` | `Assert.False(calc.IsEven(5))` |
+| `Assert.NotNull(obj)` | 检查对象是否不为 `null` | `Assert.NotNull(calc)` |
+| `Assert.Null(obj)` | 检查对象是否为 `null` | `Assert.Null(user)` |
+| `Assert.Throws<TException>(action)` | 验证某个操作是否抛出指定异常 | `Assert.Throws<ArgumentException>(() => calc.DivideByZero())` |
+| `Assert.Same(expected, actual)` | 检查两个对象是否是同一个实例 | 使用较少，通常用 `Assert.Equal` |
+| `Assert.Collection(actual, expected)` | 检查集合是否包含各元素 | `Assert.Collection(result, new[] {1, 2, 3})` |
+| `Assert.Single(collection)` | 验证集合是否仅有 1 个元素 | `Assert.Single(list)` |
+| `Assert.Empty(collection)` | 验证集合是否为空 | `Assert.Empty(list)` |
+| `Assert.HasItem(collection, item)` | 验证集合是否包含某个元素 | `Assert.HasItem(list, 2)` |
+
+## 12.5 ASP.NET Core 单元测试中的依赖注入
+
+在进行 ASP.NET CoreController 的单元测试时，我们通常会借助依赖注入来 注入模拟的（Mock）服务，比如 Mock repository、Mock services、Mock database context 等。
+
+### 12.5.1 使用 IServiceProvider 和 IServiceScope 获得环境依赖
+
+在测试中，我们可以通过 IServiceProvider 获取服务：
+
+```C#
+public class UserControllerTests
+{
+    [Fact]
+    public void GetUserInfo_ReturnsViewWithUser()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        services.AddTransient<IUserService, MockUserService>();
+        var serviceProvider = services.BuildServiceProvider();
+
+        var controller = new UserController(serviceProvider.GetRequiredService<IUserService>());
+
+        // Act
+        var result = controller.GetUserInfo(1);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.IsType<ViewResult>(result);
+    }
+}
+```
+### 12.5.2 使用 IServiceScopeFactory 创建作用域
+
+某些服务包含作用域（如 DbContext），需要使用 IServiceScopeFactory 来创建一个作用域：
+
+```C#
+[Fact]
+public void GetUserInfo_ReturnsUserFromDatabase()
+{
+    // Arrange
+    var services = new ServiceCollection();
+    services.AddScoped<MyDbContext>();
+    services.AddTransient<IUserService, UserService>();
+    services.AddTransient<UserController>();
+
+    var scopeFactory = services.BuildServiceProvider().GetRequiredService<IServiceScopeFactory>();
+    using var scope = scopeFactory.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<MyDbContext>();
+    context.Users.Add(new User { Id = 1, Name = "Alice" });
+    context.SaveChanges();
+
+    var controller = scope.ServiceProvider.GetRequiredService<UserController>();
+
+    // Act
+    var result = controller.GetUserInfo(1);
+
+    // Assert
+    Assert.IsType<ViewResult>(result);
+    var viewResult = (ViewResult)result;
+    Assert.Equal("Alice", viewResult.Model as User?.Name);
+}
+```
+
+## 12.6 xUnit 与 ASP.NET Core 测试工具集成
+
+### 12.6.1 xUnit + Moq（Mocking）
+
+在 ASP.NET Core 中常用 Moq 进行 Mock 测试：
+
+```C#
+dotnet add test YourProject.Tests Moq
+```
+
+然后你可以用 Mock<IService> 代替实现实例。
+
+### 12.6.2 示例：Mock 一个 Service 并测试 Controller
+
+```C#
+public class UserControllerTests
+{
+    [Fact]
+    public void GetUserInfo_ReturnsUserFromService()
+    {
+        // Arrange
+        var mockUserService = new Mock<IUserService>();
+        mockUserService.Setup(u => u.GetUser(1)).Returns(new User { Id = 1, Name = "Alice" });
+
+        var services = new ServiceCollection();
+        services.AddTransient<IUserService, MockUserService>(mockUserService.Object);
+        services.AddTransient<UserController>();
+        var serviceProvider = services.BuildServiceProvider();
+
+        var controller = serviceProvider.GetRequiredService<UserController>();
+
+        // Act
+        var result = controller.GetUserInfo(1);
+
+        // Assert
+        Assert.IsType<ViewResult>(result);
+        var viewResult = (ViewResult)result;
+        Assert.Equal("Alice", (viewResult.Model as User).Name);
+    }
+}
+```
+> 注意：在 ASP.NET Core 中，如果你希望通过 DI 容器来提供基于lifetime管理的实例（如 AddTransient、AddScoped、AddSingleton），可以以更结构化的方式做注入。
+
+## 12.7 xUnit 单元测试中常见问题和注意事项
+
+| 问题 | 解决方案 |
+|------|----------|
+| **测试无法通过 DI 注入的服务** | 使用 `IServiceProvider` 获取取决于 DI 服务时应按生命周期构建 |
+| **Singleton 服务中使用了 Scoped 或 Transient 服务** | 通常不会发生，但如果发生可通过 `IServiceProvider` 手动获取 |
+| **如何确保全局状态不污染测试** | 使用 `ITestOutputHelper` 输出日志并进行隔离 |
+| **如何运行 xUnit 测试** | 在 Visual Studio 中使用 Test Explorer，或使用 `dotnet test` 命令 |
+| **如何在 CI/CD 中集成 xUnit** | 使用 `dotnet test` 构建脚本，例如在 Azure DevOps、GitHub Actions 中运行 |
+| **如何模拟 ASP.NET Core 的环境？** | 使用 `HttpClient`、`WebApplicationFactory`、`TestServer` 来测试 MVC 或 Web API 控制器 |
+| **如何确保测试环境的干净？** | 在测试前进行 DB 清理，或者使用 InMemoryDb 等机制 |
+

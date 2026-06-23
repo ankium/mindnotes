@@ -4726,7 +4726,7 @@ $Env:ASPNETCORE_ENVIRONMENT="Staging" #PowerShell命令
 set ASPNETCORE_ENVIRONMENT="Staging" #PowerShell以外的常规命令提示符的命令
 ```
 
-# 第11章 配置与HTTP Client
+# 第11章 配置与 HTTP Client
 
 ## 11.1 配置基础
 
@@ -5260,7 +5260,7 @@ namespace StocksApp.Services
 
 ```
 
-# 第12章 单元测试xUnit
+# 第12章 单元测试 xUnit
 
 xUnit 是一个流行的 .NET 单元测试框架，广泛用于 C# 项目中的自动化测试。它是 .NET Core 和 .NET Framework 中的首选单元测试工具之一。下面我将以 ASP.NET Core 项目为背景，为你整理归纳 xUnit 单元测试 的核心知识点、使用方法以及常见注意事项。
 

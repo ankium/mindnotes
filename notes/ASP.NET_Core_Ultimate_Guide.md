@@ -5267,6 +5267,7 @@ xUnit 是一个流行的 .NET 单元测试框架，广泛用于 C# 项目中的�
 ![2026-06-22-21-19-09](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-22-21-19-09.png)
 
 ## 12.1 xUnit 单元测试简介
+
 xUnit 是一个基于 .NET 的单元测试框架，它与 .NET Core 有原生支持，不需要额外的 NuGet 包安装（除了 xunit 和 xunit.Abstractions），并且与 Visual Studio 和 Visual Studio Code 集成良好。
 
 > 主要特点
@@ -5290,59 +5291,63 @@ dotnet add test YourProject.Tests Microsoft.NET.Test.Sdk
 
 或者在 VS 中通过 NuGet 安装。
 
-## 12.3 xUnit 的基本语法和使用方式
+## 12.3 xUnit的基本用法
 
-### 12.3.1 测试类与测试方法
+### 12.3.1 被测试方法示例
 
 ```C#
-using Xunit;
 
-public class CalculatorTests
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace CRUDTest
 {
-    [Fact]
-    public void Add_TwoPositiveNumbers_ReturnsSum()
+    internal class MyMath
     {
-        // Arrange
-        var calc = new Calculator();
-        
-        // Act
-        var result = calc.Add(2, 3);
-        
-        // Assert
-        Assert.Equal(5, result);
+        public int Add(int a, int b)
+        {
+            int c = a + b;
+            return c;
+        }
     }
 }
+
 ```
 
-### 12.3.2 理论测试（Theory）
-
-允许你运行多个测试用例，适合验证多个输入-输出组合。
+### 12.3.2 测试方法示例
 
 ```C#
-[Theory]
-[InlineData(2, 3, 5)]
-[InlineData(-1, 1, 0)]
-[InlineData(10, 5, 15)]
-public void Add_WithMultipleScenarios_ReturnsCorrectResult(int a, int b, int expected)
+namespace CRUDTest
 {
-    var calc = new Calculator();
-    var result = calc.Add(a, b);
-    Assert.Equal(expected, result);
+    public class UnitTest1
+    {
+        [Fact]
+        public void Test1()
+        {
+            // Arrange
+            MyMath myMath = new MyMath();
+            int a = 5;
+            int b = 6;
+            int expected = 11;
+            // Act
+            int actual = myMath.Add(a, b);
+            // Assert
+            Assert.Equal(expected, actual);
+
+        }
+    }
 }
 
 ```
 
-### 12.3.3 异常处理测试（Assert.Throws）
+测试方法通常通过[Fact]特性进行标记，且一个测试方法的执行通常包含以下三个步骤：
 
-```C#
-[Fact]
-public void Divide_ByZero_ThrowsException()
-{
-    var calc = new Calculator();
-    var exception = Assert.Throws<DivideByZeroException>(() => calc.Divide(10, 0));
-    Assert.Contains("division by zero", exception.Message);
-}
-```
+- 准备【Arrange】
+
+- 执行【Act】
+
+- 断言【Assert】
 
 ## 12.4 xUnit 中常用的断言方法
 
@@ -5361,120 +5366,5 @@ public void Divide_ByZero_ThrowsException()
 | `Assert.Empty(collection)` | 验证集合是否为空 | `Assert.Empty(list)` |
 | `Assert.HasItem(collection, item)` | 验证集合是否包含某个元素 | `Assert.HasItem(list, 2)` |
 
-## 12.5 ASP.NET Core 单元测试中的依赖注入
-
-在进行 ASP.NET CoreController 的单元测试时，我们通常会借助依赖注入来 注入模拟的（Mock）服务，比如 Mock repository、Mock services、Mock database context 等。
-
-### 12.5.1 使用 IServiceProvider 和 IServiceScope 获得环境依赖
-
-在测试中，我们可以通过 IServiceProvider 获取服务：
-
-```C#
-public class UserControllerTests
-{
-    [Fact]
-    public void GetUserInfo_ReturnsViewWithUser()
-    {
-        // Arrange
-        var services = new ServiceCollection();
-        services.AddTransient<IUserService, MockUserService>();
-        var serviceProvider = services.BuildServiceProvider();
-
-        var controller = new UserController(serviceProvider.GetRequiredService<IUserService>());
-
-        // Act
-        var result = controller.GetUserInfo(1);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.IsType<ViewResult>(result);
-    }
-}
-```
-### 12.5.2 使用 IServiceScopeFactory 创建作用域
-
-某些服务包含作用域（如 DbContext），需要使用 IServiceScopeFactory 来创建一个作用域：
-
-```C#
-[Fact]
-public void GetUserInfo_ReturnsUserFromDatabase()
-{
-    // Arrange
-    var services = new ServiceCollection();
-    services.AddScoped<MyDbContext>();
-    services.AddTransient<IUserService, UserService>();
-    services.AddTransient<UserController>();
-
-    var scopeFactory = services.BuildServiceProvider().GetRequiredService<IServiceScopeFactory>();
-    using var scope = scopeFactory.CreateScope();
-    var context = scope.ServiceProvider.GetRequiredService<MyDbContext>();
-    context.Users.Add(new User { Id = 1, Name = "Alice" });
-    context.SaveChanges();
-
-    var controller = scope.ServiceProvider.GetRequiredService<UserController>();
-
-    // Act
-    var result = controller.GetUserInfo(1);
-
-    // Assert
-    Assert.IsType<ViewResult>(result);
-    var viewResult = (ViewResult)result;
-    Assert.Equal("Alice", viewResult.Model as User?.Name);
-}
-```
-
-## 12.6 xUnit 与 ASP.NET Core 测试工具集成
-
-### 12.6.1 xUnit + Moq（Mocking）
-
-在 ASP.NET Core 中常用 Moq 进行 Mock 测试：
-
-```C#
-dotnet add test YourProject.Tests Moq
-```
-
-然后你可以用 Mock<IService> 代替实现实例。
-
-### 12.6.2 示例：Mock 一个 Service 并测试 Controller
-
-```C#
-public class UserControllerTests
-{
-    [Fact]
-    public void GetUserInfo_ReturnsUserFromService()
-    {
-        // Arrange
-        var mockUserService = new Mock<IUserService>();
-        mockUserService.Setup(u => u.GetUser(1)).Returns(new User { Id = 1, Name = "Alice" });
-
-        var services = new ServiceCollection();
-        services.AddTransient<IUserService, MockUserService>(mockUserService.Object);
-        services.AddTransient<UserController>();
-        var serviceProvider = services.BuildServiceProvider();
-
-        var controller = serviceProvider.GetRequiredService<UserController>();
-
-        // Act
-        var result = controller.GetUserInfo(1);
-
-        // Assert
-        Assert.IsType<ViewResult>(result);
-        var viewResult = (ViewResult)result;
-        Assert.Equal("Alice", (viewResult.Model as User).Name);
-    }
-}
-```
-> 注意：在 ASP.NET Core 中，如果你希望通过 DI 容器来提供基于lifetime管理的实例（如 AddTransient、AddScoped、AddSingleton），可以以更结构化的方式做注入。
-
-## 12.7 xUnit 单元测试中常见问题和注意事项
-
-| 问题 | 解决方案 |
-|------|----------|
-| **测试无法通过 DI 注入的服务** | 使用 `IServiceProvider` 获取取决于 DI 服务时应按生命周期构建 |
-| **Singleton 服务中使用了 Scoped 或 Transient 服务** | 通常不会发生，但如果发生可通过 `IServiceProvider` 手动获取 |
-| **如何确保全局状态不污染测试** | 使用 `ITestOutputHelper` 输出日志并进行隔离 |
-| **如何运行 xUnit 测试** | 在 Visual Studio 中使用 Test Explorer，或使用 `dotnet test` 命令 |
-| **如何在 CI/CD 中集成 xUnit** | 使用 `dotnet test` 构建脚本，例如在 Azure DevOps、GitHub Actions 中运行 |
-| **如何模拟 ASP.NET Core 的环境？** | 使用 `HttpClient`、`WebApplicationFactory`、`TestServer` 来测试 MVC 或 Web API 控制器 |
-| **如何确保测试环境的干净？** | 在测试前进行 DB 清理，或者使用 InMemoryDb 等机制 |
+## 12.5 xUnit 项目练习 CRUD
 

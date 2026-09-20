@@ -5368,3 +5368,62 @@ namespace CRUDTest
 
 ## 12.5 xUnit 项目练习 CRUD
 
+本项目的主要目的是通过CRUD项目学习单元测试xUnit！
+
+### 12.5.1 添加国家
+
+![2026-09-20-20-19-08](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-19-08.png)
+
+![2026-09-20-20-19-20](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-19-20.png)
+
+### 12.5.2 获取所有国家
+
+![2026-09-20-20-19-41](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-19-41.png)
+
+![2026-09-20-20-19-51](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-19-51.png)
+
+### 12.5.3 根据国家ID获取国家
+
+![2026-09-20-20-20-01](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-20-01.png)
+
+![2026-09-20-20-20-11](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-20-11.png)
+
+### 12.5.4 添加人员
+
+![2026-09-20-20-21-47](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-21-47.png)
+
+![2026-09-20-20-21-57](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-21-57.png)
+
+### 12.5.5 根据人员ID获取人员
+
+![2026-09-20-20-22-11](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-22-11.png)
+
+![2026-09-20-20-22-20](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-22-20.png)
+
+### 12.5.6 获取所有人员
+
+![2026-09-20-20-22-31](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-22-31.png)
+
+![2026-09-20-20-22-41](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-22-41.png)
+
+### 12.5.7 获取筛选后的人员
+
+![2026-09-20-20-22-58](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-22-58.png)
+
+![2026-09-20-20-23-08](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-23-08.png)
+
+### 12.5.8 获取排序后的人员
+
+![2026-09-20-20-23-22](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-23-22.png)
+
+### 12.5.9 更新人员
+
+![2026-09-20-20-23-35](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-23-35.png)
+
+![2026-09-20-20-23-46](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-23-46.png)
+
+### 12.5.10 删除人员
+
+![2026-09-20-20-24-01](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-24-01.png)
+
+![2026-09-20-20-24-13](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-24-13.png)

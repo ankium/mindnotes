@@ -5427,3 +5427,68 @@ namespace CRUDTest
 ![2026-09-20-20-24-01](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-24-01.png)
 
 ![2026-09-20-20-24-13](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-24-13.png)
+
+# 第13章 标签助手 Tag Helpers
+
+## 13.1 标签助手简介
+
+标签助手可以在视图中作为HTML标签或HTML属性调用，它们为现有HTML标签的属性提供值，或生成新的HTML标签。
+
+![2026-09-29-21-19-54](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-29-21-19-54.png)
+
+## 13.2 Tag Helpers的 基本结构
+
+### 13.2.1 内置 Tag Helpers
+
+![2026-09-29-21-21-40](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-29-21-21-40.png)
+
+![2026-09-29-21-22-30](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-29-21-22-30.png)
+
+ASP.NET Core 提供了一些 内置的 Tag Helpers，用于支持常见功能，比如：
+
+asp-route-*（用于构建 MVC 路由）
+asp-for（用于绑定表单输入与模型属性）
+asp-validation-summary（用于显示验证错误）
+asp-page / asp-page-handler（用于页面路由）
+asp-items / asp-for / asp-selected（用于构建下拉菜单）
+效果：
+
+这些 Tag Helpers 会将 HTML 标签的属性转换为 Razor 命令或 C# 逻辑，减少了需要编写大量 C# 代码的需求。
+
+### 13.2.2 自定义 Tag Helpers
+
+开发人员也可以自定义 Tag Helpers 来增强 HTML 标签的功能，支持自定义行为、属性、组件等。
+
+- 定义 Tag Helpers
+
+```C#
+[HtmlHelper]
+public class MyCustomTagHelper : TagHelper
+{
+    [HtmlAttributeName("my-attr")]
+    public string MyProperty { get; set; }
+
+    public override void Process(TagHelperContext context, TagHelperOutput output)
+    {
+        output.TagName = "span";
+        output.Content.SetContent($"Custom: {MyProperty}");
+    }
+}
+```
+- 使用 Tag Helpers
+
+```HTML
+<my-tag my-attr="Hello World"> </my-tag>
+```
+
+## 13.3 Tag Helpers 的作用
+
+![2026-09-29-21-24-46](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-29-21-24-46.png)
+
+| 作用 | 说明 |
+|------|------|
+| **HTML 转义控制** | 可以减少 HTML 转义的风险，**直接在 HTML 中插入 C# 代码**，而不用担心输出是否安全。 |
+| **增强可读性** | 通过使用类似于 HTML 标签的格式编写代码，让 HTML 的语义更明确，**增强 HTML 与 C# 的可读性与用途分离**。 |
+| **替代传统 HTML 注释** | 原先在 Razor 中使用 `@{ ... }` 代码块嵌入 HTML，Tag Helpers 提供了**更直观和更简洁的方式**处理 HTML 元素的属性。 |
+| **构建动态 HTML 元素** | 通过在 HTML 标签中使用标签助手（Tag Helper），可以**动态地设置元素的属性、事件、样式、类等**。 |
+| **统一的前端绑定** | 与 C# 的模型绑定、数据绑定功能集成非常紧密，简化了表单交互、数据展示等操作。

@@ -5492,3 +5492,69 @@ public class MyCustomTagHelper : TagHelper
 | **替代传统 HTML 注释** | 原先在 Razor 中使用 `@{ ... }` 代码块嵌入 HTML，Tag Helpers 提供了**更直观和更简洁的方式**处理 HTML 元素的属性。 |
 | **构建动态 HTML 元素** | 通过在 HTML 标签中使用标签助手（Tag Helper），可以**动态地设置元素的属性、事件、样式、类等**。 |
 | **统一的前端绑定** | 与 C# 的模型绑定、数据绑定功能集成非常紧密，简化了表单交互、数据展示等操作。
+
+# 第14章 EntityFramework Core
+
+## 14.1 EFCore简介
+
+EntityFramework Core是ASP.NET Core中用于数据库连接的轻量级、可扩展、跨平台框架。
+
+![2026-10-01-20-25-42](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-01-20-25-42.png)
+
+![2026-10-01-20-26-08](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-01-20-26-08.png)
+
+### 14.1.1 EFCore的优势和劣势
+
+![2026-10-01-20-26-28](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-01-20-26-28.png)
+
+| **特性** | **优势** | **劣势** |
+|----------|----------|----------|
+| **开发效率** | 用 C# 代码操作数据库，避免编写大量 SQL 查询，提高开发速度。 | 对复杂 SQL 查询支持有限，无法完全取代原生 SQL。 |
+| **代码可维护性** | 模型与数据库结构解耦，代码更易维护。 | 模型若是反向生成（如 Database First），可能不够灵活和可读。 |
+| **数据库迁移** | `Add-Migration` 与 `Update-Database` 命令实现简单的版本控制和数据库更新。 | 对于已有数据库，需要谨慎使用 `Scaffold-DbContext`，否则容易引起模型和数据库不一致。 |
+| **LINQ 支持** | 支持使用 C# LINQ 查询，更安全、更易读。 | 性能不如原生 SQL，尤其在大规模数据处理时。 |
+| **跨数据库支持** | 支持多种数据库（如 SQL Server、MySQL、PostgreSQL 等）。 | 某些数据库特定功能可能需要额外配置或插件。 |
+| **对象关系映射（ORM）** | 将对象模型与数据库表自动绑定，简化数据操作。 | 对于复杂的数据库结构（如存储过程、视图）映射不够直观。 |
+| **内置缓存和性能优化** | 支持查询缓存、连接池等机制，优化性能。 | 需要手动优化，否则可能产生性能问题（如 N+1 查询）。 |
+| **与 ASP.NET Core 无缝集成** | 提供自动依赖注入、异步操作、模型注册等支持。 | 较多配置和生命周期管理要求。 |
+| **灵活性** | 可通过数据注解和 Fluent API 定制模型映射。 | 对精简的数据库设计需额外努力。 |
+| **可扩展性** | 支持拦截器、值生成器、自定义查询等高级功能。 | 需要一定的专业技术背景来有效利用这些扩展。 |
+| **轻量级** | 相比 EF，EF Core 更轻量、性能更好。 | 需要开发者具备一定的 ORM 理解和编码习惯。 |
+| **团队协作友好** | 模型与数据库文档化，便于多人协作开发。 | 对于 SQL 专家团队，可能不适用。 |
+| **适合快速开发** | 适合 MVP（Minimum Viable Product）项目，快速构建和迭代。 | 对于数据量极大或性能敏感的场景，不如原生数据库操作。 |
+| **简化 SQL 注入风险** | 使用 LINQ 查询避免 SQL 注入问题。 | 无法完全避免，尤其涉及动态 SQL 场景。 |
+
+> Entity Framework Core 提供了高效的数据库操作方式，适合大多数中型及小型 ASP.NET Core 应用，但在高性能或高度定制 SQL 的场景中需谨慎使用或结合原生 SQL。
+
+## 14.2 EFCore开发模式
+
+EF Core 常用 Code First 模式：先定义实体类，再通过 EF Core 自动生成数据库表结构。也支持 Database First 模式，从已有数据库生成实体类和上下文。
+
+1. Database First（数据库优先） 模式是先创建数据库，再使用 EF Core 从数据库中反向生成模型代码。
+
+2. Code First（代码优先） 模式是 先创建模型类，再自动生成数据库表结构。
+
+![2026-10-01-20-27-13](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-01-20-27-13.png)
+
+![2026-10-01-20-27-31](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-01-20-27-31.png)
+
+### 14.2.1 两种模式如何选择
+
+| 场景 | 推荐模式 | 说明 |
+|------|----------|------|
+| ✅ **已有数据库，不会频繁变更** | **Database First** | 适合企业级项目、现有系统集成或后端服务，开发速度较快，结构稳定性强 |
+| ✅ **快速开发、新项目** | **Code First** | 适合开发阶段不明确、模型需要快速迭代的项目，结构更灵活可控 |
+| ✅ **需要高度自定义数据库结构（如表名、列名、索引等）** | **Code First** | 你可以在代码中配置 EF 如何映射表结构，而不是依赖自动反向生成 |
+| ✅ **使用了存储过程、视图或复杂的SQL操作** | **Database First** | EF Core 能很好地处理复杂SQL结构，比如自定义视图、存储过程 |
+| ✅ **团队中只有数据库专家** | **Database First** | 如果你团队中擅长 SQL，但对 C# Entity Framework 不熟悉，这个模式更适合 |
+| ✅ **团队熟悉 C#、面向对象设计** | **Code First** | 适合现代开发中的“前端-后端-数据库”分工协作模式，开发更高效 |
+| ✅ **需要对映射和关系进行高度控制** | **Code First** | 使用 Fluent API 配置实体关系、索引、约束、值生成器等 |
+| ✅ **想要使用 Code First 的迁移机制** | **Code First** | 便于代码部署和版本管理 |
+
+## 14.3 DbContext和DbSet
+
+![2026-10-01-21-05-16](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-01-21-05-16.png)
+
+DbContext绑定到特定的数据库，而DbSet绑定到特定的表。
+
+![2026-10-01-21-08-25](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-01-21-08-25.png)

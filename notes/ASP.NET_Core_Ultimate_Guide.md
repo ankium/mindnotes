@@ -5551,10 +5551,387 @@ EF Core 常用 Code First 模式：先定义实体类，再通过 EF Core 自动
 | ✅ **需要对映射和关系进行高度控制** | **Code First** | 使用 Fluent API 配置实体关系、索引、约束、值生成器等 |
 | ✅ **想要使用 Code First 的迁移机制** | **Code First** | 便于代码部署和版本管理 |
 
-## 14.3 DbContext和DbSet
+## 14.3 使用EFCore
+
+### 14.3.1 准备模型数据
+
+ - Person模型类
+
+ ```C#
+using System;
+using System.ComponentModel.DataAnnotations;
+
+namespace Entities
+{
+  /// <summary>
+  /// Person domain model class
+  /// </summary>
+  public class Person
+  {
+    [Key]
+    public Guid PersonID { get; set; }
+
+    [StringLength(40)] //nvarchar(40)
+    public string? PersonName { get; set; }
+
+    [StringLength(40)]
+    public string? Email { get; set; }
+
+    public DateTime? DateOfBirth { get; set; }
+
+    [StringLength(10)]
+    public string? Gender { get; set; }
+
+    //uniqueidentifier
+    public Guid? CountryID { get; set; }
+
+    [StringLength(200)]
+    public string? Address { get; set; }
+
+    //bit
+    public bool ReceiveNewsLetters { get; set; }
+  }
+}
+
+ ```
+
+ - Country模型类
+
+ ```C#
+using System.ComponentModel.DataAnnotations;
+
+namespace Entities
+{
+  /// <summary>
+  /// Domain Model for Country
+  /// </summary>
+  public class Country
+  {
+    [Key]
+    public Guid CountryID { get; set; }
+
+    public string? CountryName { get; set; }
+  }
+}
+
+ ```
+### 14.3.2 引入NuGet包
+
+```bash
+Install-Package Microsoft.EntityFrameworkCore.SqlServer
+```
+### 14.3.3 创建自定义DbContext上下文类
 
 ![2026-10-01-21-05-16](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-01-21-05-16.png)
 
 DbContext绑定到特定的数据库，而DbSet绑定到特定的表。
 
 ![2026-10-01-21-08-25](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-01-21-08-25.png)
+
+自定义的DbContext上下文类必须继承自Microsoft.EntityFrameworkCore.DbContext类。
+
+```C#
+using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
+
+namespace Entities
+{
+  public class PersonsDbContext : DbContext
+  {
+    //通过DbSet将模型类绑定到对应的数据库表（一般用复数）
+    public DbSet<Country> Countries { get; set; }
+    public DbSet<Person> Persons { get; set; }
+
+    //重写OnModelCreating()方法
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+      base.OnModelCreating(modelBuilder);
+      //可自定义数据库表名
+      modelBuilder.Entity<Country>().ToTable("Countries");
+      modelBuilder.Entity<Person>().ToTable("Persons");
+    }
+  }
+}
+
+```
+
+### 14.3.4 注册DbContext服务
+
+![2026-10-02-19-10-33](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-02-19-10-33.png)
+
+在启动项目的Program.cs文件中将DbContext添加为服务。
+
+```C#
+builder.Services.AddDbContext<PersonsDbContext>(options => {
+  options.UseSqlServer();
+});
+```
+
+### 14.3.5 连接字符串
+
+#### 14.3.5.1 Connection String in appsettings.json
+
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*",
+  "ConnectionStrings":
+  {
+    "DefaultConnection": "Data Source=(localdb)\\MSSQLLocalDB;Initial Catalog=PersonsDatabase;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False"
+  }
+}
+
+```
+
+#### 14.5.3.2 AddDbContext with Connection String
+
+```C#
+using ServiceContracts;
+using Services;
+using Microsoft.EntityFrameworkCore;
+using Entities;
+
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllersWithViews();
+
+//add services into IoC container
+builder.Services.AddSingleton<ICountriesService, CountriesService>();
+builder.Services.AddSingleton<IPersonsService, PersonsService>();
+
+//Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=PersonsDatabase;Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False
+
+builder.Services.AddDbContext<PersonsDbContext>(options => {
+  options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
+
+var app = builder.Build();
+
+if (builder.Environment.IsDevelopment())
+{
+  app.UseDeveloperExceptionPage();
+}
+
+app.UseStaticFiles();
+app.MapControllers();
+
+app.Run();
+
+```
+
+### 14.3.6 种子数据
+
+默认情况下，我们根据模型类创建的数据库表是空的，但通常我们希望向表中添加一些初始数据，称之为种子数据。使用ModelBuilder.Entity<ModelClass>().HasData(entityOjbect)方法，你可以提供相应的实体对象，当数据库最初创建时，该对象数据将以行记录的方式被插入到数据库表中。
+
+![2026-10-02-19-24-22](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-02-19-24-22.png)
+
+#### 14.3.6.1 准备种子数据
+
+- Country模型类绑定数据库表的种子数据
+
+```json
+[{"CountryID":"14629847-905a-4a0e-9abe-80b61655c5cb","CountryName":"Philippines"},
+{"CountryID":"56bf46a4-02b8-4693-a0f5-0a95e2218bdc","CountryName":"Thailand"},
+{"CountryID":"12e15727-d369-49a9-8b13-bc22e9362179","CountryName":"China"},
+{"CountryID":"8f30bedc-47dd-4286-8950-73d8a68e5d41","CountryName":"Palestinian Territory"},
+{"CountryID":"501c6d33-1bbe-45f1-8fbd-2275913c6218","CountryName":"China"}]
+```
+
+- Person模型类绑定数据库表的种子数据
+
+```json
+[
+  {
+    "PersonID": "c03bbe45-9aeb-4d24-99e0-4743016ffce9",
+    "PersonName": "Marguerite",
+    "Email": "mwebsdale0@people.com.cn",
+    "DateOfBirth": "1989-08-28",
+    "Gender": "Female",
+    "CountryID": "56bf46a4-02b8-4693-a0f5-0a95e2218bdc",
+    "Address": "4 Parkside Point",
+    "ReceiveNewsLetters": false
+  },
+  {
+    "PersonID": "c3abddbd-cf50-41d2-b6c4-cc7d5a750928",
+    "PersonName": "Ursa",
+    "Email": "ushears1@globo.com",
+    "DateOfBirth": "1990-10-05",
+    "Gender": "Female",
+    "CountryID": "14629847-905a-4a0e-9abe-80b61655c5cb",
+    "Address": "6 Morningstar Circle",
+    "ReceiveNewsLetters": false
+  },
+  {
+    "PersonID": "c6d50a47-f7e6-4482-8be0-4ddfc057fa6e",
+    "PersonName": "Franchot",
+    "Email": "fbowsher2@howstuffworks.com",
+    "DateOfBirth": "1995-02-10",
+    "Gender": "Male",
+    "CountryID": "14629847-905a-4a0e-9abe-80b61655c5cb",
+    "Address": "73 Heath Avenue",
+    "ReceiveNewsLetters": true
+  },
+  {
+    "PersonID": "d15c6d9f-70b4-48c5-afd3-e71261f1a9be",
+    "PersonName": "Angie",
+    "Email": "asarvar3@dropbox.com",
+    "DateOfBirth": "1987-01-09",
+    "Gender": "Male",
+    "CountryID": "12e15727-d369-49a9-8b13-bc22e9362179",
+    "Address": "83187 Merry Drive",
+    "ReceiveNewsLetters": true
+  },
+  {
+    "PersonID": "89e5f445-d89f-4e12-94e0-5ad5b235d704",
+    "PersonName": "Tani",
+    "Email": "ttregona4@stumbleupon.com",
+    "DateOfBirth": "1995-02-11",
+    "Gender": "Gender",
+    "CountryID": "56bf46a4-02b8-4693-a0f5-0a95e2218bdc",
+    "Address": "50467 Holy Cross Crossing",
+    "ReceiveNewsLetters": false
+  },
+  {
+    "PersonID": "2a6d3738-9def-43ac-9279-0310edc7ceca",
+    "PersonName": "Mitchael",
+    "Email": "mlingfoot5@netvibes.com",
+    "DateOfBirth": "1988-01-04",
+    "Gender": "Male",
+    "CountryID": "8f30bedc-47dd-4286-8950-73d8a68e5d41",
+    "Address": "97570 Raven Circle",
+    "ReceiveNewsLetters": false
+  },
+  {
+    "PersonID": "29339209-63f5-492f-8459-754943c74abf",
+    "PersonName": "Maddy",
+    "Email": "mjarrell6@wisc.edu",
+    "DateOfBirth": "1983-02-16",
+    "Gender": "Male",
+    "CountryID": "12e15727-d369-49a9-8b13-bc22e9362179",
+    "Address": "57449 Brown Way",
+    "ReceiveNewsLetters": true
+  },
+  {
+    "PersonID": "ac660a73-b0b7-4340-abc1-a914257a6189",
+    "PersonName": "Pegeen",
+    "Email": "pretchford7@virginia.edu",
+    "DateOfBirth": "1998-12-02",
+    "Gender": "Female",
+    "CountryID": "12e15727-d369-49a9-8b13-bc22e9362179",
+    "Address": "4 Stuart Drive",
+    "ReceiveNewsLetters": true
+  },
+  {
+    "PersonID": "012107df-862f-4f16-ba94-e5c16886f005",
+    "PersonName": "Hansiain",
+    "Email": "hmosco8@tripod.com",
+    "DateOfBirth": "1990-09-20",
+    "Gender": "Male",
+    "CountryID": "12e15727-d369-49a9-8b13-bc22e9362179",
+    "Address": "413 Sachtjen Way",
+    "ReceiveNewsLetters": true
+  },
+  {
+    "PersonID": "cb035f22-e7cf-4907-bd07-91cfee5240f3",
+    "PersonName": "Lombard",
+    "Email": "lwoodwing9@wix.com",
+    "DateOfBirth": "1997-09-25",
+    "Gender": "Male",
+    "CountryID": "8f30bedc-47dd-4286-8950-73d8a68e5d41",
+    "Address": "484 Clarendon Court",
+    "ReceiveNewsLetters": false
+  },
+  {
+    "PersonID": "28d11936-9466-4a4b-b9c5-2f0a8e0cbde9",
+    "PersonName": "Minta",
+    "Email": "mconachya@va.gov",
+    "DateOfBirth": "1990-05-24",
+    "Gender": "Female",
+    "CountryID": "501c6d33-1bbe-45f1-8fbd-2275913c6218",
+    "Address": "2 Warrior Avenue",
+    "ReceiveNewsLetters": true
+  },
+  {
+    "PersonID": "a3b9833b-8a4d-43e9-8690-61e08df81a9a",
+    "PersonName": "Verene",
+    "Email": "vklussb@nationalgeographic.com",
+    "DateOfBirth": "1987-01-19",
+    "Gender": "Female",
+    "CountryID": "501c6d33-1bbe-45f1-8fbd-2275913c6218",
+    "Address": "9334 Fremont Street",
+    "ReceiveNewsLetters": true
+  }
+]
+```
+
+#### 14.3.6.2 使用种子数据
+
+```C#
+using System;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
+
+namespace Entities
+{
+  public class PersonsDbContext : DbContext
+  {
+    //为Db上下文配置数据库提供程序
+    public PersonsDbContext(DbContextOptions options) : base(options)
+    {
+    }
+
+    public DbSet<Country> Countries { get; set; }
+    public DbSet<Person> Persons { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+      base.OnModelCreating(modelBuilder);
+
+      modelBuilder.Entity<Country>().ToTable("Countries");
+      modelBuilder.Entity<Person>().ToTable("Persons");
+
+      //Seed to Countries
+      string countriesJson = System.IO.File.ReadAllText("countries.json");
+      List<Country> countries = System.Text.Json.JsonSerializer.Deserialize<List<Country>>(countriesJson);
+
+      foreach (Country country in countries)
+        modelBuilder.Entity<Country>().HasData(country);
+
+
+      //Seed to Persons
+      string personsJson = System.IO.File.ReadAllText("persons.json");
+      List<Person> persons = System.Text.Json.JsonSerializer.Deserialize<List<Person>>(personsJson);
+
+      foreach (Person person in persons)
+        modelBuilder.Entity<Person>().HasData(person);
+    }
+  }
+}
+
+```
+
+### 14.3.7 数据迁移Migration
+
+![2026-10-02-19-33-56](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-02-19-33-56.png)
+
+#### 14.3.7.1 创建迁移
+
+迁移，也称为代码优先迁移，是对数据库的命令，用于创建表或对现有表结构进行更改。使用迁移需要在包管理器控制台中运行一个小命令：
+
+```bash
+Add-Migration Initial
+```
+
+#### 14.3.7.2 运行迁移
+
+Add-Migration会为迁移生成C#代码。为了运行迁移，你将运行另一个命令:
+
+```bash
+Update-Database -Verbose
+```
+在控制台中，你可以看到针对数据库生成并执行的所有SQL脚本。 最终结果是，数据库连同表以及初始数据已创建。

@@ -5432,7 +5432,7 @@ namespace CRUDTest
 
 在 ASP.NET Core 中，属性路由（Attribute Routing） 是一种用于定义端点路由的机制，允许你在 Controller Action 方法 上直接使用属性来指定路由路径。你可以在控制器或动作方法上使用 [Route] 或 [ApiController] 属性（结合 [Route]）来定义请求的 URL 路径。这种方式 直接将路由信息添加到控制器或方法上。它允许你为控制器和动作方法定义更细粒度的路由规则，支持多种路由方式（如 GET、POST、PUT 等），并且可以定义多个路由路径。
 
-![2026-10-11-21-19-37](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-11-21-19-37.jpg)
+![2026-10-11-21-19-37](https://cdn.jsdelivr.ne/gh/ankium/mindnotes@assets/bags/2026-10-11-21-19-37.jpg)
 
 ![2026-10-11-21-20-12](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-11-21-20-12.jpg)
 
@@ -5446,30 +5446,91 @@ namespace CRUDTest
 
 ## 13.1 标签助手简介
 
+在 ASP.NET Core 中，Tag Helpers 是一种在 HTML 中使用类似 XML 的标签来生成服务器端代码的工具。它们让开发者用更接近 HTML 的方式编写 Razor 语法，并且支持了大量常用功能，如表单、链接、表单控件、导航、Bootstrap 集成等。
+
+ASP.NET Core 从 2.0 版本开始将 Tag Helpers 纳入为默认功能，并在后续的版本中持续增强。
+
 标签助手可以在视图中作为HTML标签或HTML属性调用，它们为现有HTML标签的属性提供值，或生成新的HTML标签。
 
 ![2026-09-29-21-19-54](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-29-21-19-54.png)
 
-## 13.2 Tag Helpers的 基本结构
+## 13.2 Tag Helpers 的作用
 
-### 13.2.1 内置 Tag Helpers
+![2026-09-29-21-24-46](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-29-21-24-46.png)
+
+| 作用 | 说明 |
+|------|------|
+| **HTML 转义控制** | 可以减少 HTML 转义的风险，**直接在 HTML 中插入 C# 代码**，而不用担心输出是否安全。 |
+| **增强可读性** | 通过使用类似于 HTML 标签的格式编写代码，让 HTML 的语义更明确，**增强 HTML 与 C# 的可读性与用途分离**。 |
+| **替代传统 HTML 注释** | 原先在 Razor 中使用 `@{ ... }` 代码块嵌入 HTML，Tag Helpers 提供了**更直观和更简洁的方式**处理 HTML 元素的属性。 |
+| **构建动态 HTML 元素** | 通过在 HTML 标签中使用标签助手（Tag Helper），可以**动态地设置元素的属性、事件、样式、类等**。 |
+| **统一的前端绑定** | 与 C# 的模型绑定、数据绑定功能集成非常紧密，简化了表单交互、数据展示等操作。
+
+
+## 13.3 内置 Tag Helpers
 
 ![2026-09-29-21-21-40](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-29-21-21-40.png)
 
 ![2026-09-29-21-22-30](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-29-21-22-30.png)
 
-ASP.NET Core 提供了一些 内置的 Tag Helpers，用于支持常见功能，比如：
+以下是 ASP.NET Core 8.0 中默认内置的 Tag Helpers，并列出了它们对应的传统 HTML 标签和功能。
 
-asp-route-*（用于构建 MVC 路由）
-asp-for（用于绑定表单输入与模型属性）
-asp-validation-summary（用于显示验证错误）
-asp-page / asp-page-handler（用于页面路由）
-asp-items / asp-for / asp-selected（用于构建下拉菜单）
-效果：
+| Tag Helper | 对应 HTML 标签 | 功能说明 |
+|------------|----------------|----------|
+| `asp-action` | `<a>`、`<form>`、`<input>`等 | 指定 Action 名称（如：`<a asp-action="Index">Home</a>`） |
+| `asp-controller` | `<a>`、`<form>`、`<input>`等 | 指定 Controller 名称（如：`<a asp-controller="Home" asp-action="Index">Home</a>`） |
+| `asp-area` | `<a>`、`<form>`等 | 指定 Area 名称（如：`<a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin Home</a>`） |
+| `asp-route-*` | `<a>`、`<form>`、`<input>`等 | 用于构建路由参数（如：`<a asp-route-id="123">Details</a>`） |
+| `asp-include` | `<script>`、`<style>`等 | 简化共享资源（如：`<script asp-include="script.js">`） |
+| `asp-append-version` | `<script>`、`<style>`等 | 添加缓存 Busting 版本参数用于资源加载（如：版本号 `v1.0.0`） |
+| `asp-page` | `<a>`、`<form>`等 | 指定 Razor Pages 的路径（用于 Razor Pages 项目） |
+| `asp-page-handler` | `<a>`、`<form>`等 | 指定 Razor Pages 的处理程序（如：`?handler=Edit`） |
+| `asp-route` | `<a>`、`<form>`等 | 设置路由名称（如：`asp-route-name="MyRouteName"`） |
+| `asp-for` | `<input>`、`<textarea>`、`<select>`等 | 绑定到 Model 的属性（如：`<input asp-for="Model.Name">`） |
+| `asp-items` | `<select>`、`<ul>`等 | 绑定到下拉列表的集合（如：`<select asp-items="Model.OPTIONS">`） |
+| `asp-select` | `<select>` | 简化 select 标签绑定（如：`<select asp-select="Model.SelectedOption">`） |
+| `asp-validation-for` | `<input>`、`<textarea>`等 | 显示模型验证错误（如：`<input asp-validation-for="Model.Name">`） |
+| `asp-validation-summary` | `<div>` | 显示所有验证错误信息（如：`<div asp-validation-summary="All"></div>`） |
+| `asp-require` | `<input>`等 | 表单验证（如：`<input asp-require="true">`） |
+| `asp-enum` | `<select>` | 绑定到枚举（如：`<select asp-enum="Model.EnumProperty">`） |
+| `asp-route-value` | `<a>`等 | 设置路由值（如：`<a asp-route-value="123">View Details</a>`） |
+| `asp-route-url` | `<a>`等 | 设置路线的 URL（用于 JavaScript 中的动态路由） |
+| `asp-intro` | `<span>` | 用于校验富文本编辑器（如：Quill）的引入 |
+| `asp-connection-string` | `<connectionStrings>` | 简化对 `appsettings.json` 中 connection strings 的引用 |
+| `asp-localized` | `<label>`、`<span>`等 | 简化区域化内容（如：`<span asp-localized="MyKey"></span>`） |
+| `asp-query-builder` | `<input>` | 构建查询字符串或参数（如：`<input asp-query-builder="MyQuery">`） |
+| `asp-verify` | `<input>` | 用于校验表单内容是否符合验证规则（如：`<input asp-verify="MyModel.Name">`） |
+| `asp-blazor-route` | `<a>` | 用于 Blazor 的路由（如：`<a asp-blazor-route="MyComponent">`） |
+| `asp-remember-me` | `<input>` | 用于登录表单的“记住我”复选框（如：`<input asp-remember-me="true">`） |
 
-这些 Tag Helpers 会将 HTML 标签的属性转换为 Razor 命令或 C# 逻辑，减少了需要编写大量 C# 代码的需求。
 
-### 13.2.2 自定义 Tag Helpers
+## 13.4 常见 Tag Helpers 与 HTML 标签的对比
+
+Razor Page 项目中常使用的 Tag Helpers
+
+| Tag Helper | 对应 HTML 标签 | 功能说明 |
+|------------|----------------|----------|
+| `asp-page` | `<a>`、`<form>`等 | 指向 Razor Page 的路径（相对于 `Pages/`目录） |
+| `asp-page-handler` | `<a>`、`<form>`等 | 指定 Razor Page 的处理程序（如 `?handler=Edit`） |
+| `asp-route-*` | `<a>`、`<form>`等 | 为 Razor Page 设置路由参数 |
+| `asp-for` | `<input>`、`<textarea>`、`<select>`等 | 将 HTML 控件绑定到 model 的属性 |
+| `asp-validation-for` | `<input>`、`<textarea>`、`<select>`等 | 显示与 model 属性相关的验证错误 |
+| `asp-validation-summary` | `<div>` | 显示所有 model 的验证错误 |
+| `asp-enum` | `<select>` | 枚举绑定 |
+| `asp-items` | `<select>` | 绑定数据集合（如：`IEnumerable<SelectListItem>`） |
+| `asp-include` | `<script>`、`<style>`等 | 包含外部资源（如：脚本、样式文件） |
+| `asp-append-version` | `<script>`、`<style>`等 | 添加缓存 busting 版本号（如：`v1.0.0`） |
+| `asp-connection-string` | `<connectionStrings>` | 获取 `appsettings.json` 中的连接字符串 |
+| `asp-localized` | `<label>`、`<span>`等 | 获取本地化字符串（需要 `Microsoft.AspNetCore.Localization` 包） |
+| `asp-route` | `<a>`、`<form>`等 | 为 Razor Page 设置路由名称（用于构建 Url） |
+
+**说明**
+
+- Tag Helpers 的核心是 强化 Razor 语法，将其与 HTML 结合使用，让开发者更直观地处理动态内容。
+- 有些 Tag Helpers 是专门为某些场景设计（如 Blazor、JavaScript 等）。
+- 如果你想自定义 Tag Helpers，可以通过 Razor Tag Helpers Provider 或 自定义 Tag Helper 类实现。
+
+## 13.5 自定义 Tag Helpers
 
 开发人员也可以自定义 Tag Helpers 来增强 HTML 标签的功能，支持自定义行为、属性、组件等。
 
@@ -5495,17 +5556,7 @@ public class MyCustomTagHelper : TagHelper
 <my-tag my-attr="Hello World"> </my-tag>
 ```
 
-## 13.3 Tag Helpers 的作用
 
-![2026-09-29-21-24-46](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-29-21-24-46.png)
-
-| 作用 | 说明 |
-|------|------|
-| **HTML 转义控制** | 可以减少 HTML 转义的风险，**直接在 HTML 中插入 C# 代码**，而不用担心输出是否安全。 |
-| **增强可读性** | 通过使用类似于 HTML 标签的格式编写代码，让 HTML 的语义更明确，**增强 HTML 与 C# 的可读性与用途分离**。 |
-| **替代传统 HTML 注释** | 原先在 Razor 中使用 `@{ ... }` 代码块嵌入 HTML，Tag Helpers 提供了**更直观和更简洁的方式**处理 HTML 元素的属性。 |
-| **构建动态 HTML 元素** | 通过在 HTML 标签中使用标签助手（Tag Helper），可以**动态地设置元素的属性、事件、样式、类等**。 |
-| **统一的前端绑定** | 与 C# 的模型绑定、数据绑定功能集成非常紧密，简化了表单交互、数据展示等操作。
 
 # 第14章 EntityFramework Core
 

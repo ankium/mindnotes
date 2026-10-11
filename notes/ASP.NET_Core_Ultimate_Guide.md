@@ -5442,6 +5442,90 @@ namespace CRUDTest
 
 ![2026-10-11-21-20-24](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-11-21-20-24.jpg)
 
+### 12.6.2 属性路由示例代码
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+using ServiceContracts;
+using ServiceContracts.DTO;
+using ServiceContracts.Enums;
+
+namespace CRUDExample.Controllers
+{
+    [Route("[controller]")] //对Persons控制器应用属性路由（路由令牌）
+    public class PersonsController : Controller
+    {
+        // Private field
+        private readonly IPersonsService _personsService;
+        private readonly ICountriesService _countriesService;
+
+        // Constructor
+        public PersonsController(IPersonsService personsService, ICountriesService countriesService)
+        {
+            _personsService = personsService;
+            _countriesService = countriesService;
+        }
+
+        [Route("index")] //对Index方法应用属性路由
+        [Route("/")]
+        public IActionResult Index(string searchBy, string? searchString, string sortBy = nameof(PersonResponse.PersonName), SortOrderOptions sortOrder = SortOrderOptions.ASC)
+        {
+
+            //Search
+            ViewBag.SearchFields = new Dictionary<string, string>()
+            {
+                {nameof(PersonResponse.PersonName),"Person Name"},
+                {nameof(PersonResponse.Email),"Email"},
+                {nameof(PersonResponse.DateOfBirth),"Date Of Birth"},
+                {nameof(PersonResponse.Gender),"Gender"},
+                {nameof(PersonResponse.CountryID),"Country"},
+                {nameof(PersonResponse.Address),"Address"},
+            };
+            List<PersonResponse> persons = _personsService.GetFilteredPersons(searchBy, searchString);
+            ViewBag.CurrentSearchBy = searchBy;
+            ViewBag.CurrentSearchString = searchString;
+
+            //Sort
+
+            List<PersonResponse> sortedPersons = _personsService.GetSortedPersons(persons, sortBy, sortOrder);
+            ViewBag.CurrentSortBy = sortBy;
+            ViewBag.CurrentSortOrder = sortOrder.ToString();
+            return View(sortedPersons); //Views/Persons/Index.cshtml
+        }
+
+        // Executes when the user clicks on "Create Person" hyperlink (while opening the create view)
+        [Route("[action]")] //对Create方法应用属性路由（路由令牌）
+        [HttpGet]
+        public IActionResult Create()
+        {
+            List<CountryResponse> countries = _countriesService.GetAllCountries();
+            ViewBag.Countries = countries;
+            return View();
+        }
+
+        [Route("[action]")] //对Create方法应用属性路由（路由令牌）
+        [HttpPost]
+        public IActionResult Create(PersonAddRequest personAddRequest)
+        {
+            if (!ModelState.IsValid)
+            {
+                List<CountryResponse> countries = _countriesService.GetAllCountries();
+                ViewBag.Countries = countries;
+
+                ViewBag.Errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+                return View();
+            }
+
+            // Call the service method
+            PersonResponse personResponse = _personsService.AddPerson(personAddRequest);
+
+            // Navigate to Index action method (it makes another request to "persons/index")
+            return RedirectToAction("Index", "Persons");
+        }
+    }
+}
+
+```
 # 第13章 标签助手 Tag Helpers
 
 ## 13.1 标签助手简介

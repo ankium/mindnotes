@@ -5428,6 +5428,20 @@ namespace CRUDTest
 
 ![2026-09-20-20-24-13](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-20-20-24-13.png)
 
+## 12.6 属性路由 Attribute Routing
+
+在 ASP.NET Core 中，属性路由（Attribute Routing） 是一种用于定义端点路由的机制，允许你在 Controller Action 方法 上直接使用属性来指定路由路径。你可以在控制器或动作方法上使用 [Route] 或 [ApiController] 属性（结合 [Route]）来定义请求的 URL 路径。这种方式 直接将路由信息添加到控制器或方法上。它允许你为控制器和动作方法定义更细粒度的路由规则，支持多种路由方式（如 GET、POST、PUT 等），并且可以定义多个路由路径。
+
+![2026-10-11-21-19-37](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-11-21-19-37.jpg)
+
+![2026-10-11-21-20-12](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-11-21-20-12.jpg)
+
+### 12.6.1 路由令牌 Route Tokens
+
+在控制器或者操作方法中应用属性路由时，可以使用路由令牌来自动获取控制器和操作方法的名称，而不是手动编写。
+
+![2026-10-11-21-20-24](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-11-21-20-24.jpg)
+
 # 第13章 标签助手 Tag Helpers
 
 ## 13.1 标签助手简介

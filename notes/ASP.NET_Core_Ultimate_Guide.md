@@ -5557,6 +5557,18 @@ ASP.NET Core 从 2.0 版本开始将 Tag Helpers 纳入为默认功能，并在�
 
 ![2026-09-29-21-22-30](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-09-29-21-22-30.png)
 
+![2026-10-12-23-24-18](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-12-23-24-18.jpg)
+
+![2026-10-12-23-24-28](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-12-23-24-28.jpg)
+
+![2026-10-12-23-24-38](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-12-23-24-38.jpg)
+
+![2026-10-12-23-24-47](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-12-23-24-47.jpg)
+
+![2026-10-12-23-29-00](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-12-23-29-00.jpg)
+
+![2026-10-12-23-29-10](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-12-23-29-10.jpg)
+
 以下是 ASP.NET Core 8.0 中默认内置的 Tag Helpers，并列出了它们对应的传统 HTML 标签和功能。
 
 | Tag Helper | 对应 HTML 标签 | 功能说明 |

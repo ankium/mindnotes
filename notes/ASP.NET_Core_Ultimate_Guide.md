@@ -5640,6 +5640,35 @@ public class MyCustomTagHelper : TagHelper
 <my-tag my-attr="Hello World"> </my-tag>
 ```
 
+## 13.7 客户端验证 Client Side Validations
+
+### 13.7.1 ASP.NET Core 客户端验证概述
+
+在 ASP.NET Core 中，客户端验证（Client-Side Validation）是一种帮助开发者在用户提交表单之前，在浏览器端进行输入校验的技术。它能显著提高用户体验，避免不必要的服务器端请求，减少网络负载。
+
+客户端验证通常通过 JavaScript 脚本实现，主要由 jQuery Validation 和 asp-validation 标签帮助器支持。在基于模型的 Razor 页面（Razor Pages）和 MVC 项目中广泛使用。
+
+**核心目的**
+
+- 在用户点击提交按钮之前，立即校验表单中的输入字段是否符合模型的要求。
+- 提供即时反馈（如错误提示），帮助用户更正错误。
+- 如果验证失败，阻止表单提交，并显示错误信息。
+
+### 13.7.2 客户端验证的步骤
+
+![2026-10-12-22-59-42](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-12-22-59-42.jpg)
+
+**客户端验证由以下几个部分组成：**
+
+| 组件 | 说明 |
+|------|------|
+| **Model Validation** | 通过数据注解（Data Annotations）定义模型中的校验规则 |
+| **asp-validation-for** | 用于显示字段的验证错误 |
+| **asp-validation-summary** | 用于显示所有验证错误的汇总 |
+| **jquery.validate.min.js** | 使用的 JavaScript 库（通过 `Microsoft.AspNetCore.Mvc.DataAnnotations` 和 `Microsoft.AspNetCore.Mvc.Razor.Extensions` 引入） |
+| **asp-for** | 绑定控件的值到模型属性 |
+| **Validation attributes** | 如 `[Required]`, `[StringLength]` 等 |
+| **Remote Attribute** | 可用于对输入项进行异步验证 |
 
 
 # 第14章 EntityFramework Core

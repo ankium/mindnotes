@@ -6125,3 +6125,157 @@ Add-Migration会为迁移生成C#代码。为了运行迁移，你将运行另�
 Update-Database -Verbose
 ```
 在控制台中，你可以看到针对数据库生成并执行的所有SQL脚本。 最终结果是，数据库连同表以及初始数据已创建。
+
+## 14.4 EFCore 中的 CRUD 操作及其原理
+
+> EF Core 的 CRUD 操作本质上是通过 LINQ 查询语法将实体变更映射为 SQL 语句的执行，并通过 SaveChanges() 或 SaveChangesAsync() 提交变更到数据库。
+
+### 14.4.1 CRUD 操作方式（以 Controller 为例）
+
+1. Create（新增）
+
+![2026-10-16-20-22-31](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-16-20-22-31.png)
+
+```C#
+public class PostController : Controller
+{
+    private readonly YourDbContext _context;
+
+    public PostController(YourDbContext context)
+    {
+        _context = context;
+    }
+
+    [HttpPost]
+    public IActionResult Create(Post post)
+    {
+        _context.Posts.Add(post); // 添加实体对象
+        _context.SaveChanges();   // 保存变更到数据库
+
+        return RedirectToAction("Index");
+    }
+}
+```
+
+2. Read（读取）
+
+![2026-10-16-20-23-00](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-16-20-23-00.png)
+
+```C#
+public IActionResult Index()
+{
+    var posts = _context.Posts.ToList(); // 从数据库查询所有数据
+    return View(posts);
+}
+```
+
+3. Update（更新）
+
+![2026-10-16-20-23-44](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-16-20-23-44.png)
+
+```C#
+[HttpPost]
+public IActionResult Edit(int id, Post updatedPost)
+{
+    var existingPost = _context.Posts.Find(id); // 查找原始记录
+    if (existingPost == null)
+        return NotFound();
+
+    _context.Entry(existingPost).State = EntityState.Modified; // 设置为修改状态
+    _context.SaveChanges(); // 保存变更
+
+    return RedirectToAction("Index");
+}
+```
+
+4. Delete（删除）
+
+![2026-10-16-20-24-46](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-16-20-24-46.png)
+
+```C#
+public IActionResult Delete(int id)
+{
+    var post = _context.Posts.Find(id);
+    if (post == null)
+        return NotFound();
+
+    _context.Posts.Remove(post); // 回收实体对象
+    _context.SaveChanges(); // 保存变更
+
+    return RedirectToAction("Index");
+}
+```
+
+### 14.4.2 EFCore 中 CRUD 的实现原理
+
+![2026-10-16-20-25-35](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-16-20-25-35.png)
+
+#### 14.4.2.1 Entity Framework Core 是“延迟加载”的 ORM 软件
+
+EF Core 在查询数据库时，通常是 延迟加载（Lazy Loading）或 贪婪加载（Eager Loading）的形式执行，具体在 Query 时才会发起数据库请求。
+
+#### 14.4.2.2 关键概念：Entity State 和 Change Tracker
+
+EF Core 使用 ChangeTracker 来追踪实体的状态（如 Added, Modified, Unchanged, Deleted），在 SaveChanges() 时统一提交这些状态变更到数据库。
+
+实体状态（Entity State）：
+
+| 状态 | 说明 | 操作 |
+|------|------|------|
+| `Added` | 实体是新添加的 | 使用 `.Add()` 方法 |
+| `Modified` | 实体被修改过，但未保存 | 使用 `.Update()` 方法或 `.State = EntityState.Modified` |
+| `Unchanged` | 不需要保存的默认状态 | 默认，非手动操作状态 |
+| `Deleted` | 实体被标记为删除 | 使用 `.Remove()` 方法 |
+
+#### 14.4.2.3 数据库上下文（DbContext）的核心功能：
+
+提供数据库连接（Database 属性）
+管理 ChangeTracker 以追踪变更状态
+提供 DbSet<TEntity> 以操作集合
+提供 SaveChanges() 方法来持久化变更
+
+> EF Core 使用 Change Tracker 来追踪哪些实体被修改、添加或删除，避免重复查询，并减少数据库交互的次数。
+
+#### 14.4.2.4 查询（Read）
+EF Core 通过 LINQ 预约查询（在 DbSet 上），会根据你的查询语法生成 SQL 语句。
+
+```C#
+var result = _context.Posts.Where(p => p.Author == "John").ToList();
+```
+
+> ToList() 是触发数据库查询的关键，EF Core 会优化查询 SQL 并返回结果。
+
+#### 14.4.2.5 保存变更（SaveChanges）
+
+SaveChanges() 方法会将 Change Tracker 中记录的变更执行 SQL 操作。
+实际上会调用 SaveChangesAsync()，并通过一个异步机制将变更提交到数据库。
+执行的 SQL 操作取决于实体的状态：
+- Added → INSERT
+- Modified → UPDATE
+- Deleted → DELETE
+
+### 14.4.3 CRUD 的边界情况和注意事项
+
+| 场景 | 说明 | 建议 |
+|------|------|------|
+| 使用 `Find()` 查询记录 | 快速查询，但如果记录不存在，会返回 `null` | 安全使用 `Find()` 时应判断 `null` |
+| 使用 `Add()` 新增 | 实体未被加入数据库，只是进入 Change Tracker | 保存前需考量实体数据完整性 |
+| 使用 `Update()` 更新 | 有些情况下可能需要你自己手动设置属性，然后再调用 `SaveChanges()` | `Update()` 仅适用于已有的实体 |
+| 使用 `Remove()` 删除 | 安全删除某条记录 | 通常建议通过业务逻辑判断删除合理性 |
+| 异步操作 | 使用 `SaveChangesAsync()`（推荐） | 可提高并发性能和响应速度 |
+
+### 14.4.4 EF Core 的三层结构
+
+为了清晰区分 CRUD 的职责和数据访问逻辑，通常会使用三层架构：
+
+
+前端（Controller）     用户接口
+│
+├── 业务逻辑层 (Service)
+│   └── 调用 DbContext 进行 CRUD 操作
+│
+└── 数据访问层 (DbContext)
+   └── 管理实体模型和数据库交互
+
+
+你的 DbContext 通常封装好了数据访问的逻辑，而不是直接暴露在 Controller 中。

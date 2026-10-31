@@ -6279,3 +6279,132 @@ SaveChanges() 方法会将 Change Tracker 中记录的变更执行 SQL 操作。
 
 
 你的 DbContext 通常封装好了数据访问的逻辑，而不是直接暴露在 Controller 中。
+
+## 14.5 EF 存储过程 Stored Procedures
+
+存储过程（Stored Procedure） 是预编译的 SQL 代码集合，存储在数据库中，并能被应用程序调用。
+
+它允许你将复杂的业务逻辑放在数据库中执行，从而减少客户端的处理量、提高性能、增强安全性，并支持参数化查询、事务控制等功能。
+
+![2026-10-31-21-55-39](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-31-21-55-39.png)
+
+> 如果你想执行多个或者复杂的数据库操作，这意味着你希望一次数据库调用执行多个SQL语句，那么在数据库中创建存储过程是最佳选择。因为使用存储过程，你会打包，意味着你将多个SQL语句组合成一个存储过程，然后你将从应用程序源代码中通过一次数据库调用调用它。
+
+### 14.5.1 EF Core 中存储过程的作用
+
+| **作用** | **说明** |
+|----------|----------|
+| **提升性能** | 将复杂的逻辑封装到数据库，减少网络传输的数据量 |
+| **封装业务逻辑** | 使数据库层面的逻辑更加独立和可重用 |
+| **增强安全性** | 减少直接使用 SQL 语句的可能性，避免 SQL 注入风险 |
+| **支持多个数据库** | EF Core 支持多种数据库，存储过程是通用的数据库特性 |
+| **简化 API 设计** | 可以将存储过程映射为 C# 方法，提升应用程序的可阅读性 |
+| **执行复杂操作** | 例如执行多表Join、批量更新、数据计算等 |
+
+### 14.5.2 存储过程在 EF Core 中的实现原理
+
+| **原理** | **说明** |
+|----------|----------|
+| **数据库存储** | 存储过程存储在数据库中，通过 SQL 调用 |
+| **EF Core 通过 ADO.NET 调用** | EF Core 所有操作底层都基于 ADO.NET，支持调用存储过程 |
+| **与 LINQ 松散关联** | EF Core 无法直接将存储过程映射为 LINQ 查询，但可以通过 `FromSqlRaw` 或 `FromSqlInterpolated` 进行调用 |
+| **支持输入输出参数** | 可通过定义参数标识（如 `@ParamName`）来调用带参数的存储过程 |
+| **事务机制** | EF Core 支持与数据库事务协同工作，实现原子性操作 |
+
+
+### 14.5.3 如何创建存储过程？（以 SQL Server 为例）
+
+1. 创建存储过程（SQL Server）
+
+```SQL
+CREATE PROCEDURE GetCustomersByCity
+    @City NVARCHAR(50)
+AS
+BEGIN
+    SELECT * FROM Customers WHERE City = @City;
+END
+```
+
+2. 创建返回多个结果的存储过程
+
+```SQL
+CREATE PROCEDURE MultipleResults
+AS
+BEGIN
+    SELECT * FROM Customers;
+    SELECT * FROM Orders;
+END
+```
+
+### 14.5.4 如何在 EF Core 中使用存储过程
+
+EF Core 支持使用存储过程进行数据操作，主要分为两种使用方式：
+
+1. 调用存储过程（不通过 DDL，直接调用）
+
+在 EF Core 中可以直接调用存储过程，使用 FromSqlRaw 或 FromSqlInterpolated 方法。
+
+**示例1：** 调用无参数的存储过程
+
+```C#
+var result = _context.MyStoredProcedure().FromSqlRaw("EXEC MyStoredProc").ToList();
+```
+
+> 你必须在 OnModelCreating 中对存储过程进行映射才能调用
+
+**示例2：** 调用有参数的存储过程
+
+```C#
+var result = _context.MyStoredProcedure().FromSqlRaw("EXEC MyStoredProc @Param1 = {0}, @Param2 = {1}", "val1", "val2").ToList();
+```
+
+> 注意事项：
+
+- 先执行存储过程（没有返回的 insert/delete）使用 .ExecuteSqlRaw() 方法
+- 有返回结果的存储过程，使用 .FromSqlRaw() 或 .FromSqlInterpolated() 来映射执行结果
+- 参数名必须和数据库中一致
+- 你需要提供一个 映射的类（DTO） 用于接受返回结果
+
+
+2. 映射存储过程的返回结果（需定义实体或 DTO）
+
+如果存储过程返回数据，你需要定义一个 IQueryable 的 DbSet，或者让 EF Core 自动映射到某个实体
+
+**示例：** 在 OnModelCreating 中映射存储过程
+
+```C#
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    base.OnModelCreating(modelBuilder);
+
+    modelBuilder.Entity<StoredProcResult>()
+        .HasNoKey()
+        .ToSqlQuery("EXEC GetCustomerData @CustomerId = {0}",
+            "CustomerId");
+
+    modelBuilder.Entity<StoredProcResult>()
+        .HasNoKey()
+        .ToView("StoredProcResult");
+}
+```
+
+> 注意：ToSqlQuery 用于映射带参数的存储过程，ToView 类似于视图，但允许你使用 FromSqlRaw 调用。
+
+### 14.5.5 类型映射（即返回结果如何映射到 C# 对象）
+
+EF Core 支持将查询结果映射到多个 C# 类型，具体方法如下：
+
+1. 调用存储过程返回多种类型对象
+
+```C#
+var result1 = _context.Database.ExecuteSqlRaw("EXEC InsertData @Id={0}, @Name={1}", 1, "Test");
+var result2 = _context.Customers.FromSqlRaw("EXEC GetCustomers @CustomerId={0}", 1).ToList();
+```
+
+2. 返回复杂结构（如匿名对象）
+
+```C#
+var result = _context.Database.FromSqlRaw<CustomersData>("EXEC GetCustomerData @CustomerId = {0}", 1).ToList();
+```
+
+> 你可以在 EF Core 查询中 使用 FromSqlRaw 直接地将存储过程的返回结果映射到 C# 对象。

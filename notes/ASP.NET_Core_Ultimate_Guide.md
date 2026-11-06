@@ -6292,6 +6292,8 @@ SaveChanges() 方法会将 Change Tracker 中记录的变更执行 SQL 操作。
 
 ### 14.5.1 EF Core 中存储过程的作用
 
+![2026-11-06-11-04-09](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-06-11-04-09.png)
+
 | **作用** | **说明** |
 |----------|----------|
 | **提升性能** | 将复杂的逻辑封装到数据库，减少网络传输的数据量 |
@@ -6313,6 +6315,8 @@ SaveChanges() 方法会将 Change Tracker 中记录的变更执行 SQL 操作。
 
 
 ### 14.5.3 如何创建存储过程？（以 SQL Server 为例）
+
+![2026-11-06-10-47-24](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-06-10-47-24.png)
 
 1. 创建存储过程（SQL Server）
 

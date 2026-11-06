@@ -6412,3 +6412,194 @@ var result = _context.Database.FromSqlRaw<CustomersData>("EXEC GetCustomerData @
 ```
 
 > 你可以在 EF Core 查询中 使用 FromSqlRaw 直接地将存储过程的返回结果映射到 C# 对象。
+
+## 14.6 Fluent API
+
+在 ASP.NET Core 中，Fluent API 是 Entity Framework Core (EF Core) 提供的一种强大的配置方式，用于在代码中 显式地定义模型与数据库之间的映射关系，而不是依赖 Data Annotations（数据注解） 或手动编写 OnModelCreating 方法。
+
+### 14.6.1 什么是 Fluent API？
+
+Fluent API 是使用 C# 代码配置 Entity Framework Core 的方式，替代传统的属性注解（如 [Required]、[MaxLength] 等）。
+
+它提供了一种更 灵活、可维护 和 类型安全 的模型配置方法，尤其适合复杂的映射需求或当团队不想在模型类中使用注解时。
+
+### 14.6.2 Fluent API 的作用
+
+| ✅ 作用 | ✅ 说明 |
+|--------|--------|
+| **定义实体映射** | 明确指定实体类与数据库表的映射关系 |
+| **配置属性行为** | 设置字段名称、主键、是否可为 null、约束等 |
+| **定义关系（导航属性）** | 配置一对多、多对多、一对一等关系 |
+| **自定义数据库架构** | 控制数据库物理结构，如索引、唯一约束等 |
+| **不依赖注解** | 提供更清晰的模型配置，无需在模型类上添加额外的属性 |
+| **支持类型安全** | 由于是 C# 代码，调用链更加清晰，便于维护和验证 |
+
+### 14.6.3 使用方式
+
+Fluent API 的配置通常在 DbContext 类的 OnModelCreating(ModelBuilder modelBuilder) 方法中完成。
+
+![2026-11-06-19-39-21](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-06-19-39-21.png)
+
+![2026-11-06-19-39-48](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-06-19-39-48.png)
+
+![2026-11-06-20-19-50](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-06-20-19-50.png)
+
+![2026-11-06-20-20-51](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-06-20-20-51.png)
+
+![2026-11-06-20-21-57](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-06-20-21-57.png)
+
+### 14.6.4 基本用法示例
+
+**示例 1：设置实体的表名和字段名（不使用注解）**
+
+```C#
+protected override void OnModelCreating(ModelBuilder modelBuilder)
+{
+    modelBuilder.Entity<Employee>()
+        .ToTable("Employees")       // 表名
+        .Property(e => e.Name)
+        .HasColumnName("Fullname"); // 字段名
+}
+```
+
+**示例 2：设置主键（典型用法）**
+
+```C#
+modelBuilder.Entity<Employee>()
+    .HasKey(e => e.Id);
+```
+
+**示例 3：设置主键长度（如使用 GUID）**
+
+```C#
+modelBuilder.Entity<Employee>()
+    .Property(e => e.Id)
+    .HasConversion(v => Guid.Parse(v), v => v.ToString())
+    .HasColumnName("EmployeeGuidId");
+```
+
+**示例 4：定义一对一关系**
+
+```C#
+modelBuilder.Entity<Employee>()
+    .HasOne(e => e.Profile)
+    .WithOne(p => p.Employee)
+    .HasForeignKey<Profile>(p => p.EmployeeId)
+    .OnDelete(DeleteBehavior.Cascade);
+```
+
+**示例 5：定义一对多关系**
+
+```C#
+modelBuilder.Entity<Customer>()
+    .HasMany(c => c.Orders)
+    .WithOne(o => o.Customer)
+    .HasForeignKey(o => o.CustomerId);
+```
+
+**示例 6：配置索引与唯一约束**
+
+```C#
+modelBuilder.Entity<Employee>()
+    .HasIndex(e => e.Email)
+    .IsUnique(); // 设置唯一索引
+```
+
+**示例 7：设置字段为可为 null（默认 EF 会根据类型自动配置）**
+
+```C#
+modelBuilder.Entity<Employee>()
+    .Property(e => e.Email)
+    .IsRequired(false); // 明确设置字段可为 null
+```
+
+### 14.6.5 Fluent API 的优势
+
+| ✅ 优势 | ✅ 说明 |
+|--------|--------|
+| **可读性更高** | 配置规则集中写在 `OnModelCreating` 中，不会分散在多个类中 |
+| **可维护性更强** | 适合团队开发，统一风格，避免在实体类中混入配置逻辑 |
+| **更加灵活** | 可以配置非常复杂的映射规则，超出属性注解的能力范围 |
+| **避免冲突** | 当注解和 Fluent API 冲突时，Fluent API 会**覆盖注解配置** |
+| **支持类型安全配置** | 使用 C# 代码确保配置的正确性，避免拼写错误 |
+| **适合 CI/CD 或自动化构建** | 显式的代码配置比注解更易于测试和回归检查 |
+
+### 14.6.6 Fluent API 与 Data Annotations 的差异
+
+| ✅ 类型 | ✅ Fluent API | ✅ Data Annotations（属性） |
+|--------|---------------|-----------------------------|
+| **配置方式** | 使用 C# 方法 | 使用属性标记 |
+| **可读性** | 集中且清晰 | 分散在模型类中 |
+| **灵活性** | 更强，支持更复杂规则 | 相对有限 |
+| **是否覆盖注解** | ✅ 覆盖 | ❌ 被注解覆盖 |
+| **类型安全** | ✅ 类型安全 | ❌ 需要字符串拼写（可能出错） |
+| **适合的场景** | 复杂的映射、大型项目、团队协作 | 简单的配置、快速开发 |
+
+
+### 14.6.7 使用场景建议
+
+| ✅ 场景 | ✅ 建议使用 Fluent API |
+|--------|-------------------------|
+| 需要复杂的映射规则（如自定义字段名、索引、约束） | ✅ 推荐 |
+| 团队不希望模型类中混入各种注解 | ✅ 推荐 |
+| 需要更灵活、可维护的配置方式 | ✅ 推荐 |
+| 希望避免属性注解冲突 | ✅ 推荐 |
+| 想让模型类更加干净简洁 | ✅ 推荐 |
+
+### 14.6.8 注意事项
+
+1. Fluent API 在 OnModelCreating 中定义，不能出现在 OnConfiguring 中。
+2. Fluent API 配置会覆盖 Data Annotations，如果不想被覆盖，可以使用 Ignored 标记。
+3. 配置顺序有讲究，通常应按照实体定义的顺序来配置，以免关系映射出错。
+4. 配置既可以基于实体类，也可以基于字段或导航属性。
+
+
+### 14.6.9 何时应该使用 Fluent API？
+
+| ✅ 场景 | ✅ 是否应该使用 Fluent API |
+|--------|----------------------------|
+| 仅使用基本配置 | ❌ 无必要 |
+| 数据库表名与实体类名不同 | ✅ 是 |
+| 需要设置特定约束（如 Unique Constraint、Index）| ✅ 是 |
+| 需要设置非数据库字段（如 `Id` 与 `GuidId` 映射） | ✅ 是 |
+| 需要定义复杂对象关系（如查询、逆向关系、多对多） | ✅ 是 |
+
+### 14.6.10 总结
+
+| ✅ 特点 | ✅ 说明 |
+|--------|--------|
+| **语法简洁明了** | `modelBuilder.Entity(...).Property(...).HasColumnName(...)` |
+| **支持关系配置** | 可以配置一对多、多对多、一对一关系 |
+| **类型安全** | 使用 C# 代码而不是字符串注解 |
+| **更灵活和强大** | 特别适合复杂映射和团队协作 |
+| **可统一管理配置逻辑** | 而非分散在实体类中 |
+| **与 Data Annotations 灵活搭配** | 可以同时使用注解和 Fluent API 来配置模型 |
+
+
+**示例代码总结**
+
+```C#
+public class EmployeeContext : DbContext
+{
+    public DbSet<Employee> Employees { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Employee>()
+            .ToTable("Employees")                
+            .Property(e => e.Name)
+            .HasColumnName("Fullname");
+
+        modelBuilder.Entity<Employee>()
+            .HasOne(e => e.Profile)
+            .WithOne(p => p.Employee)
+            .HasForeignKey<Profile>(p => p.EmployeeId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+```
+
+> Fluent API 是 Entity Framework Core 推荐的模型配置方式之一，适合需要精确控制模型映射、不希望模型类中混入注解、或者配置更复杂的数据库结构时使用。
+

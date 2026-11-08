@@ -6603,3 +6603,138 @@ public class EmployeeContext : DbContext
 
 > Fluent API 是 Entity Framework Core 推荐的模型配置方式之一，适合需要精确控制模型映射、不希望模型类中混入注解、或者配置更复杂的数据库结构时使用。
 
+
+## 14.7 EFCore中的表关系
+
+EF Core 的 Fluent API 关系配置，核心是在 OnModelCreating 方法中，通过 HasOne / HasMany 等链式方法，精确控制实体间的导航属性、外键和删除行为。它主要用来覆盖 EF Core 的默认约定，实现更精细的控制。
+
+### 14.7.1 核心套路
+
+Fluent API 的关系配置都在 DbContext 的 OnModelCreating() 方法里，基本模式是：
+
+```C#
+HasXXX(...).WithYYY(...).HasForeignKey(...).IsRequired()...
+```
+
+● HasOne / HasMany：描述当前实体这一端的关系
+
+● WithOne / WithMany：描述对方那一端的关系
+
+● HasForeignKey：指定外键属性
+
+● IsRequired：是否必填（决定外键是否可空）
+
+### 14.7.2 关系配置
+
+#### 14.7.2.1 一对多关系 (One-to-Many)
+
+这是最常见的关系。配置时，通常从“依赖实体”（即“多”端）开始，或者从“主体实体”（即“一”端）开始也可以。
+
+**场景：** 一个 User 有多个 Order。
+
+```C#
+// 方式一：从“多”端（Order）开始配置（推荐）
+modelBuilder.Entity<Order>()
+    .HasOne(o => o.User)          // Order 拥有一个 User
+    .WithMany(u => u.Orders)      // User 拥有多个 Order
+    .HasForeignKey(o => o.UserId); // 指定 Order 上的外键
+
+// 方式二：从“一”端（User）开始配置
+modelBuilder.Entity<User>()
+    .HasMany(u => u.Orders)
+    .WithOne(o => o.User)
+    .HasForeignKey(o => o.UserId);
+```
+
+**关键点：**
+
+HasForeignKey 指定外键属性，必须位于“多”端（这里是 Order.UserId）。
+
+如果 WithMany() 不带参数，表示“一”端没有对应的集合导航属性。
+
+如果关系是必需的（外键不可为空），可以链式调用 .IsRequired()；如果是可选的，外键属性应定义为可空类型（如 int?）。
+
+#### 14.7.2.2 一对一关系 (One-to-One)
+
+配置一对一关系时，必须明确谁是主体（Principal），谁是依赖（Dependent），外键放在依赖实体上。
+
+**场景：** 一个 User 对应一个 Profile。
+
+```C#
+modelBuilder.Entity<User>()
+    .HasOne(u => u.Profile)           // User 拥有一个 Profile
+    .WithOne(p => p.User)             // Profile 拥有一个 User
+    .HasForeignKey<Profile>(p => p.UserId); // 外键在 Profile 上
+```
+
+**关键点：**
+
+必须使用泛型版的 HasForeignKey<Profile> 来明确指定依赖实体的类型，因为 EF Core 有时无法自动推断。
+
+依赖实体的外键属性通常也是它的主键，或者需要在该属性上建立唯一约束。
+
+#### 14.7.2.3 多对多关系 (Many-to-Many)
+
+EF Core 5 及以上版本原生支持多对多关系，无需手动创建连接实体。
+
+**场景：** Student 和 Course 是多对多关系。
+
+1. 简单配置（自动生成连接表）
+
+```C#
+modelBuilder.Entity<Student>()
+    .HasMany(s => s.Courses)
+    .WithMany(c => c.Students);
+```
+
+EF Core 会自动创建一个名为 StudentCourse 的连接表，包含 StudentsId 和 CoursesId 两个外键。
+
+2. 自定义连接表
+
+如果需要指定表名、列名或添加额外属性，可以使用 UsingEntity。
+
+```C#
+modelBuilder.Entity<Student>()
+    .HasMany(s => s.Courses)
+    .WithMany(c => c.Students)
+    .UsingEntity<Dictionary<string, object>>(
+        "StudentCourse", // 自定义连接表名
+        j => j.HasOne<Course>().WithMany().HasForeignKey("CourseId"),
+        j => j.HasOne<Student>().WithMany().HasForeignKey("StudentId")
+    );
+```
+
+UsingEntity 提供了丰富的重载，用于配置连接表的各个方面。
+
+#### 14.7.2.4 删除行为 (OnDelete)
+
+使用 OnDelete 方法并传入 DeleteBehavior 枚举，可以控制删除主体实体时，依赖实体的行为。
+
+**常用选项：**
+
+- Cascade (级联删除)：删除主体时，自动删除依赖实体。非空外键的一对多关系默认启用此行为。
+
+- Restrict (限制)：如果存在依赖实体，则阻止删除主体。
+
+- SetNull (置空)：将依赖实体的外键设置为 null（要求外键可空）。
+
+**示例：** 禁止级联删除，改为限制删除。
+
+```C#
+modelBuilder.Entity<Department>()
+    .HasOne(d => d.Administrator)
+    .WithMany()
+    .OnDelete(DeleteBehavior.Restrict);
+```
+
+#### 14.7.2.5 其他实用配置
+
+- **自引用关系：** 配置指向同一实体的导航属性。例如，Category 的父子结构。
+
+```C#
+modelBuilder.Entity<Category>()
+    .HasOne(c => c.Parent)
+    .WithMany(c => c.Children)
+    .HasForeignKey(c => c.ParentId);
+```
+- **配置结构：** 建议将每个实体的配置逻辑放在独立的 IEntityTypeConfiguration<T> 类中，然后在 OnModelCreating 里通过 modelBuilder.ApplyConfigurationsFromAssembly(...) 批量加载，以保持代码整洁。

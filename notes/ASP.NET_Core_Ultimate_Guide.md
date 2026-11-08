@@ -6442,12 +6442,6 @@ Fluent API 的配置通常在 DbContext 类的 OnModelCreating(ModelBuilder mode
 
 ![2026-11-06-19-39-48](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-06-19-39-48.png)
 
-![2026-11-06-20-19-50](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-06-20-19-50.png)
-
-![2026-11-06-20-20-51](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-06-20-20-51.png)
-
-![2026-11-06-20-21-57](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-06-20-21-57.png)
-
 ### 14.6.4 基本用法示例
 
 **示例 1：设置实体的表名和字段名（不使用注解）**
@@ -6607,6 +6601,12 @@ public class EmployeeContext : DbContext
 ## 14.7 EFCore中的表关系
 
 EF Core 的 Fluent API 关系配置，核心是在 OnModelCreating 方法中，通过 HasOne / HasMany 等链式方法，精确控制实体间的导航属性、外键和删除行为。它主要用来覆盖 EF Core 的默认约定，实现更精细的控制。
+
+![2026-11-06-20-19-50](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-06-20-19-50.png)
+
+![2026-11-06-20-20-51](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-06-20-20-51.png)
+
+![2026-11-06-20-21-57](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-06-20-21-57.png)
 
 ### 14.7.1 核心套路
 

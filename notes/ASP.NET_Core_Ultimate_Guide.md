@@ -6616,13 +6616,13 @@ Fluent API 的关系配置都在 DbContext 的 OnModelCreating() 方法里，基
 HasXXX(...).WithYYY(...).HasForeignKey(...).IsRequired()...
 ```
 
-● HasOne / HasMany：描述当前实体这一端的关系
+- HasOne / HasMany：描述当前实体这一端的关系
 
-● WithOne / WithMany：描述对方那一端的关系
+- WithOne / WithMany：描述对方那一端的关系
 
-● HasForeignKey：指定外键属性
+- HasForeignKey：指定外键属性
 
-● IsRequired：是否必填（决定外键是否可空）
+- IsRequired：是否必填（决定外键是否可空）
 
 ### 14.7.2 关系配置
 
@@ -6648,11 +6648,11 @@ modelBuilder.Entity<User>()
 
 **关键点：**
 
-HasForeignKey 指定外键属性，必须位于“多”端（这里是 Order.UserId）。
+- HasForeignKey 指定外键属性，必须位于“多”端（这里是 Order.UserId）。
 
-如果 WithMany() 不带参数，表示“一”端没有对应的集合导航属性。
+- 如果 WithMany() 不带参数，表示“一”端没有对应的集合导航属性。
 
-如果关系是必需的（外键不可为空），可以链式调用 .IsRequired()；如果是可选的，外键属性应定义为可空类型（如 int?）。
+- 如果关系是必需的（外键不可为空），可以链式调用 .IsRequired()；如果是可选的，外键属性应定义为可空类型（如 int?）。
 
 #### 14.7.2.2 一对一关系 (One-to-One)
 
@@ -6669,9 +6669,9 @@ modelBuilder.Entity<User>()
 
 **关键点：**
 
-必须使用泛型版的 HasForeignKey<Profile> 来明确指定依赖实体的类型，因为 EF Core 有时无法自动推断。
+- 必须使用泛型版的 HasForeignKey<Profile> 来明确指定依赖实体的类型，因为 EF Core 有时无法自动推断。
 
-依赖实体的外键属性通常也是它的主键，或者需要在该属性上建立唯一约束。
+- 依赖实体的外键属性通常也是它的主键，或者需要在该属性上建立唯一约束。
 
 #### 14.7.2.3 多对多关系 (Many-to-Many)
 
@@ -6737,4 +6737,5 @@ modelBuilder.Entity<Category>()
     .WithMany(c => c.Children)
     .HasForeignKey(c => c.ParentId);
 ```
+
 - **配置结构：** 建议将每个实体的配置逻辑放在独立的 IEntityTypeConfiguration<T> 类中，然后在 OnModelCreating 里通过 modelBuilder.ApplyConfigurationsFromAssembly(...) 批量加载，以保持代码整洁。

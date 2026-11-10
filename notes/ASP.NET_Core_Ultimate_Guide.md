@@ -6739,3 +6739,28 @@ modelBuilder.Entity<Category>()
 ```
 
 - **配置结构：** 建议将每个实体的配置逻辑放在独立的 IEntityTypeConfiguration<T> 类中，然后在 OnModelCreating 里通过 modelBuilder.ApplyConfigurationsFromAssembly(...) 批量加载，以保持代码整洁。
+
+## 14.8 EF 异步操作
+
+![2026-11-10-23-22-35](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-10-23-22-35.png)
+
+## 14.9 文件导出
+
+### 14.9.1 导出为PDF文件
+
+![2026-11-10-23-19-51](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-10-23-19-51.png)
+
+### 14.9.2 导出为CSV文件
+
+![2026-11-10-23-20-09](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-10-23-20-09.png)
+
+![2026-11-10-23-20-39](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-10-23-20-39.png)
+
+![2026-11-10-23-20-54](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-10-23-20-54.png)
+
+![2026-11-10-23-21-05](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-10-23-21-05.png)
+
+### 14.9.3 导出为Excel文件
+
+![2026-11-10-23-21-25](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-10-23-21-25.png)
+

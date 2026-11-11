@@ -6750,17 +6750,471 @@ modelBuilder.Entity<Category>()
 
 ![2026-11-10-23-19-51](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-10-23-19-51.png)
 
+#### 14.9.1.1 安装Rotativa的NuGet包
+
+**方式一**：使用 .NET CLI（推荐）
+
+在解决方案根目录或任意路径下执行以下命令，将 <你的项目路径> 替换为实际的项目文件路径（如 src/MyProject/MyProject.csproj）：
+
+```bash
+dotnet add <你的项目路径> package Rotativa.AspNetCore --version 1.5.0
+```
+
+如果当前终端已经定位在目标项目目录下，可以简写为：
+
+```bash
+dotnet add package EPPlus --version 8.7.2
+```
+
+该命令会将指定版本的 EPPlus 包引用添加到项目文件中，并自动还原依赖。
+
+**方式二**：使用 Visual Studio 包管理器控制台
+
+在 Visual Studio 中打开“包管理器控制台”，通过 -ProjectName 参数指定目标项目：
+
+```powershell
+Install-Package Rotativa.AspNetCore -Version 1.5.0 -ProjectName <你的项目名称>
+```
+
+此命令同样支持精确指定版本和项目。
+
+**方式三**：手动编辑项目文件
+
+如果你的项目使用 PackageReference 格式（现代 .NET 项目默认使用），也可以直接编辑目标项目的 .csproj 文件，在 <ItemGroup> 节点内添加：
+
+```xml
+<PackageReference Include="Rotativa.AspNetCore" Version="1.5.0" />
+```
+
+保存后 Visual Studio 或 dotnet restore 会自动还原该包。
+
+#### 14.9.1.2 配置wkhtmltopdf
+
+**核心依赖关系**
+
+Rotativa 在运行时，会调用 wkhtmltopdf.exe（Windows）或对应的二进制文件（Linux）来实际执行 HTML 到 PDF 的转换工作。如果找不到这个可执行文件，Rotativa 将无法工作。
+
+下载地址：[Rotativa](https://wkhtmltopdf.org/downloads.html)
+
+**部署时的关键点**
+
+为了让 Rotativa 正常运行，你需要确保 wkhtmltopdf 可执行文件被正确放置：
+
+默认路径：Rotativa（特别是 ASP.NET Core 版本）默认会在网站根目录下寻找一个名为 Rotativa 的文件夹(wwwroot/Rotativa)，并期望可执行文件就在里面。
+
+自定义路径：如果不想用默认文件夹，可以在启动配置时通过 RotativaConfiguration.Setup(env, "你的相对路径") 来指定包含可执行文件的具体目录。
+
+文件完整性：除了主程序 wkhtmltopdf.exe，通常还需要将同目录下的相关依赖文件（如 wkhtmltox.dll 以及特定的 VC++ 运行库 dll）一并复制过去，以防止在服务器环境出现缺失报错。
+
+
+**在Program主程序中配置**
+
+```C#
+Rotativa.AspNetCore.RotativaConfiguration.Setup(builder.Environment.WebRootPath, "Rotativa");
+```
+
+#### 14.9.1.3 创建PDF视图
+
+在 Rotativa 中引用 CSS 文件时，需要使用绝对路径（或者能够被 wkhtmltopdf 解析的完整 URL），否则在服务器部署后，相对路径很容易失效，导致样式丢失。
+
+**为什么需要绝对路径**
+
+Rotativa 底层依赖 wkhtmltopdf 渲染页面。当它处理相对路径（如 ~/Content/site.css）时，需要一个明确的基准 URL 来定位文件。在本地开发环境（IIS Express）下可能碰巧能解析，但发布到 IIS 服务器后，由于工作目录或身份验证权限的变化，相对路径往往会解析失败，从而无法加载 CSS。
+
+**解决方案**
+
+- 使用服务器物理路径（ASP.NET MVC / .NET Framework）
+
+如果你使用的是传统的 ASP.NET MVC，可以通过 Server.MapPath 将虚拟路径转换为服务器上的物理绝对路径。这是社区中验证过能有效解决服务器端样式丢失的方法。
+
+```C#
+<link href="@Server.MapPath("~/Content/bootstrap.min.css")" rel="stylesheet" />
+```
+
+这种方法能确保 wkhtmltopdf 直接通过文件系统路径找到 CSS 文件。
+
+- 使用完整的 HTTP/HTTPS URL（通用）
+
+如果物理路径不方便，或者你使用的是 ASP.NET Core，另一种可靠的方式是在 <link> 标签中构造完整的绝对 URL。
+
+```C#
+<link href="@($"{Context.Request.Scheme}://{Context.Request.Host}/css/site.css")" rel="stylesheet" />
+```
+
+注意：这要求 wkhtmltopdf 能够访问该 URL 地址（即服务器需要能解析自身的域名或 IP，且没有防火墙拦截内部请求）。
+
+**视图代码**
+
+```html
+@model IEnumerable<PersonResponse>
+@{
+    Layout = null;
+}
+
+@*在 Rotativa 中引用 CSS 文件时，需要在 <link> 标签中构造完整的绝对 URL*@
+@* <link rel="stylesheet" href="@("http://" + Context.Request.Host.ToString() + "/StyleSheet.css")" /> *@
+<link href="@($"{Context.Request.Scheme}://{Context.Request.Host}/Stylesheet.css")" rel="stylesheet" />
+
+<h1>Persons</h1>
+
+<table class="table w-100 mt">
+    <thead>
+        <tr>
+            <th>Person Name</th>
+            <th>Email</th>
+            <th>Date Of Birth</th>
+            <th>Age</th>
+            <th>Gender</th>
+            <th>Country</th>
+            <th>Address</th>
+            <th>Receive News Letters</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (PersonResponse person in Model)
+        {
+            <tr>
+                <td style="width:15%">@person.PersonName</td>
+                <td style="width:15%">@person.Email</td>
+                <td style="width:15%">@person.DateOfBirth?.ToString("yyyy-MM-dd")</td>
+                <td style="width:10%">@person.Age</td>
+                <td style="width:10%">@person.Gender</td>
+                <td style="width:10%">@person.Country</td>
+                <td style="width:10%">@person.Address</td>
+                <td style="width:10%">@person.ReceiveNewsLetters</td>
+            </tr>
+        }
+    </tbody>
+</table>
+```
+
+**补充排查建议**
+
+如果使用了绝对路径后 CSS 依然不生效，可以检查以下两点：
+
+- 身份验证：如果你的站点启用了 Windows 身份验证，wkhtmltopdf 可能没有权限读取 CSS 文件。需要在 web.config 中为样式文件所在的目录（如 content 文件夹）添加 <allow users="*" /> 授权规则。
+
+- 打包与压缩：如果你使用了 ASP.NET 的 Bundling 功能，默认情况下会忽略 .min.css 文件。可以尝试在 BundleConfig 中加入 bundles.IgnoreList.Clear();，或者直接引用未压缩的原始 CSS 文件进行测试。
+
+#### 14.9.1.4 控制器调用方法
+
+```C#
+[Route("[controller]")]
+public class PersonsController : Controller
+{
+    [Route("[action]")]
+    public async Task<IActionResult> ExportToPDF()
+    {
+        List<PersonResponse> persons = await _personsService.GetAllPersons();
+        return new ViewAsPdf("ExportToPDF", persons,ViewData)
+        {
+            FileName = "Persons.pdf",
+            PageMargins = new Rotativa.AspNetCore.Options.Margins(10, 10, 10, 10),
+            PageOrientation = Rotativa.AspNetCore.Options.Orientation.Landscape,
+            PageSize = Rotativa.AspNetCore.Options.Size.A4
+        };
+    }
+}
+```
+
+#### 14.9.1.5 视图链接激活功能
+
+```html
+<div class="flex-1">
+    <a asp-controller="Persons" asp-action="ExportToPDF" class="ml">Export to PDF</a>
+</div>
+```
+
 ### 14.9.2 导出为CSV文件
 
 ![2026-11-10-23-20-09](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-10-23-20-09.png)
+
+#### 14.9.2.1 安装CsvHelper的NuGet包
+
+```bash
+dotnet add <你的项目路径> package CsvHelper --version 27.2.1
+```
+
+#### 14.9.2.2 接口服务
+
+- **定义接口**
+
+```C#
+/// <summary>
+/// Returns a MemoryStream containing all persons in CSV format
+/// </summary>
+/// <returns>MemoryStream containing CSV data of all persons</returns>
+Task<MemoryStream> GetPersonsCSV();
+```
+
+- **实现接口一**
 
 ![2026-11-10-23-20-39](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-10-23-20-39.png)
 
 ![2026-11-10-23-20-54](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-10-23-20-54.png)
 
+```C#
+public async Task<MemoryStream> GetPersonsCSV()
+{
+    MemoryStream memoryStream = new MemoryStream();
+    StreamWriter streamWriter = new StreamWriter(memoryStream);
+    CsvWriter csvWriter = new CsvWriter(streamWriter, CultureInfo.InvariantCulture, leaveOpen: true);
+
+    csvWriter.WriteHeader<PersonResponse>(); //PersonID,PersonName,...
+    csvWriter.NextRecord();
+
+    List<PersonResponse> persons = _db.Persons
+    .Include("Country")
+    .Select(temp => temp.ToPersonResponse()).ToList();
+
+    await csvWriter.WriteRecordsAsync(persons);
+    //1,abc,....
+
+    memoryStream.Position = 0;
+    return memoryStream;
+}
+```
+
+- **实现接口二（改进）**
+
 ![2026-11-10-23-21-05](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-10-23-21-05.png)
+
+```C#
+public async Task<MemoryStream> GetPersonsCSV()
+{
+    MemoryStream memoryStream = new MemoryStream();
+    StreamWriter streamWriter = new StreamWriter(memoryStream);
+
+    CsvConfiguration csvConfiguration = new CsvConfiguration(CultureInfo.InvariantCulture)
+    {
+        HasHeaderRecord = true,
+        Delimiter = ","
+    };
+
+    CsvWriter csvWriter = new CsvWriter(streamWriter,csvConfiguration);
+    csvWriter.WriteField(nameof(PersonResponse.PersonName));
+    csvWriter.WriteField(nameof(PersonResponse.Email));
+    csvWriter.WriteField(nameof(PersonResponse.DateOfBirth));
+    csvWriter.WriteField(nameof(PersonResponse.Age));
+    csvWriter.WriteField(nameof(PersonResponse.Gender));
+    csvWriter.WriteField(nameof(PersonResponse.Country));
+    csvWriter.WriteField(nameof(PersonResponse.Address));
+    csvWriter.WriteField(nameof(PersonResponse.ReceiveNewsLetters));
+    csvWriter.NextRecord();
+
+    List<PersonResponse> allPersons = _db.Persons.Include("Country").Select(temp => temp.ToPersonResponse()).ToList();
+    foreach (PersonResponse person in allPersons)
+    {
+        csvWriter.WriteField(person.PersonName);
+        csvWriter.WriteField(person.Email);
+        if (person.DateOfBirth.HasValue)
+        {
+            csvWriter.WriteField(person.DateOfBirth.Value.ToString("yyyy-MM-dd"));
+        }
+        else
+        {
+            csvWriter.WriteField(string.Empty);
+        }
+        csvWriter.WriteField(person.Age);
+        csvWriter.WriteField(person.Gender);
+        csvWriter.WriteField(person.Country);
+        csvWriter.WriteField(person.Address);
+        csvWriter.WriteField(person.ReceiveNewsLetters);
+        csvWriter.NextRecord();
+        csvWriter.Flush();
+    }
+
+    memoryStream.Position = 0;
+    return memoryStream;
+}
+```
+
+#### 14.9.2.3 控制器调用方法
+
+```C#
+[Route("[controller]")]
+public class PersonsController : Controller
+{
+    [Route("[action]")]
+    public async Task<IActionResult> ExportToCSV()
+    {
+        MemoryStream memoryStream = await _personsService.GetPersonsCSV();
+        return File(memoryStream, "application/octet-stream", "Persons.csv");
+    }
+}
+```
+
+#### 14.9.2.4 视图链接激活功能
+
+```html
+<div class="flex-1">
+    <a asp-controller="Persons" asp-action="ExportToCSV" class="ml">Export to CSV</a>
+</div>
+```
 
 ### 14.9.3 导出为Excel文件
 
 ![2026-11-10-23-21-25](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-10-23-21-25.png)
 
+#### 14.9.3.1 安装EPPlus的NuGet包
+
+```bash
+dotnet add <你的项目路径> package EPPlus --version 8.7.2
+```
+
+#### 14.9.3.2 许可证配置
+
+##### 14.9.3.2.1 Via Code
+
+EPPlus 8 在商业场景下需要设置许可证。自 5 版本起，使用时必须显式设置 ExcelPackage.LicenseContext，否则可能抛出异常。非商业用途可参考官方说明配置 SetNonCommercialPersonal 或 SetNonCommercialOrganization。
+
+**EPPlus 8（最新版）**
+
+配置方式变为使用 License 静态属性，且非商业使用需声明身份：
+
+```C#
+
+// 商业用途：填入购买的密钥
+ExcelPackage.License.SetCommercial("你的商业许可证密钥");
+
+// 非商业用途：填入个人姓名或组织名称
+ExcelPackage.License.SetNonCommercialPersonal("你的名字");
+// 或 ExcelPackage.License.SetNonCommercialOrganization("组织名");
+
+```
+
+注意：非商业模式下，EPPlus 会占用工作簿的“注释”和“标签”字段来写入许可信息。
+
+**EPPlus 5 / 6 / 7（旧版）**
+
+配置方式为简单的枚举值：
+
+```C#
+ExcelPackage.LicenseContext = LicenseContext.Commercial; // 商业
+// 或
+ExcelPackage.LicenseContext = LicenseContext.NonCommercial; // 非商业
+
+```
+
+##### 14.9.3.2.2 Via appSettings.json
+
+```json
+{
+    {
+    "EPPlus": {
+        "ExcelPackage": {
+            "License": "Commercial:<Your License Key here>" //The license context used
+            }
+        }
+    }
+}
+```
+
+##### 14.9.3.2.3 Via app/web.config
+
+```xml
+<appSettings>
+    <!--The license context used-->
+    <add key="EPPlus:ExcelPackage.License" value="NonCommercialPersonal:Your Name" /> //..or use "NonCommercialOrganization:Your Organizations name" 
+</appSettings>
+```
+
+##### 14.9.3.2.4 Set the environment variable 'EPPlusLicenseContext'
+
+This might be the easiest way of configuring this. Just as above, set the variable EPPlusLicense.
+这可能是一种最简单的配置方法。正如上面所述，设置变量 EPPlusLicense。
+
+#### 14.9.3.3 接口服务
+
+- **定义接口**
+
+```C#
+/// <summary>
+/// Returns persons data in Excel format as a MemoryStream
+/// </summary>
+/// <returns>Returns persons data in Excel format</returns>
+Task<MemoryStream> GetPersonsExcel();
+```
+
+- **实现接口**
+
+```C#
+public async Task<MemoryStream> GetPersonsExcel()
+{
+    MemoryStream memoryStream = new MemoryStream();
+    // Set the Non-commercial license context for EPPlus
+    ExcelPackage.License.SetNonCommercialPersonal("ankium");
+    using (ExcelPackage excelPackage = new ExcelPackage(memoryStream))
+    {
+        ExcelWorksheet worksheet = excelPackage.Workbook.Worksheets.Add("Persons");
+        // Add header row
+        worksheet.Cells[1, 1].Value = nameof(PersonResponse.PersonName);
+        worksheet.Cells[1, 2].Value = nameof(PersonResponse.Email);
+        worksheet.Cells[1, 3].Value = nameof(PersonResponse.DateOfBirth);
+        worksheet.Cells[1, 4].Value = nameof(PersonResponse.Age);
+        worksheet.Cells[1, 5].Value = nameof(PersonResponse.Gender);
+        worksheet.Cells[1, 6].Value = nameof(PersonResponse.Country);
+        worksheet.Cells[1, 7].Value = nameof(PersonResponse.Address);
+        worksheet.Cells[1, 8].Value = nameof(PersonResponse.ReceiveNewsLetters);
+        // Apply formatting to header row
+        using (ExcelRange headerCells = worksheet.Cells[1, 1, 1, 8])
+        {
+            headerCells.Style.Font.Bold = true;
+            headerCells.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+            headerCells.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+        }
+        // Add data rows
+        List<PersonResponse> allPersons = _db.Persons.Include("Country").Select(temp => temp.ToPersonResponse()).ToList();
+        int rowIndex = 2;
+        foreach (PersonResponse person in allPersons)
+        {
+            worksheet.Cells[rowIndex, 1].Value = person.PersonName;
+            worksheet.Cells[rowIndex, 2].Value = person.Email;
+            if (person.DateOfBirth.HasValue)
+            {
+                worksheet.Cells[rowIndex, 3].Value = person.DateOfBirth.Value.ToString("yyyy-MM-dd");
+            }
+            else
+            {
+                worksheet.Cells[rowIndex, 3].Value = string.Empty;
+            }
+            worksheet.Cells[rowIndex, 4].Value = person.Age;
+            worksheet.Cells[rowIndex, 5].Value = person.Gender;
+            worksheet.Cells[rowIndex, 6].Value = person.Country;
+            worksheet.Cells[rowIndex, 7].Value = person.Address;
+            worksheet.Cells[rowIndex, 8].Value = person.ReceiveNewsLetters;
+            rowIndex++;
+        }
+        // Auto-fit columns for better visibility
+        worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+        // Save the Excel package to the memory stream
+        await excelPackage.SaveAsync();
+    }
+    // Reset the position of the memory stream to the beginning
+    memoryStream.Position = 0;
+    return memoryStream;
+}
+```
+
+#### 14.9.3.4 控制器调用方法
+
+```C#
+[Route("[controller]")]
+public class PersonsController : Controller
+{
+    [Route("[action]")]
+    public async Task<IActionResult> ExportToExcel()
+    {
+        MemoryStream memoryStream = await _personsService.GetPersonsExcel();
+        return File(memoryStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Persons.xlsx");
+    }
+}
+```
+
+#### 14.9.3.5 视图链接激活功能
+
+```html
+<div class="flex-1">
+    <a asp-controller="Persons" asp-action="ExportToExcel" class="ml">Export to Excel</a>
+</div>
+```

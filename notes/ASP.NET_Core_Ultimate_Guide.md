@@ -7218,3 +7218,162 @@ public class PersonsController : Controller
     <a asp-controller="Persons" asp-action="ExportToExcel" class="ml">Export to Excel</a>
 </div>
 ```
+
+## 14.10 Excel 文件上传
+
+### 14.10.1 安装NuGet包Microsoft.AspNetCore.Http
+
+```bash
+dotnet add <你的接口项目路径> package Microsoft.AspNetCore.Http --version 2.3.14
+dotnet add <你的实现接口项目路径> package EPPlus --version 8.7.2
+```
+
+### 14.10.2 接口服务
+
+- **定义接口**
+
+此处，接口参数IFormFile来自于NuGet包Microsoft.AspNetCore.Http。
+
+```C#
+/// <summary>
+/// Uploads countries from an excel file.
+/// </summary>
+/// <param name="file">The Excel file containing country data to upload.</param>
+/// <returns>The number of countries successfully uploaded.</returns>
+Task<int> UploadCountriesFromExcelFile(IFormFile file);
+```
+
+- **实现接口**
+
+此处，使用ExcelPackage需要安装NuGet包EPPlus。
+
+```C#
+public async Task<int> UploadCountriesFromExcelFile(IFormFile file)
+{
+    MemoryStream memoryStream = new MemoryStream();
+    await file.CopyToAsync(memoryStream);
+    int countriesAddedCount = 0;
+
+    // Set the Non-commercial license context for EPPlus
+    ExcelPackage.License.SetNonCommercialPersonal("ankium");
+    using (ExcelPackage excelPackage = new ExcelPackage(memoryStream))
+    {
+        ExcelWorksheet worksheet = excelPackage.Workbook.Worksheets[0];
+        int rowCount = worksheet.Dimension.Rows;
+        for (int row = 2; row <= rowCount; row++)
+        {
+            string countryName = worksheet.Cells[row, 1].Value?.ToString()?.Trim() ?? string.Empty;
+            if (!string.IsNullOrWhiteSpace(countryName) &&
+                !_db.Countries.ToList().Any(temp => string.Equals(temp.CountryName, countryName, StringComparison.OrdinalIgnoreCase)))
+            {
+                Country country = new Country
+                {
+                    //CountryID = Guid.NewGuid(),
+                    CountryName = countryName
+                };
+                _db.Countries.Add(country);
+                await _db.SaveChangesAsync();
+                countriesAddedCount++;
+            }
+        }
+    }
+    return countriesAddedCount;
+}
+```
+
+### 14.10.3 控制器调用方法
+
+```C#
+using Microsoft.AspNetCore.Mvc;
+using ServiceContracts;
+
+namespace CRUDExample.Controllers
+{
+    [Route("controller")]
+    public class CountriesController : Controller
+    {
+        private readonly ICountriesService _countriesService;
+        public CountriesController(ICountriesService countriesService)
+        {
+            _countriesService = countriesService;
+        }
+
+        [HttpGet]
+        [Route("action")]
+        public IActionResult UploadFromExcel()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [Route("action")]
+        public async Task<IActionResult> UploadFromExcel(IFormFile excelFile)
+        {
+            if (excelFile == null || excelFile.Length == 0)
+            {
+                ViewBag.Message = "Please select an Excel file.";
+                return View();
+            }
+
+            if(!Path.GetExtension(excelFile.FileName).Equals(".xlsx",StringComparison.OrdinalIgnoreCase))
+            {
+                ViewBag.Message = "Invalid file format. Please upload an Excel file with .xlsx extension.";
+                return View();
+            }
+
+            int uploadedCount = await _countriesService.UploadCountriesFromExcelFile(excelFile);
+            ViewBag.Message = $"{uploadedCount} countries uploaded successfully.";
+            return View();
+        }
+
+    }
+}
+
+```
+
+### 14.10.4 上传视图 HttpGet
+
+对应控制器中的HttpGet操作方法
+
+```html
+<ul>
+    <li>
+        <a asp-controller="Countries" asp-action="UploadFromExcel">Upload Countries from Excel</a>
+    </li>
+</ul>
+```
+
+### 14.10.5 上传视图 HttpPost
+
+对应控制器中的HttpPost操作方法
+
+```html
+@{
+    ViewBag.Title = "Upload from Excel";
+}
+
+<h2>Upload Countries from Excel</h2>
+
+<div class="w-50">
+    <form method="post" enctype="multipart/form-data" asp-controller="Countries" asp-action="UploadFromExcel">
+        @*ExcelFile*@
+        <div class="form-field flex">
+           <div class="w-25">
+             <label class="form-label pt">Select Excel File</label>
+           </div>
+            <div class="flex-1">
+                <input type="file" class="form-input" id="excelFile" name="excelFile" accept=".xlsx,.xls" />
+                <div class="text-red">@ViewBag.ErrorMessage</div>
+                <div class="text-green">@ViewBag.Message</div>
+            </div>
+        </div>
+
+        <div class="form-field flex">
+            <div class="w-25"></div>
+            <div class="flex-1">
+                <button type="submit" class="button button-green-back">Upload</button>
+            </div>
+        </div>
+    </form>
+</div>
+```

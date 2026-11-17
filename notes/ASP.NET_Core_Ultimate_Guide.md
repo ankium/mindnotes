@@ -7402,4 +7402,53 @@ namespace CRUDExample.Controllers
 
 - 及时性：编写测试用例所花费的时间不应超过编写被测试代码所需的时间
 
+## 15.2 模拟 DbContext
 
+![2026-11-17-20-11-08](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-17-20-11-08.png)
+
+![2026-11-17-20-11-18](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-17-20-11-18.png)
+
+![2026-11-17-20-11-28](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-17-20-11-28.png)
+
+**示例代码**
+
+```C#
+
+using System;
+using System.Collections.Generic;
+using System.Text;
+using Entities;
+using Microsoft.EntityFrameworkCore;
+using ServiceContracts;
+using ServiceContracts.DTO;
+using Services;
+using System.Threading.Tasks;
+using EntityFrameworkCoreMock;
+using Moq;
+
+namespace CRUDTest
+{
+    public class CountriesServiceTest
+    {
+        private readonly ICountriesService _countriesService;
+
+        // Constructor to initialize the CountriesService instance
+        public CountriesServiceTest()
+        {
+            // Create a mock DbContext using EntityFrameworkCoreMock
+            DbContextMock<ApplicationDbContext> dbContextMock = new DbContextMock<ApplicationDbContext>(new DbContextOptionsBuilder<ApplicationDbContext>().Options);
+
+            // Create a mock DbSet for Countries
+            var countriesInitialData = new List<Country>() { };
+            dbContextMock.CreateDbSetMock(temp => temp.Countries, countriesInitialData);
+
+            // Get the mock DbContext object from the DbContextMock
+            ApplicationDbContext dbContext = dbContextMock.Object;
+
+            // Use the mock DbContext to create an instance of CountriesService
+            _countriesService = new CountriesService(dbContext);
+        }
+    }
+}
+
+```

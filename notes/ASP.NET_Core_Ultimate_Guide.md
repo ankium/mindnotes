@@ -7452,3 +7452,173 @@ namespace CRUDTest
 }
 
 ```
+
+## 15.3 AutoFixture
+
+在几乎每个单元测试用例中，经常做同一件事情：我们尝试创建一个带有假数据的虚拟模型对象。
+
+为了减少手动创建模型对象的开销，如果有一个库能自动用假数据或测试数据填充模型对象，那会更好。
+
+这正是AutoFixture的作用。
+
+AutoFixture是一个第三方库或包，它能轻松创建模型对象并在其中填充假数据。
+
+![2026-11-17-21-16-33](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-17-21-16-33.png)
+
+![2026-11-17-21-16-46](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-17-21-16-46.png)
+
+![2026-11-17-21-27-04](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-17-21-27-04.png)
+
+**手动创建模型对象的示例代码**
+
+```C#
+using Entities;
+using EntityFrameworkCoreMock;
+using Microsoft.EntityFrameworkCore;
+using ServiceContracts;
+using ServiceContracts.DTO;
+using ServiceContracts.Enums;
+using Services;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+using Xunit;
+using Xunit.Abstractions;
+
+namespace CRUDTest
+{
+    public class PersonsServiceTest
+    {
+        // private fields
+        private readonly IPersonsService _personsService;
+        private readonly ICountriesService _countriesService;
+        private readonly ITestOutputHelper _testOutputHelper;
+
+        // constructor
+        public PersonsServiceTest(ITestOutputHelper testOutputHelper)
+        {
+            // Create a mock DbContext using EntityFrameworkCoreMock
+            DbContextMock<ApplicationDbContext> dbContextMock = new DbContextMock<ApplicationDbContext>(new DbContextOptionsBuilder<ApplicationDbContext>().Options);
+
+            // Create a mock DbSet for Countries
+            var countriesInitialData = new List<Country>() { };
+            var personsInitialData = new List<Person>() { };
+            dbContextMock.CreateDbSetMock(temp => temp.Countries, countriesInitialData);
+            dbContextMock.CreateDbSetMock(temp => temp.Persons, personsInitialData);
+
+            // Get the mock DbContext object from the DbContextMock
+            ApplicationDbContext dbContext = dbContextMock.Object;
+
+            // Use the mock DbContext to create instances of CountriesService and PersonsService
+            _countriesService = new CountriesService(dbContext);
+            _personsService = new PersonsService(dbContext, _countriesService);
+
+            _testOutputHelper = testOutputHelper;
+        }
+
+        // when we supply proper PersonAddRequest object, it should insert the person into persons list ，then it should return PersonResponse object with newly generated PersonID
+        [Fact]
+        public async Task AddPerson_ProperPersonAddRequest_ReturnsPersonResponseWithNewlyGeneratedPersonID()
+        {
+            //Arrange
+            PersonAddRequest? personAddRequest = new PersonAddRequest()
+            {
+                PersonName = "John Doe",
+                Email = "john@msn.cn",
+                DateOfBirth = DateTime.Parse("2002-12-15"),
+                Address = "123 Main St",
+                CountryID = Guid.NewGuid(),
+                Gender = GenderOptions.Male,
+                ReceiveNewsLetters = true
+            };
+            // Act
+            PersonResponse person_response_from_add = await _personsService.AddPerson(personAddRequest);
+            List<PersonResponse> person_list = await _personsService.GetAllPersons();
+
+            // Assert
+            Assert.True(person_response_from_add.PersonID != Guid.Empty);
+            Assert.Contains(person_response_from_add, person_list);
+        }        
+    }
+}
+```
+
+**使用AutoFixture创建模型对象的示例代码**
+
+```C#
+using Entities;
+using EntityFrameworkCoreMock;
+using Microsoft.EntityFrameworkCore;
+using ServiceContracts;
+using ServiceContracts.DTO;
+using ServiceContracts.Enums;
+using Services;
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+using Xunit;
+using Xunit.Abstractions;
+using AutoFixture;
+
+namespace CRUDTest
+{
+    public class PersonsServiceTest
+    {
+        // private fields
+        private readonly IPersonsService _personsService;
+        private readonly ICountriesService _countriesService;
+        private readonly ITestOutputHelper _testOutputHelper;
+        private readonly IFixture _fixture;
+
+        // constructor
+        public PersonsServiceTest(ITestOutputHelper testOutputHelper)
+        {
+            _fixture = new Fixture();
+
+            // Create a mock DbContext using EntityFrameworkCoreMock
+            DbContextMock<ApplicationDbContext> dbContextMock = new DbContextMock<ApplicationDbContext>(new DbContextOptionsBuilder<ApplicationDbContext>().Options);
+
+            // Create a mock DbSet for Countries
+            var countriesInitialData = new List<Country>() { };
+            var personsInitialData = new List<Person>() { };
+            dbContextMock.CreateDbSetMock(temp => temp.Countries, countriesInitialData);
+            dbContextMock.CreateDbSetMock(temp => temp.Persons, personsInitialData);
+
+            // Get the mock DbContext object from the DbContextMock
+            ApplicationDbContext dbContext = dbContextMock.Object;
+
+            // Use the mock DbContext to create instances of CountriesService and PersonsService
+            _countriesService = new CountriesService(dbContext);
+            _personsService = new PersonsService(dbContext, _countriesService);
+
+            _testOutputHelper = testOutputHelper;
+        }
+
+        // when we supply proper PersonAddRequest object, it should insert the person into persons list ，then it should return PersonResponse object with newly generated PersonID
+        [Fact]
+        public async Task AddPerson_ProperPersonAddRequest_ReturnsPersonResponseWithNewlyGeneratedPersonID()
+        {
+            // Arrange
+            // PersonAddRequest? personAddRequest = _fixture.Create<PersonAddRequest>();
+            // If you want to set specific values for certain properties, you can use the With method to customize the generated object. For example, if you want to set the Email property to a specific value, you can do it like this:
+            PersonAddRequest? personAddRequest = _fixture.Build<PersonAddRequest>()
+                .With(temp => temp.Email, "someone@example.com")
+                .Create();
+
+            // Act
+            PersonResponse person_response_from_add = await _personsService.AddPerson(personAddRequest);
+            List<PersonResponse> person_list = await _personsService.GetAllPersons();
+
+            // Assert
+            Assert.True(person_response_from_add.PersonID != Guid.Empty);
+            Assert.Contains(person_response_from_add, person_list);
+        }        
+    }
+}
+```
+
+在AutoFixture中，我们有两种方法，即Create和Build方法。如果你想基于相应数据类型用默认值初始化所有模型对象属性，那么可用使用Create方法，但如果你想自定义某些属性值，在这种情况下，你可以使用Build，然后接着用使用Create方法。
+
+

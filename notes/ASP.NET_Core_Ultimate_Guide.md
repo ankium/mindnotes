@@ -7621,4 +7621,26 @@ namespace CRUDTest
 
 在AutoFixture中，我们有两种方法，即Create和Build方法。如果你想基于相应数据类型用默认值初始化所有模型对象属性，那么可用使用Create方法，但如果你想自定义某些属性值，在这种情况下，你可以使用Build，然后接着用使用Create方法。
 
+## 15.4 流畅断言 Fluent Assertion
 
+![2026-11-18-20-50-15](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-18-20-50-15.png)
+
+![2026-11-18-20-50-27](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-18-20-50-27.png)
+
+![2026-11-18-20-50-45](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-18-20-50-45.png)
+
+![2026-11-18-20-50-56](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-18-20-50-56.png)
+
+![2026-11-18-20-51-09](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-18-20-51-09.png)
+
+![2026-11-18-20-51-24](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-18-20-51-24.png)
+
+![2026-11-18-20-51-35](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-18-20-51-35.png)
+
+![2026-11-18-20-51-56](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-18-20-51-56.png)
+
+![2026-11-18-20-52-07](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-18-20-52-07.png)
+
+![2026-11-18-20-52-18](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-18-20-52-18.png)
+
+![2026-11-18-20-52-28](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-18-20-52-28.png)

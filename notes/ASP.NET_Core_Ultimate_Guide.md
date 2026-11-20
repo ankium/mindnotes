@@ -7644,3 +7644,275 @@ namespace CRUDTest
 ![2026-11-18-20-52-18](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-18-20-52-18.png)
 
 ![2026-11-18-20-52-28](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-18-20-52-28.png)
+
+## 15.5 仓储模式 Repository Pattern
+
+在 ASP.NET Core 开发中，仓储模式（Repository Pattern） 是一种用于 抽象数据访问逻辑，提高应用程序 可维护性、可测试性、可扩展性 的重要设计模式。它将数据访问层与业务逻辑层进行解耦，为业务层提供统一的数据访问接口，而不直接操作数据库 ORM。
+
+![2026-11-19-20-38-50](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-19-20-38-50.png)
+
+### 15.5.1 仓储模式的作用
+
+| ✅ 作用 | ✅ 说明 |
+|--------|--------|
+| **解耦数据访问与业务逻辑** | 将数据访问逻辑封装，确保业务逻辑不依赖数据库或 ORM 的具体实现 |
+| **提高代码可维护性** | 集中管理数据访问代码，便于后续修改、升级或替换数据库类型 |
+| **提升代码可测试性** | 便于使用 **Mock** 仓储来测试业务逻辑，而无需真实数据库调用 |
+| **支持多数据源** | 可以轻松对接不同数据库（如 SQL Server、MongoDB、In-memory 数据库等） |
+| **统一数据访问接口** | 增加统一的 CRUD 接口（创建、读取、更新、删除），便于后续扩展 |
+| **减少重复代码** | 将相同的数据操作逻辑集中到仓储类中，降低业务类中重复的 DB 操作代码 |
+
+### 15.5.2 仓储模式的特点
+
+| ✅ 特点 | ✅ 解释 |
+|--------|--------|
+| **单一职责原则（SRP）** | 每个仓库只负责数据访问，不包含业务逻辑 |
+| **依赖注入（DI）支持** | 仓储接口可以通过 DI 注入到业务层中，便于测试和替换实现 |
+| **支持接口编程** | 通过接口抽象数据访问层，隔离布局面向具体实现 |
+| **减少耦合** | 应用程序和数据库之间通过仓储接口沟通，避免紧耦合 |
+| **可扩展性强** | 使用不同仓储实现可轻松切换数据库（如从 SQL Server 切换到 In-memory 数据库） |
+| **易于mock测试** | 通过 mock 仓储可方便地在测试中模拟数据访问行为，避免真实数据访问 |
+
+### 15.5.3 仓储模式的基本结构 （以 ASP.NET Core 为例）
+
+[业务类] 
+    ✅ 依赖仓储接口（IRepository<T>）
+[仓储接口 IRepository<T>]
+    ✅ 定义通用的 CRUD 方法（如 Get、Find、Add、Update、Delete 等）
+[仓储实现 Repository<T>]
+    ✅ 使用 EF Core、Dapper 等实现具体方法
+[数据访问层（Data Access Layer）]
+    ✅ 实现仓储接口，使用数据库连接进行实际操作
+
+### 15.5.4 仓储模式示例（EF Core 实现）
+
+1. 定义仓储接口
+
+```C#
+using Entities;
+
+namespace RepositoryContracts
+{
+    public interface ICountriesRepository
+    {
+        Task<Country> AddCountry(Country country);
+        Task<List<Country>> GetAllCountries();
+        Task<Country?> GetCountryByCountryId(Guid countryId);
+        Task<Country?> GetCountryByCountryName(string countryName);
+    }
+}
+
+```
+
+2. 实现仓储接口（使用 EF Core）
+
+```C#
+using RepositoryContracts;
+using Microsoft.EntityFrameworkCore;
+using Entities;
+
+namespace Repository
+{
+    public class CountriesRepository:ICountriesRepository
+    {
+        private readonly ApplicationDbContext _db;
+        public CountriesRepository(ApplicationDbContext db)
+        {
+            _db = db;
+        }
+
+        public async Task<Country> AddCountry(Country country)
+        {
+            _db.Countries.Add(country);
+            await _db.SaveChangesAsync();
+            return country;
+        }
+
+        public Task<List<Country>> GetAllCountries()
+        {
+            return _db.Countries.ToListAsync();
+        }
+
+        public async Task<Country?> GetCountryByCountryId(Guid countryId)
+        {
+            return await _db.Countries.FirstOrDefaultAsync(temp => temp.CountryID == countryId);
+        }
+
+        public async Task<Country?> GetCountryByCountryName(string countryName)
+        {
+            return await _db.Countries.FirstOrDefaultAsync(temp => temp.CountryName == countryName);
+        }
+    }
+}
+
+```
+
+3. 在业务类中使用仓储接口
+
+```C#
+using ServiceContracts;
+using ServiceContracts.DTO;
+using Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
+using OfficeOpenXml;
+using RepositoryContracts;
+
+namespace Services
+{
+    public class CountriesService : ICountriesService
+    {
+        // private field to store the list of countries
+        private readonly ICountriesRepository _countriesRepository;
+
+        // constructor
+        public CountriesService(ICountriesRepository countriesRepository)
+        {
+            _countriesRepository = countriesRepository;
+        }
+
+        public async Task<CountryResponse> AddCountry(CountryAddRequest? countryAddRequest)
+        {
+            // Validation: Check if countryAddRequest is null
+            if (countryAddRequest == null)
+            {
+                throw new ArgumentNullException(nameof(countryAddRequest));
+            }
+
+            // Validation: Check if CountryName is null or empty
+            if (string.IsNullOrWhiteSpace(countryAddRequest.CountryName))
+            {
+                throw new ArgumentException("Country name cannot be null or empty.", nameof(countryAddRequest.CountryName));
+            }
+
+            // Validation: Check if a country with the same name already exists in the _countries list
+            if (await _countriesRepository.GetCountryByCountryName(countryAddRequest.CountryName) != null)
+            {
+                throw new ArgumentException($"Country with name '{countryAddRequest.CountryName}' already exists.", nameof(countryAddRequest.CountryName));
+            }
+
+            // Convert object from CountryAddRequest to Country type
+            Country country = countryAddRequest.ToCountry();
+
+            // Generate new GUID for CountryID
+            country.CountryID = Guid.NewGuid();
+
+            // Add country object into _contries list
+            await _countriesRepository.AddCountry(country);
+
+            // Convert object from Country type to CountryResponse type and return
+            return country.ToCountryResponse();
+        }
+
+        public async Task<List<CountryResponse>> GetAllCountries()
+        {
+            List<Country> countries = await _countriesRepository.GetAllCountries();
+            return countries.Select(country => country.ToCountryResponse()).ToList();
+        }
+
+        public async Task<CountryResponse?> GetCountryByCountryID(Guid? countryID)
+        {
+            if (countryID == null || countryID == Guid.Empty)
+            {
+                return null;
+            }
+
+            Country? country_response_from_list = await _countriesRepository.GetCountryByCountryId(countryID.Value);
+            if (country_response_from_list == null)
+            {
+                return null;
+            }
+            else
+            {
+                return country_response_from_list.ToCountryResponse();
+            }
+        }
+
+        public async Task<int> UploadCountriesFromExcelFile(IFormFile file)
+        {
+            MemoryStream memoryStream = new MemoryStream();
+            await file.CopyToAsync(memoryStream);
+            int countriesAddedCount = 0;
+
+            // Set the Non-commercial license context for EPPlus
+            ExcelPackage.License.SetNonCommercialPersonal("ankium");
+            using (ExcelPackage excelPackage = new ExcelPackage(memoryStream))
+            {
+                ExcelWorksheet worksheet = excelPackage.Workbook.Worksheets[0];
+                int rowCount = worksheet.Dimension.Rows;
+                for (int row = 2; row <= rowCount; row++)
+                {
+                    string countryName = worksheet.Cells[row, 1].Value?.ToString()?.Trim() ?? string.Empty;
+                    if (!string.IsNullOrWhiteSpace(countryName) &&
+                        await _countriesRepository.GetCountryByCountryName(countryName) == null)
+                    {
+                        Country country = new Country
+                        {
+                            //CountryID = Guid.NewGuid(),
+                            CountryName = countryName
+                        };
+                        await _countriesRepository.AddCountry(country);
+                        countriesAddedCount++;
+                    }
+                }
+            }
+            return countriesAddedCount;
+        }
+    }
+}
+
+```
+
+### 15.5.5 仓储模式的优势（在 ASP.NET Core 中）
+
+![2026-11-20-14-41-30](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-20-14-41-30.png)
+
+| ✅ 优势 | ✅ 说明 |
+|--------|--------|
+| **解耦** | 业务层不依赖数据库上下文或 ORM 实现，提高可维护性 |
+| **可扩展性** | 可以在运行时动态切换仓储实现，例如在开发、测试、部署阶段使用不同的仓储 |
+| **可测试性** | 便于在单元测试中使用 **Mock 仓储**，避免真实数据库调用 |
+| **支持多数据库** | 可以实现多个仓储（如 SQL 仓储、Mongo 仓储、内存仓储等），实现灵活切换 |
+| **提高代码可读性** | 每个仓储只做一件事，更清晰地划分职责 |
+
+### 15.5.6 仓储模式适合的场景
+
+| ✅ 适合的场景 | ❌ 不适合的场景 |
+|---------------|-----------------|
+| 需要对数据库进行统一的访问抽象 | 只需要简单的 CRUD 操作 |
+| 需要大量复用数据访问逻辑 | 仅仅是为了测试而引入的多余层次 |
+| 在单元测试中进行行为验证而不是真实数据库访问 | 业务逻辑需要复杂的数据库操作 |
+
+### 15.5.7 仓储模式的局限性（需注意）
+
+| ❌ 局限性 | ✅ 建议 |
+|----------|--------|
+| **可能增加复杂性** | 在简单应用中，可能不值得引入，可以使用简单的 `Context.Products.Find()` |
+| **过早抽象造成维护困难** | 只在需要深入分层或复杂数据操作时使用 |
+| **需要理解接口与实现分离的思想** | 不熟悉接口设计可能会让仓储变成“包装外壳” |
+
+### 15.5.8 仓储模式的典型应用（在 ASP.NET Core 中）
+
+![2026-11-20-14-41-18](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-20-14-41-18.png)
+
+- 数据访问层抽象：将数据库操作封装为独立模块
+- 业务逻辑与数据访问分离：使得业务逻辑更清晰、更专注于业务规则
+- 单元测试优化：便于 mock 数据访问层，确保测试独立性
+- 支持依赖注入：仓储接口可在 Startup 中注册，通过 DI 注入业务层
+
+```C#
+// Startup.cs 或 Program.cs 中注册仓储
+services.AddScoped<IProductRepository, ProductRepository>();
+```
+
+### 15.5.9 总结：仓储模式的作用与特点（一句话总结）
+
+> 仓储模式用于封装数据访问逻辑，为业务类提供统一接口，在 ASP.NET Core 应用中，它能帮助提升代码质量、可测试性、可维护性与可扩展性。
+
+### 15.5.10 进阶建议（可选）
+
+- 泛型仓储（Generic Repository）：可以创建一个通用仓储基类，减少重复代码。
+- 仓储工厂（Repository Factory）：支持运行时配置使用哪个仓储（如根据环境决定使用内存或SQL仓储）
+- 结合 EF Core 时，仓储模式和 EF's DbContext 高度整合，非常适合 ORM 架构应用。
+
+如果你在使用 ASP.NET Core 开发中尝试引入仓储模式，把握好“接口抽象”、“依赖注入”、“可测试性”这三个核心点，将大大提升代码质量。

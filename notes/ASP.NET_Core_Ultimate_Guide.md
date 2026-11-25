@@ -8557,3 +8557,265 @@ namespace CRUDTest
 }
 
 ```
+
+## 15.7 集成测试
+
+单元测试和集成测试在应用程序测试中同等重要。他们的区别在于，单元测试聚焦于单个组件（如测试单个控制器或仅测试服务），而不必担心其底层或高层组件；但在集成测试中，你将关注应用程序的整体功能（如你不是通过浏览器发出请求，而是通过HTTP客户端对象发送请求，并使该请求贯穿所有组件，即你的应用程序各层的完整堆栈）。
+
+![2026-11-24-21-39-27](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-24-21-39-27.png)
+
+通常，请求将由控制器接收，它调用服务（业务逻辑），该服务调用仓储，然后调用数据库上下文。在集成测试中执行相同的组件，但唯一的区别是此处不涉及浏览器，而是通过HTTP客户端以编程方式发出HTTP请求，你将观察从控制器获得的实际最终结果（例如，控制器操作方法返回视图结果，它将接收该实际HTTP响应，并检查其是否有效），这就是集成测试的核心。
+
+通常，我们必须为应用程序中可用的每个路由创建一个集成测试（如Url:persons/index，我们必须确保它成功返回有效响应）。
+
+### 15.7.1 改造源项目
+
+在使用顶级语句的项目中，在Program.cs中编写的所有语句最终将被编译为一个Program类，所有这些语句都将保存在自动生成的Program类中的public static void Main()方法中。为了使编译器生成的Program类在同一解决方案中的其他项目中（尤其是接下来我们自定义的CustomWebApplicationFactory类）可访问，我们需要将应用程序中的Program类改编为分部类，以便在代码中可用。
+
+1. 改造Program类为分部类
+
+```C#
+using ServiceContracts;
+using Services;
+using Microsoft.EntityFrameworkCore;
+using Entities;
+using RepositoryContracts;
+using Repositories;
+
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllersWithViews();
+
+// Use dependency injection to register services and repositories
+builder.Services.AddScoped<ICountriesService, CountriesService>();
+builder.Services.AddScoped<IPersonsService, PersonsService>();
+builder.Services.AddScoped<ICountriesRepository, CountriesRepository>();
+builder.Services.AddScoped<IPersonsRepository, PersonsRepository>();
+
+// Add DbContext with SQL Server provider
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+});
+
+//Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=PersonsDatabase;Integrated Security=True;Connect Timeout=30;Encrypt=True;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False;Command Timeout=30
+var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+
+if (builder.Environment.IsEnvironment("Test") == false)
+{
+    Rotativa.AspNetCore.RotativaConfiguration.Setup(builder.Environment.WebRootPath, "Rotativa");
+}
+
+app.UseStaticFiles();
+app.UseRouting();
+app.MapControllers();
+
+app.Run();
+
+// Make the auto-generated Program accessible programmatically
+public partial class Program { }
+
+```
+
+2. 改造项目文件
+
+不幸的是，自动生成的Program类在当前运行的应用程序之外不可用，为使其对同一解决方案中的其他项目（如测试项目）可用，我们必须在当前项目（源项目）的.csproj项目文件中进行一些更改。其中InternalsVisibleTo标签的确切作用是：它向测试项目（目标项目）授予权限，以访问ASP.NET Core项目中的自动生成类。
+
+```XML
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.14">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.14" />
+    <PackageReference Include="Rotativa.AspNetCore" Version="1.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Entities\Entities.csproj" />
+    <ProjectReference Include="..\RepositoryContracts\RepositoryContracts.csproj" />
+    <ProjectReference Include="..\Repository\Repositories.csproj" />
+    <ProjectReference Include="..\ServiceContracts\ServiceContracts.csproj" />
+    <ProjectReference Include="..\Services\Services.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <InternalsVisibleTo Include="../CRUDTest/CRUDTest.csproj" />
+  </ItemGroup>
+
+</Project>
+
+```
+
+### 15.7.2 自定义CustomWebApplicationFactory
+
+为应用程序创建HTTP客户端，我们需要创建一个自定义CustomWebApplicationFactory，它是一个用户定义的类，负责启动应用程序并使其可用于集成测试（以不同常规的方式启动应用程序：即应用程序端点对集成测试可用，而不是对浏览器等客户端可用）。
+
+> 注意：使用常规Program.cs执行应用程序，它会使应用程序对客户端（浏览器）可用。
+
+自定义CustomWebApplicationFactory类需要继承自WebApplicationFactory<Program>，它基于上述改造后的Program类。在测试项目中使用WebApplicationFactory<Program>类需要安装NuGet包Microsoft.AspNetCore.Mvc.Testing;
+
+```bash
+dotnet add <你的测试项目路径> package Microsoft.AspNetCore.Mvc.Testing --version 6.0.7
+```
+
+```C#
+using Entities;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace CRUDTest;
+
+public class CustomWebApplicationFactory:WebApplicationFactory<Program>
+{
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        base.ConfigureWebHost(builder);
+        builder.UseEnvironment("Test");
+        builder.ConfigureServices(services =>
+        {
+            ServiceDescriptor? descriptor = services.SingleOrDefault(temp => temp.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
+            if (descriptor!=null)
+            {
+                services.Remove(descriptor);
+            }
+        });
+    }
+}
+
+```
+
+如此，原来存在于ASP.NET Core项目中的Program类，现在在测试项目中可被访问。
+
+### 15.7.3 使用内存数据库 EFCore In-Memory
+
+![2026-11-25-23-10-53](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-25-23-10-53.png)
+
+内存中的EFCore是实际EFCore与SQL Server的替代实现，区别在于真实的SQL Server数据库服务器（无论是Local数据库还是SQL Server），它依赖于连接字符串；但内存中的EFCore不会访问SQL Server数据库，且提供相同的dbcontext功能，即尝试在现有内存集合上执行所有CRUD操作（包括所有LINQ查询），此外，每次运行应用程序时都会在内存中创建一个新数据库而不保留上一个会话的所有数据（这正是测试所需）。 为启动EFCore In-Memory需要安装NuGet包Microsoft.EntityFrameworkCore.InMemory
+
+```bash
+dotnet add <你的测试项目路径> package Microsoft.EntityFrameworkCore.InMemory --version 6.0.7
+```
+
+```C#
+using Entities;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore.InMemory;
+using Microsoft.Extensions.Options;
+
+namespace CRUDTest;
+
+public class CustomWebApplicationFactory:WebApplicationFactory<Program>
+{
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        base.ConfigureWebHost(builder);
+        builder.UseEnvironment("Test");
+        builder.ConfigureServices(services =>
+        {
+            ServiceDescriptor? descriptor = services.SingleOrDefault(temp => temp.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
+            if (descriptor!=null)
+            {
+                services.Remove(descriptor);
+            }
+            services.AddDbContext<ApplicationDbContext>(Options =>
+            {
+                Options.UseInMemoryDatabase("DatabaseForTesting");
+            });
+        });
+    }
+}
+
+```
+
+### 15.7.4 创建HTTP客户端
+
+使用XUnit中的IClassFixture基于CustomWebApplicationFactory创建CustomWebApplicationFactory对象。总体而言，一旦集成测试开始，它会自动创建CustomWebApplicationFactory的新对象，我们在集成测试的构造函数中接收并使用其CreateClient方法创建HTTP客户端对象。当调用CreateClient方法时，作为ASP.NET Core内置功能的一部分，它会调用CustomWebApplicationFactory中编写的ConfigureWebHost()方法，因此它执行完整program.cs文件中的代码（连接CustomWebApplicationFactory和Program的方法就在创建CustomWebApplicationFactory类时将Program作为泛型参数传递给其基类WebApplicationFactory），如此一来，在Program类中创建的所有服务和请求管道都完全可用。
+
+```C#
+using System.Net.Http;
+using FluentAssertions;
+using Microsoft.IdentityModel.Tokens;
+
+namespace CRUDTest;
+
+public class PersonsControllerIntegrationTest : IClassFixture<CustomWebApplicationFactory>
+{
+    private readonly HttpClient _client;
+    public PersonsControllerIntegrationTest(CustomWebApplicationFactory factory)
+    {
+        _client = factory.CreateClient();
+    }
+}
+
+```
+
+### 15.7.5 带响应体的集成测试
+
+在测试项目中安装两个NuGet包Fizzler和Fizzler.Systems.HtmlAgilityPack
+
+```bash
+dotnet add <你的测试项目路径> package Fizzler --version 1.3.0
+dotnet add <你的测试项目路径> package Fizzler.Systems.HtmlAgilityPack --version 1.2.1
+```
+
+```C#
+using System.Net;
+using System.Net.Http;
+using FluentAssertions;
+using Microsoft.IdentityModel.Tokens;
+using Fizzler.Systems.HtmlAgilityPack;
+using HtmlAgilityPack;
+using Fizzler;
+
+namespace CRUDTest;
+
+public class PersonsControllerIntegrationTest : IClassFixture<CustomWebApplicationFactory>
+{
+    private readonly HttpClient _client;
+    public PersonsControllerIntegrationTest(CustomWebApplicationFactory factory)
+    {
+        _client = factory.CreateClient();
+    }
+    #region
+    [Fact]
+    public async Task Index_ToReturnView()
+    {
+        // Arrange
+
+        // Act
+        HttpResponseMessage response = await _client.GetAsync("/Persons/Index");
+
+        // Assert
+        string responseContent = await response.Content.ReadAsStringAsync();
+        HtmlDocument htmlDocument = new HtmlDocument();
+        htmlDocument.LoadHtml(responseContent);
+        var document = htmlDocument.DocumentNode;
+        document.QuerySelectorAll("table.persons").Should().NotBeNull();
+
+    }
+    #endregion
+}
+
+```

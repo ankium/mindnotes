@@ -5807,9 +5807,12 @@ namespace Entities
  ```
 ### 14.3.2 引入NuGet包
 
-```bash
-Install-Package Microsoft.EntityFrameworkCore.SqlServer
+```powershell
+Install-Package Microsoft.EntityFrameworkCore.SqlServer -ProjectName Entities -Version 10.0.14
+Install-Package Microsoft.EntityFrameworkCore.Tools -ProjectName Entities -Version 10.0.14
 ```
+
+
 ### 14.3.3 创建自定义DbContext上下文类
 
 ![2026-10-01-21-05-16](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-01-21-05-16.png)
@@ -6757,13 +6760,16 @@ modelBuilder.Entity<Category>()
 在解决方案根目录或任意路径下执行以下命令，将 <你的项目路径> 替换为实际的项目文件路径（如 src/MyProject/MyProject.csproj）：
 
 ```bash
-dotnet add <你的项目路径> package Rotativa.AspNetCore --version 1.5.0
+cd 你的项目路径
+dotnet package add Rotativa.AspNetCore --version 1.5.0
 ```
+
 
 如果当前终端已经定位在目标项目目录下，可以简写为：
 
 ```bash
-dotnet add package EPPlus --version 8.7.2
+cd 你的项目路径
+dotnet package add EPPlus --version 8.7.2
 ```
 
 该命令会将指定版本的 EPPlus 包引用添加到项目文件中，并自动还原依赖。
@@ -6932,7 +6938,8 @@ public class PersonsController : Controller
 #### 14.9.2.1 安装CsvHelper的NuGet包
 
 ```bash
-dotnet add <你的项目路径> package CsvHelper --version 27.2.1
+cd 你的项目路径
+dotnet package add CsvHelper --version 27.2.1
 ```
 
 #### 14.9.2.2 接口服务
@@ -7059,7 +7066,8 @@ public class PersonsController : Controller
 #### 14.9.3.1 安装EPPlus的NuGet包
 
 ```bash
-dotnet add <你的项目路径> package EPPlus --version 8.7.2
+cd 你的项目路径
+dotnet package add EPPlus --version 8.7.2
 ```
 
 #### 14.9.3.2 许可证配置
@@ -7224,8 +7232,10 @@ public class PersonsController : Controller
 ### 14.10.1 安装NuGet包Microsoft.AspNetCore.Http
 
 ```bash
-dotnet add <你的接口项目路径> package Microsoft.AspNetCore.Http --version 2.3.14
-dotnet add <你的实现接口项目路径> package EPPlus --version 8.7.2
+cd 你的接口项目路径
+dotnet package add Microsoft.AspNetCore.Http --version 2.3.14
+cd 你的实现接口项目路径
+dotnet package add EPPlus --version 8.7.2
 ```
 
 ### 14.10.2 接口服务
@@ -8668,49 +8678,8 @@ public partial class Program { }
 自定义CustomWebApplicationFactory类需要继承自WebApplicationFactory<Program>，它基于上述改造后的Program类。在测试项目中使用WebApplicationFactory<Program>类需要安装NuGet包Microsoft.AspNetCore.Mvc.Testing;
 
 ```bash
-dotnet add <你的测试项目路径> package Microsoft.AspNetCore.Mvc.Testing --version 6.0.7
-```
-
-```C#
-using Entities;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace CRUDTest;
-
-public class CustomWebApplicationFactory:WebApplicationFactory<Program>
-{
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
-    {
-        base.ConfigureWebHost(builder);
-        builder.UseEnvironment("Test");
-        builder.ConfigureServices(services =>
-        {
-            ServiceDescriptor? descriptor = services.SingleOrDefault(temp => temp.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-            if (descriptor!=null)
-            {
-                services.Remove(descriptor);
-            }
-        });
-    }
-}
-
-```
-
-如此，原来存在于ASP.NET Core项目中的Program类，现在在测试项目中可被访问。
-
-### 15.7.3 使用内存数据库 EFCore In-Memory
-
-![2026-11-25-23-10-53](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-25-23-10-53.png)
-
-内存中的EFCore是实际EFCore与SQL Server的替代实现，区别在于真实的SQL Server数据库服务器（无论是Local数据库还是SQL Server），它依赖于连接字符串；但内存中的EFCore不会访问SQL Server数据库，且提供相同的dbcontext功能，即尝试在现有内存集合上执行所有CRUD操作（包括所有LINQ查询），此外，每次运行应用程序时都会在内存中创建一个新数据库而不保留上一个会话的所有数据（这正是测试所需）。 为启动EFCore In-Memory需要安装NuGet包Microsoft.EntityFrameworkCore.InMemory
-
-```bash
-dotnet add <你的测试项目路径> package Microsoft.EntityFrameworkCore.InMemory --version 6.0.7
+cd 测试项目路径
+dotnet package add Microsoft.AspNetCore.Mvc.Testing --version 10.0.14
 ```
 
 ```C#
@@ -8723,10 +8692,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore.InMemory;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace CRUDTest;
 
-public class CustomWebApplicationFactory:WebApplicationFactory<Program>
+public class CustomWebApplicationFactory : WebApplicationFactory<Program> //原来存在于ASP.NET Core项目中的Program类，现在在测试项目中可被访问。
 {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -8734,15 +8705,57 @@ public class CustomWebApplicationFactory:WebApplicationFactory<Program>
         builder.UseEnvironment("Test");
         builder.ConfigureServices(services =>
         {
-            ServiceDescriptor? descriptor = services.SingleOrDefault(temp => temp.ServiceType == typeof(DbContextOptions<ApplicationDbContext>));
-            if (descriptor!=null)
-            {
-                services.Remove(descriptor);
-            }
-            services.AddDbContext<ApplicationDbContext>(Options =>
-            {
-                Options.UseInMemoryDatabase("DatabaseForTesting");
-            });
+            // 移除原有的数据库上下文及其配置，避免生产数据库配置影响测试。
+            services.RemoveAll<ApplicationDbContext>();
+            services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
+            services.RemoveAll<IDbContextOptionsConfiguration<ApplicationDbContext>>();
+        });
+    }
+}
+
+```
+
+### 15.7.3 使用内存数据库 EFCore In-Memory
+
+![2026-11-25-23-10-53](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-25-23-10-53.png)
+
+内存中的EFCore是实际EFCore与SQL Server的替代实现，区别在于真实的SQL Server数据库服务器（无论是Local数据库还是SQL Server），它依赖于连接字符串；但内存中的EFCore不会访问SQL Server数据库，且提供相同的dbcontext功能，即尝试在现有内存集合上执行所有CRUD操作（包括所有LINQ查询），此外，每次运行应用程序时都会在内存中创建一个新数据库而不保留上一个会话的所有数据（这正是测试所需）。 为启动EFCore In-Memory需要安装NuGet包Microsoft.EntityFrameworkCore.InMemory
+
+```bash
+cd 测试项目路径
+dotnet package add Microsoft.EntityFrameworkCore.InMemory --version 10.0.14
+```
+
+```C#
+using Entities;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore.InMemory;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+
+namespace CRUDTest;
+
+public class CustomWebApplicationFactory : WebApplicationFactory<Program>
+{
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        base.ConfigureWebHost(builder);
+        builder.UseEnvironment("Test");
+        builder.ConfigureServices(services =>
+        {
+            // 移除原有的数据库上下文及其配置，避免生产数据库配置影响测试。
+            services.RemoveAll<ApplicationDbContext>();
+            services.RemoveAll<DbContextOptions<ApplicationDbContext>>();
+            services.RemoveAll<IDbContextOptionsConfiguration<ApplicationDbContext>>();
+
+            // 为测试改用 EF Core 内存数据库，无需连接外部数据库。
+            services.AddDbContext<ApplicationDbContext>(options => options.UseInMemoryDatabase("DatabaseForTesting"));
         });
     }
 }
@@ -8776,8 +8789,9 @@ public class PersonsControllerIntegrationTest : IClassFixture<CustomWebApplicati
 在测试项目中安装两个NuGet包Fizzler和Fizzler.Systems.HtmlAgilityPack
 
 ```bash
-dotnet add <你的测试项目路径> package Fizzler --version 1.3.0
-dotnet add <你的测试项目路径> package Fizzler.Systems.HtmlAgilityPack --version 1.2.1
+cd 你的测试项目路径
+dotnet package add Fizzler --version 1.3.0
+dotnet package add Fizzler.Systems.HtmlAgilityPack --version 1.2.1
 ```
 
 ```C#
@@ -8808,14 +8822,21 @@ public class PersonsControllerIntegrationTest : IClassFixture<CustomWebApplicati
         HttpResponseMessage response = await _client.GetAsync("/Persons/Index");
 
         // Assert
+        // 确认请求成功，HTTP 状态码为 2xx。
+        response.IsSuccessStatusCode.Should().BeTrue(); 
+
+        // 读取并解析响应中的 HTML，以便检查页面结构。
         string responseContent = await response.Content.ReadAsStringAsync();
         HtmlDocument htmlDocument = new HtmlDocument();
         htmlDocument.LoadHtml(responseContent);
         var document = htmlDocument.DocumentNode;
+
+        // 查询 class 为 persons 的 table 元素集合，并确认查询结果不为 null。
         document.QuerySelectorAll("table.persons").Should().NotBeNull();
 
     }
     #endregion
 }
+
 
 ```

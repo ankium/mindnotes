@@ -8842,9 +8842,13 @@ public class PersonsControllerIntegrationTest : IClassFixture<CustomWebApplicati
 
 # 第16章 日志记录
 
+日志记录是实时记录运行时操作的过程，帮助我们理解应用程序的故障和性能瓶颈。
+
 在 ASP.NET Core 中，日志记录（Logging） 是一个非常重要的机制，用于跟踪应用运行时发生的各种事件、错误、警告、信息等，以便于调试、监控和维护应用程序。ASP.NET Core 提供了一个统一的、可扩展的日志框架，支持多种日志提供者（如控制台、文件、Serilog、Application Insights 等），可以灵活地配置日志的层级、格式、输出位置等信息。
 
 ![2026-11-28-17-38-09](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-28-17-38-09.png)
+
+![2026-11-28-19-30-53](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-28-19-30-53.png)
 
 ## 16.1 日志记录的作用
 
@@ -8860,7 +8864,20 @@ public class PersonsControllerIntegrationTest : IClassFixture<CustomWebApplicati
 
 1. **支持多种日志提供者（ILoggerProvider）**
 
-比如：ConsoleLoggerProvider（控制台），DebugLoggerProvider（调试输出），SeqLoggerProvider（日志聚合），ApplicationInsights 等
+日志提供程序指定将日志存储或显示的位置。比如：ConsoleLoggerProvider（控制台），DebugLoggerProvider（调试输出），SeqLoggerProvider（日志聚合），ApplicationInsights 等
+
+![2026-11-28-19-32-39](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-28-19-32-39.png)
+
+> 注意：ASP.NETCore内置的日志提供程序不支持文件/数据库日志提供程序。
+
+*在Program主程序中配置日志提供者*
+
+```Csharp
+// Logging
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+```
 
 2. **支持日志级别（LogLevel）**
 
@@ -8934,6 +8951,8 @@ public class HomeController : Controller
 
 2. **日志层级设置示例**
 
+![2026-11-28-18-51-48](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-28-18-51-48.png)
+
 ```Csharp
 _logger.LogTrace("This is a trace message");
 _logger.LogDebug("This is a debug message");
@@ -8944,6 +8963,8 @@ _logger.LogCritical("This is a critical message");
 ```
 
 ## 16.5 日志记录的配置（通过 appsettings.json）
+
+![2026-11-28-19-05-33](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-28-19-05-33.png)
 
 ```Json
 {
@@ -8972,6 +8993,34 @@ _logger.LogCritical("This is a critical message");
 | `YourNamespace.Controllers` | 指定 Controllers 的日志级别 |
 | `IncludeScopes` | 是否记录 `ILoggerScope`，即通过 `ILoggerFactory.CreateLogger()` 创建的日志上下文 |
 | `Debug` | 指定调试级别的日志处理方式 |
+
+![2026-11-28-20-07-13](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-28-20-07-13.png)
+
+![2026-11-28-20-07-22](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-28-20-07-22.png)
+
+![2026-11-28-20-07-30](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-28-20-07-30.png)
+
+**针对特定环境（比如开发环境，通过 appsettings.Development.json）的特定日志提供程序（如EventLog）设置日志级别：**
+
+```Csharp
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "Microsoft.AspNetCore": "Warning"
+    },
+    "EventLog": {
+      "LogLevel": {
+        "Default": "Debug"
+      }
+    }
+  }
+}
+```
+
+![2026-11-28-20-07-42](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-28-20-07-42.png)
+
+> 注意：在Windows系统的事件日志（EventLog）中，没有单独的Critical日志类别，Error日志和Critical日志都显示为Error日志。
 
 ## 16.6 日志记录在 ASP.NET Core 中的默认行为
 

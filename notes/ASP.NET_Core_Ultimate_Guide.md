@@ -662,29 +662,29 @@ app.Run();
 
 | 请求头名称                   | 说明                       | 典型用途                  | 示例值                                                              | 可否在 ASP.NET Core 中获取 | 获取方式（C#）                                         |
 | ----------------------- | ------------------------ | --------------------- | ---------------------------------------------------------------- | -------------------- | ------------------------------------------------ |
-| `Host`                  | 客户端请求的目标主机与端口            | 虚拟主机路由、服务多租户识别        | `example.com:8080`                                               | ✅ 是                  | `context.Request.Host.ToString()`                |
-| `User-Agent`            | 客户端浏览器或客户端标识             | 识别设备类型、操作系统、版本        | `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36`   | ✅ 是                  | `context.Request.Headers["User-Agent"]`          |
-| `Accept`                | 客户端可接受的内容类型              | 决定返回数据格式（如 JSON、HTML） | `application/json`, `text/html`, `*/*`                           | ✅ 是                  | `context.Request.Headers["Accept"]`              |
-| `Accept-Language`       | 客户端偏好的语言                 | 多语言支持                 | `zh-CN,zh;q=0.9,en;q=0.8`                                        | ✅ 是                  | `context.Request.Headers["Accept-Language"]`     |
-| `Accept-Encoding`       | 客户端支持的编码方式（压缩）           | 优化传输性能                | `gzip`, `br`, `deflate`, `identity`                              | ✅ 是                  | `context.Request.Headers["Accept-Encoding"]`     |
-| `Accept-Charset`        | 客户端支持的字符集                | 标识编码偏好（如 UTF-8）       | `UTF-8`, `ISO-8859-1`                                            | ✅ 是                  | `context.Request.Headers["Accept-Charset"]`      |
-| `Authorization`         | 身份认证凭证                   | JWT、Basic、Bearer 等认证  | `Bearer eyJhbGciOiJIUzI1NiIs...`<br>`Basic dXNlcjpwYXNzd29yZA==` | ✅ 是                  | `context.Request.Headers["Authorization"]`       |
-| `Content-Type`          | 请求体的 MIME 类型             | 告知服务器发送的数据格式          | `application/json`, `application/x-www-form-urlencoded`          | ✅ 是                  | `context.Request.ContentType`                    |
-| `Content-Length`        | 请求体的字节长度                 | 用于接收完整数据包             | `1234`                                                           | ✅ 是                  | `context.Request.ContentLength`                  |
-| `Content-Encoding`      | 请求体使用的编码方式               | 例如 gzip 压缩的请求体        | `gzip`                                                           | ✅ 是                  | `context.Request.Headers["Content-Encoding"]`    |
-| `Cookie`                | 浏览器发送的 Cookie            | 会话维持、身份识别             | `sessionid=abc123; theme=dark`                                   | ✅ 是                  | `context.Request.Headers["Cookie"]`              |
-| `Referer` （拼写正确）        | 请求来源页面的 URL              | 防盗链、分析用户来源            | `https://google.com/search?q=api`                                | ✅ 是                  | `context.Request.Headers["Referer"]`             |
-| `Origin`                | 发起请求的源地址（CORS）           | 用于跨域请求判断              | `https://frontend.example.com`                                   | ✅ 是                  | `context.Request.Headers["Origin"]`              |
-| `X-Requested-With`      | 标识请求是否为 AJAX 请求          | 区分普通页面请求与 JS 异步请求     | `XMLHttpRequest`                                                 | ✅ 是                  | `context.Request.Headers["X-Requested-With"]`    |
-| `If-Modified-Since`     | 条件请求：仅当资源已修改才返回          | 避免重复下载                | `Tue, 20 Oct 2025 14:30:00 GMT`                                  | ✅ 是                  | `context.Request.Headers["If-Modified-Since"]`   |
-| `If-None-Match`         | 条件请求：基于 ETag 的缓存验证       | 提高缓存效率                | `"abc123"`<br>`"W/\"abc123\""（弱 ETag）`                           | ✅ 是                  | `context.Request.Headers["If-None-Match"]`       |
-| `Range`                 | 请求部分内容（断点续传）             | 大文件分块下载               | `bytes=0-1023`<br>`bytes=1024-2047`                              | ✅ 是                  | `context.Request.Headers["Range"]`               |
-| `If-Match`              | 条件更新：仅当资源匹配某 ETag 时才执行更新 | 防并发冲突                 | `"abc123"`                                                       | ✅ 是                  | `context.Request.Headers["If-Match"]`            |
-| `If-Unmodified-Since`   | 仅当资源未修改时才执行操作            | 保证数据一致性               | `Tue, 20 Oct 2025 14:30:00 GMT`                                  | ✅ 是                  | `context.Request.Headers["If-Unmodified-Since"]` |
-| `X-Forwarded-For`       | 代理服务器转发的客户端真实 IP         | 识别真实访问者（负载均衡、CDN）     | `192.168.1.1, 10.0.0.1`                                          | ✅ 是（需配置）             | `context.Request.Headers["X-Forwarded-For"]`     |
-| `X-Forwarded-Proto`     | 客户端请求的协议（HTTP/HTTPS）     | 判断真实协议（尤其在反向代理后）      | `https`                                                          | ✅ 是                  | `context.Request.Headers["X-Forwarded-Proto"]`   |
-| `X-Real-IP`             | 真实客户端 IP（Nginx/Apache 等） | 获取客户端真实地址             | `1.2.3.4`                                                        | ✅ 是（需配置）             | `context.Request.Headers["X-Real-IP"]`           |
-| `Authorization: Bearer` | JWT Token 认证常用方式         | API 认证、OAuth2         | `Bearer eyJhbGciOiJIUzI1NiIs...`                                 | ✅ 是                  | `context.Request.Headers["Authorization"]`       |
+| `Host`                  | 客户端请求的目标主机与端口            | 虚拟主机路由、服务多租户识别        | `example.com:8080`                                               |  是                  | `context.Request.Host.ToString()`                |
+| `User-Agent`            | 客户端浏览器或客户端标识             | 识别设备类型、操作系统、版本        | `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36`   |  是                  | `context.Request.Headers["User-Agent"]`          |
+| `Accept`                | 客户端可接受的内容类型              | 决定返回数据格式（如 JSON、HTML） | `application/json`, `text/html`, `*/*`                           |  是                  | `context.Request.Headers["Accept"]`              |
+| `Accept-Language`       | 客户端偏好的语言                 | 多语言支持                 | `zh-CN,zh;q=0.9,en;q=0.8`                                        |  是                  | `context.Request.Headers["Accept-Language"]`     |
+| `Accept-Encoding`       | 客户端支持的编码方式（压缩）           | 优化传输性能                | `gzip`, `br`, `deflate`, `identity`                              |  是                  | `context.Request.Headers["Accept-Encoding"]`     |
+| `Accept-Charset`        | 客户端支持的字符集                | 标识编码偏好（如 UTF-8）       | `UTF-8`, `ISO-8859-1`                                            |  是                  | `context.Request.Headers["Accept-Charset"]`      |
+| `Authorization`         | 身份认证凭证                   | JWT、Basic、Bearer 等认证  | `Bearer eyJhbGciOiJIUzI1NiIs...`<br>`Basic dXNlcjpwYXNzd29yZA==` |  是                  | `context.Request.Headers["Authorization"]`       |
+| `Content-Type`          | 请求体的 MIME 类型             | 告知服务器发送的数据格式          | `application/json`, `application/x-www-form-urlencoded`          |  是                  | `context.Request.ContentType`                    |
+| `Content-Length`        | 请求体的字节长度                 | 用于接收完整数据包             | `1234`                                                           |  是                  | `context.Request.ContentLength`                  |
+| `Content-Encoding`      | 请求体使用的编码方式               | 例如 gzip 压缩的请求体        | `gzip`                                                           |  是                  | `context.Request.Headers["Content-Encoding"]`    |
+| `Cookie`                | 浏览器发送的 Cookie            | 会话维持、身份识别             | `sessionid=abc123; theme=dark`                                   |  是                  | `context.Request.Headers["Cookie"]`              |
+| `Referer` （拼写正确）        | 请求来源页面的 URL              | 防盗链、分析用户来源            | `https://google.com/search?q=api`                                |  是                  | `context.Request.Headers["Referer"]`             |
+| `Origin`                | 发起请求的源地址（CORS）           | 用于跨域请求判断              | `https://frontend.example.com`                                   |  是                  | `context.Request.Headers["Origin"]`              |
+| `X-Requested-With`      | 标识请求是否为 AJAX 请求          | 区分普通页面请求与 JS 异步请求     | `XMLHttpRequest`                                                 |  是                  | `context.Request.Headers["X-Requested-With"]`    |
+| `If-Modified-Since`     | 条件请求：仅当资源已修改才返回          | 避免重复下载                | `Tue, 20 Oct 2025 14:30:00 GMT`                                  |  是                  | `context.Request.Headers["If-Modified-Since"]`   |
+| `If-None-Match`         | 条件请求：基于 ETag 的缓存验证       | 提高缓存效率                | `"abc123"`<br>`"W/\"abc123\""（弱 ETag）`                           |  是                  | `context.Request.Headers["If-None-Match"]`       |
+| `Range`                 | 请求部分内容（断点续传）             | 大文件分块下载               | `bytes=0-1023`<br>`bytes=1024-2047`                              |  是                  | `context.Request.Headers["Range"]`               |
+| `If-Match`              | 条件更新：仅当资源匹配某 ETag 时才执行更新 | 防并发冲突                 | `"abc123"`                                                       |  是                  | `context.Request.Headers["If-Match"]`            |
+| `If-Unmodified-Since`   | 仅当资源未修改时才执行操作            | 保证数据一致性               | `Tue, 20 Oct 2025 14:30:00 GMT`                                  |  是                  | `context.Request.Headers["If-Unmodified-Since"]` |
+| `X-Forwarded-For`       | 代理服务器转发的客户端真实 IP         | 识别真实访问者（负载均衡、CDN）     | `192.168.1.1, 10.0.0.1`                                          |  是（需配置）             | `context.Request.Headers["X-Forwarded-For"]`     |
+| `X-Forwarded-Proto`     | 客户端请求的协议（HTTP/HTTPS）     | 判断真实协议（尤其在反向代理后）      | `https`                                                          |  是                  | `context.Request.Headers["X-Forwarded-Proto"]`   |
+| `X-Real-IP`             | 真实客户端 IP（Nginx/Apache 等） | 获取客户端真实地址             | `1.2.3.4`                                                        |  是（需配置）             | `context.Request.Headers["X-Real-IP"]`           |
+| `Authorization: Bearer` | JWT Token 认证常用方式         | API 认证、OAuth2         | `Bearer eyJhbGciOiJIUzI1NiIs...`                                 |  是                  | `context.Request.Headers["Authorization"]`       |
 
 #### 3.5.3.2 示例：在 ASP.NET Core 中获取请求头
 
@@ -715,10 +715,10 @@ app.Run();
 
 | 头                   | 是否可信           | 配置建议                                          |
 | ------------------- | -------------- | --------------------------------------------- |
-| `X-Forwarded-For`   | ✅ 仅在可信代理后生效    | 推荐使用 `Microsoft.AspNetCore.HttpOverrides` 中间件 |
-| `X-Forwarded-Proto` | ✅ 仅当反向代理设置时才可信 | 同上，启用 `UseForwardedHeaders()`                 |
-| `Authorization`     | ✅ 仅来自可信客户端     | 建议在中间件中验证签名、密钥等                               |
-| `Referer`           | ❌ 可伪造          | 不可作为安全依据，仅用于分析、防盗链                            |
+| `X-Forwarded-For`   |  仅在可信代理后生效    | 推荐使用 `Microsoft.AspNetCore.HttpOverrides` 中间件 |
+| `X-Forwarded-Proto` |  仅当反向代理设置时才可信 | 同上，启用 `UseForwardedHeaders()`                 |
+| `Authorization`     |  仅来自可信客户端     | 建议在中间件中验证签名、密钥等                               |
+| `Referer`           |  可伪造          | 不可作为安全依据，仅用于分析、防盗链                            |
 
 #### 3.5.3.4 最佳实践
 
@@ -753,14 +753,14 @@ app.Run();
 
 | 方法        | HTTP 标准  | 说明                 | 幂等性 | 安全性 | 典型用途                  | ASP.NET Core 使用方式                                                                                   | 备注   |
 | --------- | -------- | ------------------ | --- | --- | --------------------- | --------------------------------------------------------------------------------------------------- | :--- |
-| `GET`     | RFC 7231 | 获取资源（无副作用）         | ✅ 是 | ✅ 是 | 查询数据、读取信息（如获取用户列表）    | `public IActionResult GetUsers()`<br>在控制器中用 `[HttpGet]` 特性                                          |      |
-| `POST`    | RFC 7231 | 创建新资源或提交数据         | ❌ 否 | ❌ 否 | 创建用户、提交表单、上传文件        | `public IActionResult CreateUser(...)`<br>`[HttpPost]`                                              |      |
-| `PUT`     | RFC 7231 | 更新（替换）整个资源         | ✅ 是 | ❌ 否 | 替换某个资源完整版本（如更新全量用户信息） | `public IActionResult PutUser(int id, User user)`<br>`[HttpPut]`                                    |      |
-| `PATCH`   | RFC 5789 | 部分更新（部分补丁）         | ❌ 否 | ❌ 否 | 只修改部分字段（如更新用户邮箱）      | `public IActionResult PatchUser(int id, [FromBody] JsonPatchDocument<User> patch)`<br>`[HttpPatch]` |      |
-| `DELETE`  | RFC 7231 | 删除资源               | ✅ 是 | ❌ 否 | 删除记录、移除资源             | `public IActionResult DeleteUser(int id)`<br>`[HttpDelete]`                                         |      |
-| `HEAD`    | RFC 7231 | 获取资源元信息（不返回响应体）    | ✅ 是 | ✅ 是 | 检查资源是否存在、获取头信息        | `public IActionResult HeadUser(int id)`<br>`[HttpHead]`                                             |      |
-| `OPTIONS` | RFC 7231 | 获取服务器支持的 HTTP 方法   | ✅ 是 | ✅ 是 | CORS 预检请求、检查接口能力      | `public IActionResult GetOptions()`<br>`[HttpOptions]`                                              |      |
-| `TRACE`   | RFC 7231 | 回显请求（用于诊断）         | ✅ 是 | ✅ 是 | 调试客户端/代理路径            | 通常禁用（安全风险）                                                                                          | 演示用途 |
+| `GET`     | RFC 7231 | 获取资源（无副作用）         |  是 |  是 | 查询数据、读取信息（如获取用户列表）    | `public IActionResult GetUsers()`<br>在控制器中用 `[HttpGet]` 特性                                          |      |
+| `POST`    | RFC 7231 | 创建新资源或提交数据         |  否 |  否 | 创建用户、提交表单、上传文件        | `public IActionResult CreateUser(...)`<br>`[HttpPost]`                                              |      |
+| `PUT`     | RFC 7231 | 更新（替换）整个资源         |  是 |  否 | 替换某个资源完整版本（如更新全量用户信息） | `public IActionResult PutUser(int id, User user)`<br>`[HttpPut]`                                    |      |
+| `PATCH`   | RFC 5789 | 部分更新（部分补丁）         |  否 |  否 | 只修改部分字段（如更新用户邮箱）      | `public IActionResult PatchUser(int id, [FromBody] JsonPatchDocument<User> patch)`<br>`[HttpPatch]` |      |
+| `DELETE`  | RFC 7231 | 删除资源               |  是 |  否 | 删除记录、移除资源             | `public IActionResult DeleteUser(int id)`<br>`[HttpDelete]`                                         |      |
+| `HEAD`    | RFC 7231 | 获取资源元信息（不返回响应体）    |  是 |  是 | 检查资源是否存在、获取头信息        | `public IActionResult HeadUser(int id)`<br>`[HttpHead]`                                             |      |
+| `OPTIONS` | RFC 7231 | 获取服务器支持的 HTTP 方法   |  是 |  是 | CORS 预检请求、检查接口能力      | `public IActionResult GetOptions()`<br>`[HttpOptions]`                                              |      |
+| `TRACE`   | RFC 7231 | 回显请求（用于诊断）         |  是 |  是 | 调试客户端/代理路径            | 通常禁用（安全风险）                                                                                          | 演示用途 |
 | `CONNECT` | RFC 7231 | 建立隧道连接（如 HTTPS 代理） | —   | —   | HTTP 代理、SSL 通道        | 仅用于代理服务器                                                                                            |      |
 
 #### HTTP GET vs POST 请求：核心区别（简明版）
@@ -784,11 +784,11 @@ app.Run();
 
 | 请求方法       | 是否支持请求体         |
 | ---------- | --------------- |
-| `GET` ✅    | ❌ 通常不使用（语义上不推荐） |
-| `POST` ✅   | ✅ 是核心用途         |
-| `PUT` ✅    | ✅ 用于更新资源        |
-| `PATCH` ✅  | ✅ 用于部分更新        |
-| `DELETE` ✅ | ✅ 可选（如传过滤条件）    |
+| `GET`     |  通常不使用（语义上不推荐） |
+| `POST`    |  是核心用途         |
+| `PUT`     |  用于更新资源        |
+| `PATCH`   |  用于部分更新        |
+| `DELETE`  |  可选（如传过滤条件）    |
 
 > 注意：虽然 GET 语法上允许请求体，但大多数服务器和代理（如 CDN、Nginx）会忽略它，且浏览器通常不发送。强烈不建议在 GET 中使用请求体。
 
@@ -805,7 +805,7 @@ app.Run();
 | 🔹 `application/xml`                   | `application/xml`                   | 早期 API 或 SOAP 接口使用                            |
 | 🔹 `application/octet-stream`          | `application/octet-stream`          | 二进制数据（如文件上传、PDF、图片等）                          |
 
-> ✅ 建议：在开发中，除非特殊需求，优先使用 application/json。
+>  建议：在开发中，除非特殊需求，优先使用 application/json。
 
 #### 3.5.5.3 典型使用场景
 
@@ -994,9 +994,9 @@ public class LoggingMiddleware
 
 | 原则             | 说明                                                                                  |
 | -------------- | ----------------------------------------------------------------------------------- |
-| ✅ **顺序至关重要**   | `UseA()` → `UseB()` → `UseC()`，出站顺序为 C → B → A                                      |
-| ✅ **不能破坏管道**   | 如果中间件不调用 `await next(context)`，请求将“卡住”，用户无响应                                        |
-| ✅ **只能读一次请求体** | 若中间件读了 `Request.Body`，后端 Controller 读不到。必须用 `EnableBuffering()` + `MemoryStream` 复制 |
+|  **顺序至关重要**   | `UseA()` → `UseB()` → `UseC()`，出站顺序为 C → B → A                                      |
+|  **不能破坏管道**   | 如果中间件不调用 `await next(context)`，请求将“卡住”，用户无响应                                        |
+|  **只能读一次请求体** | 若中间件读了 `Request.Body`，后端 Controller 读不到。必须用 `EnableBuffering()` + `MemoryStream` 复制 |
 
 ![2026-03-26-09-23-15](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-03-26-09-23-15.svg)
 
@@ -1021,7 +1021,7 @@ public class LoggingMiddleware
 
 *   步骤1：实现接口
 
-```C#
+```Csharp
 // 该自定义中间件实现了IMiddleware接口，提供了InvokeAsync方法来处理HTTP请求和响应。
 public class MyCustomMiddleware : IMiddleware
 {
@@ -1036,7 +1036,7 @@ public class MyCustomMiddleware : IMiddleware
 
 *   步骤2：注册服务并使用中间件
 
-```C#
+```Csharp
 var builder = WebApplication.CreateBuilder(args);
 // 注册自定义中间件
 builder.Services.AddTransient<MyCustomMiddleware>();
@@ -1050,7 +1050,7 @@ app.Run();
 
 *   步骤1：创建中间件类
 
-```C#
+```Csharp
 // 该自定义中间件实现了IMiddleware接口，提供了InvokeAsync方法来处理HTTP请求和响应。
 public class MyCustomMiddleware : IMiddleware
 {
@@ -1065,7 +1065,7 @@ public class MyCustomMiddleware : IMiddleware
 
 *   步骤2：扩展方法（提升可读性）
 
-```C#
+```Csharp
 //在实际项目中，创建扩展方法与创建自定义中间件一起是一种惯例和通用做法
 public static class MyCustomMiddlewareExtensions
 {
@@ -1079,7 +1079,7 @@ public static class MyCustomMiddlewareExtensions
 
 *   步骤3：使用中间件
 
-```C#
+```Csharp
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 // 通过扩展方法调用自定义中间件
@@ -1198,7 +1198,7 @@ graph TD
 ## 5.3 使用路由
 
 ### 5.3.1 UseEndpoints
-```C#
+```Csharp
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
@@ -1227,7 +1227,7 @@ app.Run();
 ```
 ### 5.3.2 Top Level Route 
 
-```C#
+```Csharp
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
@@ -1272,7 +1272,7 @@ graph LR
 
 > GetEndPoint()方法返回一个 Microsoft.AspNetCore.Http.Endpoint 类型的实例，该实例表示一个终结点。该实例包含两个重要属性：**DisplayName** 和 **RequestDelegate**。
 
-```C#
+```Csharp
 using System.Net.Security;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -1336,7 +1336,7 @@ graph LR
 
 ### 5.5.1 路由参数
 
-```C#
+```Csharp
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
@@ -1365,7 +1365,7 @@ app.Run();
 
 ### 5.5.2 默认参数
 
-```C#
+```Csharp
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
@@ -1394,7 +1394,7 @@ app.Run();
 
 ### 5.5.3 可选参数
 
-```C#
+```Csharp
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
@@ -1435,7 +1435,7 @@ app.Run();
 
 #### 5.5.4.1 常规约束
 
-```C#
+```Csharp
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
@@ -1499,7 +1499,7 @@ app.Run();
 
 - 步骤1：创建自定义约束类（实现接口IRouteConstraint）
 
-```C#
+```Csharp
 using System.Text.RegularExpressions;
 
 namespace RoutingExample.CustomConstraints
@@ -1538,7 +1538,7 @@ namespace RoutingExample.CustomConstraints
 
 - 步骤2：注册自定义约束服务
 
-```C#
+```Csharp
 var builder = WebApplication.CreateBuilder(args);
 
 // 注册路由服务
@@ -1551,7 +1551,7 @@ var app = builder.Build();
 
 - 步骤3：使用自定义约束
 
-```C#
+```Csharp
 var builder = WebApplication.CreateBuilder(args);
 
 // 注册路由服务
@@ -1606,7 +1606,7 @@ app.Run();
 
 ### 5.7.1 重命名wwwroot目录名称
 
-```C#
+```Csharp
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
 {
     WebRootPath = "myroot" // 自定义静态文件的根目录为 myroot
@@ -1623,7 +1623,7 @@ app.Run();
 
 ### 5.7.2 启用多个WebRoot目录
 
-```C#
+```Csharp
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions()
 {
     WebRootPath = "myroot" // 自定义静态文件的根目录为 myroot
@@ -1663,7 +1663,7 @@ app.Run();
 
 - 步骤1：创建控制器
 
-```C#
+```Csharp
 [Controller]
 public class ProductsController : ControllerBase
 {
@@ -1674,7 +1674,7 @@ public class ProductsController : ControllerBase
 
 - 步骤2：注册控制器
 
-```C#
+```Csharp
 builder.Services.AddControllers();
 ```
 
@@ -1682,7 +1682,7 @@ builder.Services.AddControllers();
 
 - 步骤3：启用控制器
 
-```C#
+```Csharp
 app.MapControllers();
 ```
 
@@ -1710,11 +1710,11 @@ ControllerContext 是 ASP.NET Core 中用于 封装控制器执行上下文信�
 
 | 职责 | 说明 |
 |------|------|
-| ✅ 请求上下文 | 持有当前 `HttpContext`（请求/响应/会话/用户等） |
-| ✅ 路由信息 | 包含 `RouteData`，可用于获取路由参数、控制器/动作名 |
-| ✅ 控制器实例 | 指向当前执行的 `Controller` 实例 |
-| ✅ 模型绑定上下文 | 支持 `ModelBinder`、`ActionDescriptor` 等绑定机制 |
-| ✅ 跟踪上下文状态 | 用于中间件、异常处理、过滤器、日志等场景 |
+|  请求上下文 | 持有当前 `HttpContext`（请求/响应/会话/用户等） |
+|  路由信息 | 包含 `RouteData`，可用于获取路由参数、控制器/动作名 |
+|  控制器实例 | 指向当前执行的 `Controller` 实例 |
+|  模型绑定上下文 | 支持 `ModelBinder`、`ActionDescriptor` 等绑定机制 |
+|  跟踪上下文状态 | 用于中间件、异常处理、过滤器、日志等场景 |
 
 #### 6.1.4.2 主要属性（关键字段）
 
@@ -1734,7 +1734,7 @@ ControllerContext 是 ASP.NET Core 中 控制器执行上下文的“中枢枢�
 
 - 示例1：
 
-```C#
+```Csharp
 public class MyController : ControllerBase
 {
     public IActionResult Index()
@@ -1753,7 +1753,7 @@ public class MyController : ControllerBase
 
 - 示例2：
 
-```C#
+```Csharp
 [Controller]
 //Eg: bookstore?bookid=101&isloggedin=true
 public class HomeController : Controller
@@ -1809,24 +1809,24 @@ IActionResult是所有操作结果类的父接口。通过将返回类型指定�
 
 | 类型 | 实现类 | 状态码 | 推荐写法 | 长语法示例 | 安全建议 | 适用场景 |
 |------|--------|--------|-----------|-------------|------------|------------|
-| ✅ 数据返回 | `OkObjectResult` | `200 OK` | `return Ok(data);` | `return new OkObjectResult(data);` | 使用 `Ok()` 而非 `new` | 返回操作成功的数据（如 `UserDto`、`List<Product>`） |
-| ✅ 无内容 | `NoContentResult` | `204 No Content` | `return NoContent();` | `return new NoContentResult();` | 用于无数据返回的操作 | 通常用于 `DELETE /api/users/1` 成功后的响应 |
-| ✅ 空响应 | `EmptyResult` | `200 OK` | `return new EmptyResult();` | `return new EmptyResult();` | ❌ 不推荐使用 | 极少使用，应替换为 `NoContent()` 或 `Ok()` |
+|  数据返回 | `OkObjectResult` | `200 OK` | `return Ok(data);` | `return new OkObjectResult(data);` | 使用 `Ok()` 而非 `new` | 返回操作成功的数据（如 `UserDto`、`List<Product>`） |
+|  无内容 | `NoContentResult` | `204 No Content` | `return NoContent();` | `return new NoContentResult();` | 用于无数据返回的操作 | 通常用于 `DELETE /api/users/1` 成功后的响应 |
+|  空响应 | `EmptyResult` | `200 OK` | `return new EmptyResult();` | `return new EmptyResult();` |  不推荐使用 | 极少使用，应替换为 `NoContent()` 或 `Ok()` |
 
 #### 6.2.2.2 错误响应（Error Responses）
 
 | 类型 | 实现类 | 状态码 | 推荐写法 | 长语法示例 | 安全建议 | 适用场景 |
 |------|--------|--------|-----------|-------------|------------|------------|
-| ❌ 模型验证失败 | `BadRequestObjectResult` | `400 Bad Request` | `return BadRequest(ModelState);` | `return new BadRequestObjectResult(ModelState);` | ✅ 必须传 `ModelState` | 表单字段缺失、类型不匹配（如 `int Age` 传 `"abc"`） |
-| ❌ 自定义错误 | `ProblemDetailsResult` | `400` / `429` / `500` | `return Problem(title: "Insufficient funds", detail: "Balance: $2.00");` | `return new ProblemDetailsResult(...);` | ✅ 使用 `Problem()`，避免返回纯字符串 | 业务规则错误（如库存不足、余额不足） |
-| ❌ 资源不存在 | `NotFoundResult` | `404 Not Found` | `return NotFound("User not found");` | `return new NotFoundResult();` | ✅ 建议提供明确信息 | 通过 ID 查询资源不存在（如 `GET /api/users/999`） |
-| ❌ 返回对象 | `NotFoundObjectResult` | `404 Not Found` | `return NotFound(new { error = "not found", id });` | `return new NotFoundObjectResult(...);` | ✅ 返回结构化数据 | 适合前端解析错误（避免纯字符串） |
+|  模型验证失败 | `BadRequestObjectResult` | `400 Bad Request` | `return BadRequest(ModelState);` | `return new BadRequestObjectResult(ModelState);` |  必须传 `ModelState` | 表单字段缺失、类型不匹配（如 `int Age` 传 `"abc"`） |
+|  自定义错误 | `ProblemDetailsResult` | `400` / `429` / `500` | `return Problem(title: "Insufficient funds", detail: "Balance: $2.00");` | `return new ProblemDetailsResult(...);` |  使用 `Problem()`，避免返回纯字符串 | 业务规则错误（如库存不足、余额不足） |
+|  资源不存在 | `NotFoundResult` | `404 Not Found` | `return NotFound("User not found");` | `return new NotFoundResult();` |  建议提供明确信息 | 通过 ID 查询资源不存在（如 `GET /api/users/999`） |
+|  返回对象 | `NotFoundObjectResult` | `404 Not Found` | `return NotFound(new { error = "not found", id });` | `return new NotFoundObjectResult(...);` |  返回结构化数据 | 适合前端解析错误（避免纯字符串） |
 
 #### 6.2.2.3 创建资源（Created）
 
 | 类型 | 实现类 | 状态码 | 推荐写法 | 长语法示例 | 安全建议 | 适用场景 |
 |------|--------|--------|-----------|-------------|------------|------------|
-| ✅ 创建成功 | `CreatedAtRouteResult` | `201 Created` | `return CreatedAtRoute("GetUser", new { id = 1 }, user);` | `return new CreatedAtRouteResult("GetUser", new { id = 1 }, user);` | ✅ 必须指定路由名 | 新建资源（如 `POST /api/users` 成功后） |
+|  创建成功 | `CreatedAtRouteResult` | `201 Created` | `return CreatedAtRoute("GetUser", new { id = 1 }, user);` | `return new CreatedAtRouteResult("GetUser", new { id = 1 }, user);` |  必须指定路由名 | 新建资源（如 `POST /api/users` 成功后） |
 
 > 💡 适用场景：客户提交注册表单 → 返回 201 Created + Location: /api/users/123
 
@@ -1834,39 +1834,39 @@ IActionResult是所有操作结果类的父接口。通过将返回类型指定�
 
 | 类型 | 实现类 | 状态码 | 推荐写法 | 长语法示例 | 安全建议 | 适用场景 |
 |------|--------|--------|-----------|-------------|------------|------------|
-| ✅ 物理文件 | `PhysicalFileResult` | `200 OK` | `return PhysicalFile(path, "application/pdf");` | `return new PhysicalFileResult(path, "application/pdf");` | ❗ 必须校验路径 | 从服务器文件夹返回 `PDF` / `DOC` / `IMG` 等静态文件 |
-| ✅ 内存文件 | `FileContentResult` | `200 OK` | `return File(bytes, "application/pdf", "report.pdf");` | `return new FileContentResult(bytes, "application/pdf", "report.pdf");` | ✅ 支持中文文件名 | 从内存生成文件（如报表导出、压缩包） |
-| ✅ 流式下载 | `FileStreamResult` | `200 OK` | `return File(stream, "application/zip", "large.zip");` | `return new FileStreamResult(stream, "application/zip");` | ⚠️ 使用 `useAsync: true` | 大文件（>50MB）流式传输（如视频、日志、ZIP 压缩） |
+|  物理文件 | `PhysicalFileResult` | `200 OK` | `return PhysicalFile(path, "application/pdf");` | `return new PhysicalFileResult(path, "application/pdf");` | ❗ 必须校验路径 | 从服务器文件夹返回 `PDF` / `DOC` / `IMG` 等静态文件 |
+|  内存文件 | `FileContentResult` | `200 OK` | `return File(bytes, "application/pdf", "report.pdf");` | `return new FileContentResult(bytes, "application/pdf", "report.pdf");` |  支持中文文件名 | 从内存生成文件（如报表导出、压缩包） |
+|  流式下载 | `FileStreamResult` | `200 OK` | `return File(stream, "application/zip", "large.zip");` | `return new FileStreamResult(stream, "application/zip");` | ⚠️ 使用 `useAsync: true` | 大文件（>50MB）流式传输（如视频、日志、ZIP 压缩） |
 
 #### 6.2.2.5 重定向（Redirect）
 
 | 类型 | 实现类 | 状态码 | 推荐写法 | 长语法示例 | 安全建议 | 适用场景 |
 |------|--------|--------|-----------|-------------|------------|------------|
-| ✅ 本地跳转 | `LocalRedirectResult` | `302 Found` | `return LocalRedirect("/home/index");` | `return new LocalRedirectResult("/home/index");` | ✅ **唯一推荐** | 表单提交成功后，跳转到本域名页面（如“操作成功”页） |
-| ✅ 跳转 Action | `RedirectToActionResult` | `302 Found` | `return RedirectToAction("Index", "Home");` | `return new RedirectToActionResult("Index", "Home", null);` | ✅ 用 `nameof` 避免硬编码 | 跳转到 MVC 控制器中的 Action 方法 |
-| ✅ 跳转路由 | `RedirectToRouteResult` | `302 Found` | `return RedirectToRoute("UserRoute", new { id = 1 });` | `return new RedirectToRouteResult(...);` | 🎯 适用于复杂路由 | 按路由名跳转（适合路由重构场景） |
-| ✅ 永久重定向 | `RedirectResult` | `301 Moved Permanently` | `return RedirectPermanent("https://example.com");` | `return new RedirectResult("https://example.com", true);` | ✅ 用于永久变更 | 网站迁移、旧域名跳转、SEO 优化场景 |
+|  本地跳转 | `LocalRedirectResult` | `302 Found` | `return LocalRedirect("/home/index");` | `return new LocalRedirectResult("/home/index");` |  **唯一推荐** | 表单提交成功后，跳转到本域名页面（如“操作成功”页） |
+|  跳转 Action | `RedirectToActionResult` | `302 Found` | `return RedirectToAction("Index", "Home");` | `return new RedirectToActionResult("Index", "Home", null);` |  用 `nameof` 避免硬编码 | 跳转到 MVC 控制器中的 Action 方法 |
+|  跳转路由 | `RedirectToRouteResult` | `302 Found` | `return RedirectToRoute("UserRoute", new { id = 1 });` | `return new RedirectToRouteResult(...);` | 🎯 适用于复杂路由 | 按路由名跳转（适合路由重构场景） |
+|  永久重定向 | `RedirectResult` | `301 Moved Permanently` | `return RedirectPermanent("https://example.com");` | `return new RedirectResult("https://example.com", true);` |  用于永久变更 | 网站迁移、旧域名跳转、SEO 优化场景 |
 
 #### 6.2.2.6 MVC 视图响应（MVC Mode）
 | 类型 | 实现类 | 状态码 | 推荐写法 | 长语法示例 | 安全建议 | 适用场景 |
 |------|--------|--------|-----------|-------------|------------|------------|
-| ✅ 完整视图 | `ViewResult` | `200 OK` | `return View("Index", model);` | `return new ViewResult { ViewName = "Index", Model = model };` | 适用于 MVC 模式 | 返回完整页面（含布局、脚本、CSS） |
-| ✅ 部分视图 | `PartialViewResult` | `200 OK` | `return PartialView("_Card", model);` | `return new PartialViewResult { ViewName = "_Card", Model = model };` | ✅ 用于异步组件加载 | AJAX 动态加载部分内容（如评论列表、分页） |
+|  完整视图 | `ViewResult` | `200 OK` | `return View("Index", model);` | `return new ViewResult { ViewName = "Index", Model = model };` | 适用于 MVC 模式 | 返回完整页面（含布局、脚本、CSS） |
+|  部分视图 | `PartialViewResult` | `200 OK` | `return PartialView("_Card", model);` | `return new PartialViewResult { ViewName = "_Card", Model = model };` |  用于异步组件加载 | AJAX 动态加载部分内容（如评论列表、分页） |
 
 #### 6.2.2.7 认证与授权 
 
 | 类型 | 实现类 | 状态码 | 推荐写法 | 长语法示例 | 安全建议 | 适用场景 |
 |------|--------|--------|-----------|-------------|------------|------------|
-| ❌ 未认证 | `UnauthorizedResult` | `401 Unauthorized` | `return Unauthorized();` | `return new UnauthorizedResult();` | ✅ 用于未登录状态 | 用户未登录但意图访问受保护接口 |
-| ❌ 无权限 | `ForbidResult` | `403 Forbidden` | `return Forbid();` | `return new ForbidResult();` | ✅ 用于权限不足 | 已登录但权限不足（如普通用户访问管理员接口） |
-| 🔑 身份验证发起 | `ChallengeResult` | `401 Unauthorized` | `return Challenge("Google");` | `return new ChallengeResult("Google");` | ✅ 用于 SSO/OAuth 登录流程 | 触发第三方登录（如“用 Google 登录”） |
-| 🔐 注销用户 | `SignOutResult` | `200 OK` | `return SignOut("Cookies");` | `return new SignOutResult("Cookies");` | ✅ 必须指定方案名 | 用户点击“退出登录”按钮 |
+|  未认证 | `UnauthorizedResult` | `401 Unauthorized` | `return Unauthorized();` | `return new UnauthorizedResult();` |  用于未登录状态 | 用户未登录但意图访问受保护接口 |
+|  无权限 | `ForbidResult` | `403 Forbidden` | `return Forbid();` | `return new ForbidResult();` |  用于权限不足 | 已登录但权限不足（如普通用户访问管理员接口） |
+| 🔑 身份验证发起 | `ChallengeResult` | `401 Unauthorized` | `return Challenge("Google");` | `return new ChallengeResult("Google");` |  用于 SSO/OAuth 登录流程 | 触发第三方登录（如“用 Google 登录”） |
+| 🔐 注销用户 | `SignOutResult` | `200 OK` | `return SignOut("Cookies");` | `return new SignOutResult("Cookies");` |  必须指定方案名 | 用户点击“退出登录”按钮 |
 
 #### 6.2.2.8 通用工具类
 
 | 类型 | 实现类 | 状态码 | 推荐写法 | 长语法示例 | 安全建议 | 适用场景 |
 |------|--------|--------|-----------|-------------|------------|------------|
-| ✅ 纯文本 | `ContentResult` | `200 OK` | `return Content("<h1>Hi</h1>", "text/html");` | `return new ContentResult { ContentType = "text/html", Content = "<h1>Hi</h1>" };` | ✅ 用于返回 HTML / XML | 用于 API 文档、动态响应、调试信息 |
+|  纯文本 | `ContentResult` | `200 OK` | `return Content("<h1>Hi</h1>", "text/html");` | `return new ContentResult { ContentType = "text/html", Content = "<h1>Hi</h1>" };` |  用于返回 HTML / XML | 用于 API 文档、动态响应、调试信息 |
 | 🔴 自定义状态码 | `StatusCodeResult` | `503`（可自定义） | `return StatusCode(503, "Service Unavailable");` | `return new StatusCodeResult(503);` | ⚠️ 建议搭配 `Problem()` 使用 | 用于服务维护、限流、协议级状态反馈 |
 
 #### 6.2.2.9 总结：IActionResult 选型最佳实践（新增）
@@ -1890,13 +1890,13 @@ IActionResult是所有操作结果类的父接口。通过将返回类型指定�
 
 **ContentResult** 可以根据指定的MIME类型表示任何类型的响应。MIME类型表示内容的类型，如text/plain,text/html,application/json,application/xml,application/pdf等。
 
-```C#
+```Csharp
 return new ContentResult() { Content = "Hello World", ContentType = "text/plain" };
 ```
 
 或
 
-```C#
+```Csharp
 return Content("Hello World", "text/plain");
 ```
 
@@ -1904,13 +1904,13 @@ return Content("Hello World", "text/plain");
 
 **JsonResult** 可以表示为JavaScript对象表示法(JSON)格式的对象。
 
-```C#
+```Csharp
 return new JsonResult(new { Message = "Hello World" });
 ```
 
 或
 
-```C#
+```Csharp
 return Json(new { Message = "Hello World" });
 ```
 
@@ -1923,13 +1923,13 @@ return Json(new { Message = "Hello World" });
 
 表示 WebRoot（默认为 'wwwroot'）文件夹中的一个文件（当文件位于 WebRoot 文件夹中时使用）。
 
-```C#
+```Csharp
 return new VirtualFileResult("files/test.pdf", "application/pdf");
 ```
 
 或
 
-```C#
+```Csharp
 return File("files/test.pdf", "application/pdf");
 ```
  
@@ -1937,13 +1937,13 @@ return File("files/test.pdf", "application/pdf");
 
  表示不必是项目文件夹的一部分的文件（当文件位于WebRoot文件夹之外时使用）
 
-```C#
+```Csharp
 return new PhysicalFileResult(@"C:\files\report.pdf", "application/pdf");
 ```
 
 或
 
-```C#
+```Csharp
 return PhysicalFile(@"C:\files\report.pdf", "application/pdf");
 ```
 
@@ -1951,13 +1951,13 @@ return PhysicalFile(@"C:\files\report.pdf", "application/pdf");
 
 表示来自 byte[] 的文件（当需要将来自其他数据源的文件或字节数组的一部分作为响应发送时使用）。
 
-```C#
+```Csharp
 return new FileContentResult(System.IO.File.ReadAllBytes("files/test.pdf"), "application/pdf");
 ```
 
 或
 
-```C#
+```Csharp
 return File(System.IO.File.ReadAllBytes("files/test.pdf"), "application/pdf");
 ```
 
@@ -1969,13 +1969,13 @@ StatusCodeResult发送具有指定状态代码的空响应。
 
 表示使用指定状态码的响应（在希望将特定 HTTP 状态码作为响应时使用）。
 
-```C#
+```Csharp
 return new StatusCodeResult(500);
 ```
 
 或
 
-```C#
+```Csharp
 return StatusCode(500);
 ```
 
@@ -1983,13 +1983,13 @@ return StatusCode(500);
 
 表示使用 HTTP 状态码 '401 Unauthorizied' 的响应（在用户未授权（未登录）时使用）。
 
-```C#
+```Csharp
 return new UnauthorizedResult();
 ```
 
 或
 
-```C#
+```Csharp
 return Unauthorized();
 ```
 
@@ -1997,13 +1997,13 @@ return Unauthorized();
 
 表示使用 HTTP 状态码 '400 Bad Request' 的响应（在请求值无效（验证错误）时使用）。
 
-```C#
+```Csharp
  return new BadRequestResult();
 ```
 
 或
 
-```C#
+```Csharp
 return BadRequest();
 ```
 
@@ -2011,13 +2011,13 @@ return BadRequest();
 
 表示使用 HTTP 状态码 '404 Not Found' 的响应（在请求的信息在服务器上不可用时使用）。
 
-```C#
+```Csharp
 return new NotFoundResult();
 ```
 
 或
 
-```C#
+```Csharp
 return NotFound();
 ```
 
@@ -2032,25 +2032,25 @@ RedirectResult会向浏览器发送HTTP 302或者HTTP 301响应，以重定向�
 
  - 302 - Found
 
-```C#
+```Csharp
 return new RedirectToActionResult("Index", "Home", new { id = 1 });
 ```
 
 或
 
-```C#
+```Csharp
 return RedirectToAction("Index", "Home", new { id = 1 });
 ```
 
 - 301 - Moved Permanently
 
-```C#
+```Csharp
 return new RedirectToActionResult("Index", "Home", new { id = 1 },true);
 ```
 
 或
 
-```C#
+```Csharp
 return RedirectToActionPermanent("Index", "Home", new { id = 1 });
 ```
 
@@ -2061,25 +2061,25 @@ return RedirectToActionPermanent("Index", "Home", new { id = 1 });
 
  - 302 - Found
 
-```C#
+```Csharp
 return new LocalRedirectResult("/home");
 ```
 
 或
 
-```C#
+```Csharp
 return LocalRedirect("/home");
 ```
 
 - 301 - Moved Permanently
 
-```C#
+```Csharp
 return new LocalRedirectResult("/home",true);
 ```
 
 或
 
-```C#
+```Csharp
 return LocalRedirectPermanent("/home");
 ```
 
@@ -2089,25 +2089,25 @@ return LocalRedirectPermanent("/home");
 
 - 302 - Found
 
-```C#
+```Csharp
 return new RedirectResult("https://example.com");
 ```
 
 或
 
-```C#
+```Csharp
 return Redirect("https://example.com");
 ```
 
 - 301 - Moved Permanently
 
-```C#
+```Csharp
 return new RedirectResult("https://example.com",true);
 ```
 
 或
 
-```C#
+```Csharp
 return RedirectPermanent("https://example.com");
 ```
 
@@ -2125,7 +2125,7 @@ FromRoute和FromQuery的优先级：在不考虑A表单字段和B请求体的情
 
 *代码示例*
 
-```C#
+```Csharp
 public class HomeController : Controller
 {
     [Route("bookstore/{bookid?}/{isloggedin?}")]
@@ -2162,19 +2162,19 @@ public class HomeController : Controller
 如果特别需要从查询字符串FromQuery而不是从路由数据FromRoute中检索特定参数值，就得使用FromQuery和FromRoute属性。
 
 - [FromQuery]
-```C#
+```Csharp
 //仅从查询字符串中获取值
 public IActionResult ActionMethodName([FromQuery] type parameter){}
 ```
 - [FromRoute]
-```C#
+```Csharp
 //仅从路由参数中获取值
 public IActionResult ActionMethodName([FromRoute] type parameter){}
 ```
 
 *代码示例*
 
-```C#
+```Csharp
 public class HomeController : Controller
 {
     [Route("bookstore/{bookid?}/{isloggedin?}")]
@@ -2216,13 +2216,13 @@ public class HomeController : Controller
 |------|----------------------------------------|------------------------|
 | 内容类型 | `application/x-www-form-urlencoded` | `multipart/form-data` |
 | 编码方式 | URL编码方式，键值对形式 | 分块（part）方式，每个场字段有明确的头和内容 |
-| 是否支持文件传输 | ❌ 不支持 | ✅ 支持 |
-| 是否支持二进制 | ❌ 不支持（只能传输文本） | ✅ 支持 |
+| 是否支持文件传输 |  不支持 |  支持 |
+| 是否支持二进制 |  不支持（只能传输文本） |  支持 |
 | 数据结构 | 简单的键值对 | 多个字段可以有相同名称，支持内容类型（如 `image/png`） |
 | 使用场景 | 不需要文件上传的表单 | 需要上传文件的表单 |
 | 传输数据量 | 受URL长度限制 | 无数据限制（使用流式传输） |
-| 添加文件字段是否需要特殊处理 | ❌ 不需要 | ✅ 需要，通常通过 `<input type="file">` 提交 |
-| 编码是否兼容ASCII | ✅ 只能发送ASCII文本 | ✅ 可以发送任意编码的文本和二进制数据（如UTF-8） |
+| 添加文件字段是否需要特殊处理 |  不需要 |  需要，通常通过 `<input type="file">` 提交 |
+| 编码是否兼容ASCII |  只能发送ASCII文本 |  可以发送任意编码的文本和二进制数据（如UTF-8） |
 
 ## 7.3 模型类
 
@@ -2256,7 +2256,7 @@ ModelState是ControllerBase的一个属性（ModelStateDictionary类型对象）
 
 *示例代码*
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 using ModelValidationsExample.Models;
 
@@ -2301,7 +2301,7 @@ namespace ModelValidationsExample.Controllers
 
 ### 7.4.1 预定义验证规则
 
-```C#
+```Csharp
 using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -2359,7 +2359,7 @@ public class Person
 
 #### 7.4.2.1 自定义单属性验证规则
 
-```C#
+```Csharp
 using System
 using System.ComponentModel.DataAnnotations;
 
@@ -2415,7 +2415,7 @@ public class MinimumYearValidatorAttribute : ValidationAttribute
 
 #### 7.4.2.2 自定义多属性验证规则
 
-```C#
+```Csharp
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
@@ -2471,7 +2471,7 @@ public class DateRangeValidatorAttribute : ValidationAttribute
 
 自定义针对特定模型类的验证规则，需要模型类实现IValidatableObject接口的Validate方法。
 
-```C#
+```Csharp
 using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -2523,7 +2523,7 @@ public class Person : IValidatableObject
 
 过滤绑定：默认情况下，在模型绑定中，模型类的所有属性都会被绑定，但是，如果你使用Bind并指定要绑定的属性列表，只有这些属性会被包含在绑定中，而其余属性将被跳过。Bind属性的好处是你可以避免过度提交不需要的属性。
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 using ModelValidationsExample.Models;
 
@@ -2556,7 +2556,7 @@ namespace ModelValidationsExample.Controllers
 
 豁免绑定：有时我们需要绑定模型类中除个别属性外的其余所有属性，此时可以在模型类中使用BindNever特性。
 
-```C#
+```Csharp
 using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -2639,7 +2639,7 @@ public class Person
 
 #### 7.6.2.3 JSON解析
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 using ModelValidationsExample.Models;
 
@@ -2673,7 +2673,7 @@ namespace ModelValidationsExample.Controllers
 如果想要使XML正常工作，即我们要从请求体中读取XML数据，则必须手动为控制器添加XML序列化输入格式化器。
 
 #### 7.6.3.1 启用XML格式化器
-```C#
+```Csharp
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // 添加XML序列化格式化器
@@ -2701,7 +2701,7 @@ app.Run();
 
 #### 7.6.3.3 XML解析
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 using ModelValidationsExample.Models;
 
@@ -2738,7 +2738,7 @@ namespace ModelValidationsExample.Controllers
 
 #### 7.7.1.1 自定义模型类
 
-```C#
+```Csharp
 using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -2789,7 +2789,7 @@ public class Person
 
 #### 7.7.1.2 自定义模型绑定器
 
-```C#
+```Csharp
 using System;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using ModelValidationsExample.Models;
@@ -2853,7 +2853,7 @@ public class PersonModelBinder : IModelBinder
 
 #### 7.7.1.3 在控制器指定自定义模型绑定器
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 using ModelValidationsExample.Models;
 using ModelValidationsExample.CustomModelBinders;
@@ -2897,7 +2897,7 @@ namespace ModelValidationsExample.Controllers
 
 #### 7.7.2.1 自定义模型绑定器提供程序
 
-```C#
+```Csharp
 using System;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
@@ -2922,7 +2922,7 @@ public class PersonBinderProvider : IModelBinderProvider
 ```
 
 #### 7.7.2.2 注册模型绑定器提供程序
-```C#
+```Csharp
 using ModelValidationsExample.CustomModelBinders;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -2943,7 +2943,7 @@ app.Run();
 
 #### 7.7.2.3 模型绑定器提供程序自动工作
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 using ModelValidationsExample.Models;
 using ModelValidationsExample.CustomModelBinders;
@@ -2979,14 +2979,14 @@ namespace ModelValidationsExample.Controllers
 
 ### 7.8.1 请求参数数组
 
-```C#
+```Csharp
 Hobbies[0]="Listen To Music"
 Hobbies[1]="Play Basketball"
 ```
 
 ### 7.8.2 集合绑定属性
 
-```C#
+```Csharp
 using System.ComponentModel.DataAnnotations;
 
 namespace ModelValidationsExample.Models;
@@ -3011,7 +3011,7 @@ public class Person
 ![2026-05-14-22-27-02](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-05-14-22-27-02.svg)
 
 ### 7.9.1 读取请求头的传统方式
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 using ModelValidationsExample.Models;
 using ModelValidationsExample.CustomModelBinders;
@@ -3043,7 +3043,7 @@ namespace ModelValidationsExample.Controllers
 
 ### 7.9.2 FromHeader属性从请求头中读取值
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 using ModelValidationsExample.Models;
 using ModelValidationsExample.CustomModelBinders;
@@ -3143,7 +3143,7 @@ Razor 是 ASP.NET Core 中用于构建网页内容的服务器端视图引擎，
 
 Razor 视图通常位于项目的 Views 文件夹下，根据控制器路径自动匹配对应的视图文件。
 
-```C#
+```Csharp
 /Views
   /Home
     Index.cshtml
@@ -3209,7 +3209,7 @@ ViewData 是一个字典对象，在接收请求时会自动创建，并在向�
 
 通过 ViewData 字典传递数据，是动态的。ViewData 只在当前 Action 中有效，生命周期和 View 相同。
 
-```C#
+```Csharp
 ViewData["Message"] = "Hello from controller!";
 ```
 
@@ -3227,7 +3227,7 @@ ViewData["Message"] = "Hello from controller!";
 
 ViewBag 是 MVC3 新增语法，ViewBag 不再是字典的键值对结构，而是 dynamic 动态类型，它会在程序运行的时候动态解析。
 
-```C#
+```Csharp
 ViewBag.Message = "Hello from controller!";
 ```
 
@@ -3237,7 +3237,7 @@ ViewBag.Message = "Hello from controller!";
 
 控制器：
 
-```C#
+```Csharp
 public IActionResult Index()
 {
     var model = new MyModel { Name = "John", Age = 25 };
@@ -3256,7 +3256,7 @@ Razor页面:
 
 用于短生命周期的临时数据传递，通常用于页面跳转时的回传数据。TempData  的数据至多只能经过一次Controller传递，并且每个元素至多只能被访问一次，访问以后，自动被删除。
 
-```C#
+```Csharp
 TempData["Message"] = "Temporary message";
 ```
 
@@ -3264,7 +3264,7 @@ TempData["Message"] = "Temporary message";
 
 控制器：
 
-```C#
+```Csharp
 public IActionResult Details()
 {
     var data = new { Name = "Alice", Age = 28 };
@@ -3323,7 +3323,7 @@ Razor页面：
 
 - return View();
 
-```C#
+```Csharp
 // View name is the same name as the current action method.
 // 视图名称与当前操作方法的名称相同。
 return View();
@@ -3331,7 +3331,7 @@ return View();
 
 - return View(object Model);
 
-```C#
+```Csharp
 // View name is the same name as the current action method & the view can be a strongly-typed view to receive the supplied model object.
 // 视图名称与当前操作方法的名称相同，并且该视图可以是强类型视图以接收提供的模型对象。
 return View(object Model);
@@ -3339,7 +3339,7 @@ return View(object Model);
 
 - return View(string ViewName);
 
-```C#
+```Csharp
 // View name is explicitly specified.
 // 视图名称已明确指定。
 return View(string ViewName);
@@ -3347,7 +3347,7 @@ return View(string ViewName);
 
 - return View(string ViewName,object Model);
 
-```C#
+```Csharp
 // View name is explicitly specified & the view can be a strongly-typed view to receive the supplied model object.
 // 视图名称是显式指定的，并且视图可以是强类型视图以接收所提供的模型对象。
 return View(string ViewName,object Model);
@@ -3383,7 +3383,7 @@ return View(string ViewName,object Model);
 
 动态布局视图本质是根据条件判断调用哪个布局视图。
 
-```C#
+```Csharp
 @{
  ViewData["Title"] = "Search Products";
  if (ViewBag.ProductID != null)
@@ -3397,7 +3397,7 @@ return View(string ViewName,object Model);
 
 - 定义布局视图区域
 
-```C#
+```Csharp
 @section footer_section
 {
     <p>Contact support: 98348734873984734</p>
@@ -3405,7 +3405,7 @@ return View(string ViewName,object Model);
 ```
 - 渲染布局视图区域
 
-```C#
+```Csharp
 @RenderSection("footer_section", false)
 ```
 @RenderSection：在布局页面中，呈现名为 footer_section 的区段的内容。
@@ -3416,7 +3416,7 @@ return View(string ViewName,object Model);
 
 嵌套布局视图的含义是将一个布局视图应用于另一个布局视图。如布局视图_LayoutA.cshtml和布局视图_LayoutB.cshtml共享应用了主布局视图_MasterLayout.cshtml，此时可以通过如下代码在布局视图_LayoutA.cshtml和布局视图_LayoutB.cshtml中指定主布局视图：
 
-```C#
+```Csharp
 @{
     Layout="~/Views/Shared/_MasterLayout.cshtml";
 }
@@ -3447,7 +3447,7 @@ return View(string ViewName,object Model);
 
 - 方法2:返回内容（以IHtmlContent形式返回HTML内容）到父视图（在运行时，部分视图的内容将成为上级调用视图的一部分），可用变量接收返回内容。
 
-```C#
+```Csharp
 @addTagHelper "*, Microsoft.AspNetCore.Mvc.TagHelpers"
 
 @await Html.PartialAsync("partial view name")
@@ -3455,7 +3455,7 @@ return View(string ViewName,object Model);
 
 - 方法3:RenderPartialAsync方法应该在代码块中调用，但它不是将部分视图的内容返回到父视图，而是直接将内容流式传输到浏览器。对于大规模代码中的性能优化，建议使用RenderPartialAsync方式以调用部分视图，但其返回类型为Void，不可用变量接收返回内容。
 
-```C#
+```Csharp
 @addTagHelper "*, Microsoft.AspNetCore.Mvc.TagHelpers"
 
 @{
@@ -3477,7 +3477,7 @@ return View(string ViewName,object Model);
 
 除了提供默认ViewData对象外，还可以在调用部分视图时提供自定义的ViewDataDictionary对象（ViewData的父类），而不是将完整的默认ViewData对象发送到部分视图。
 
-```C#
+```Csharp
 @addTagHelper "*, Microsoft.AspNetCore.Mvc.TagHelpers"
 
 @{
@@ -3513,7 +3513,7 @@ return View(string ViewName,object Model);
 
 - partial标签助手
 
-```C#
+```Csharp
 @using PartialViewsExample.Models
 
 <h1>Home</h1>
@@ -3536,7 +3536,7 @@ return View(string ViewName,object Model);
 
 - RenderPartialAsync方法
 
-```C#
+```Csharp
 @using PartialViewsExample.Models
 
 <h1>About</h1>
@@ -3564,7 +3564,7 @@ return View(string ViewName,object Model);
 
 - 模型ListModel
 
-```C#
+```Csharp
 namespace PartialViewsExample.Models
 {
  public class ListModel
@@ -3578,7 +3578,7 @@ namespace PartialViewsExample.Models
 
 - 控制器HomeController
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 using PartialViewsExample.Models;
 
@@ -3613,7 +3613,7 @@ namespace PartialViewsExample.Controllers
 
 - 部分视图_ListPartialView.cshtml
 
-```C#
+```Csharp
 @using PartialViewsExample.Models
 @model ListModel
 
@@ -3630,7 +3630,7 @@ namespace PartialViewsExample.Controllers
 
 - 按需请求并加载部分视图的普通视图Index.cshtml
 
-```C#
+```Csharp
 @{
  Layout = "~/Views/Shared/_Layout.cshtml";
 }
@@ -3654,7 +3654,7 @@ namespace PartialViewsExample.Controllers
 
 - 布局视图_Layout.cshtml
 
-```C#
+```Csharp
 <!DOCTYPE html>
 
 <html>
@@ -3701,7 +3701,7 @@ namespace PartialViewsExample.Controllers
 
 - 创建视图组件类GridViewComponent.cs
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 
 namespace ViewComponentsExample.ViewComponents
@@ -3721,7 +3721,7 @@ namespace ViewComponentsExample.ViewComponents
 
 - 创建视图组件对应的部分视图Sample.cshtml
 
-```C#
+```Csharp
 <div class="box">
     <h3>Grid</h3>
     <table class="table w-100">
@@ -3748,7 +3748,7 @@ namespace ViewComponentsExample.ViewComponents
 
 - 调用视图组件的普通视图Index.cshtml
 
-```C#
+```Csharp
 @addTagHelper "*, Microsoft.AspNetCore.Mvc.TagHelpers"
 @addTagHelper "*, ViewComponentsExample"
 
@@ -3768,7 +3768,7 @@ namespace ViewComponentsExample.ViewComponents
 
 - 模型类PersonGridModel.cs
 
-```C#
+```Csharp
 namespace ViewComponentsExample.Models
 {
   public class Person
@@ -3788,7 +3788,7 @@ namespace ViewComponentsExample.Models
 
 - 控制器类HomeController.cs
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 
 namespace ViewComponentsExample.Controllers
@@ -3807,7 +3807,7 @@ namespace ViewComponentsExample.Controllers
 
 - 视图组件类GridViewComponent.cs
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 using ViewComponentsExample.Models;
 
@@ -3836,7 +3836,7 @@ namespace ViewComponentsExample.ViewComponents
 
 - 视图组件对应的部分视图Sample.cshtml
 
-```C#
+```Csharp
 @using ViewComponentsExample.Models
 
 <div class="box">
@@ -3863,7 +3863,7 @@ namespace ViewComponentsExample.ViewComponents
 
 - 调用视图组件的普通视图Index.cshtml
 
-```C#
+```Csharp
 
 @addTagHelper "*, Microsoft.AspNetCore.Mvc.TagHelpers"
 @addTagHelper "*, ViewComponentsExample"
@@ -3886,7 +3886,7 @@ namespace ViewComponentsExample.ViewComponents
 
 - 模型类PersonGridModel.cs
 
-```C#
+```Csharp
 namespace ViewComponentsExample.Models
 {
   public class Person
@@ -3906,7 +3906,7 @@ namespace ViewComponentsExample.Models
 
 - 控制器类HomeController.cs
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 
 namespace ViewComponentsExample.Controllers
@@ -3925,7 +3925,7 @@ namespace ViewComponentsExample.Controllers
 
 - 视图组件类GridViewComponent.cs
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 using ViewComponentsExample.Models;
 
@@ -3954,7 +3954,7 @@ namespace ViewComponentsExample.ViewComponents
 
 - 视图组件对应的部分视图Sample.cshtml
 
-```C#
+```Csharp
 @using ViewComponentsExample.Models
 @model PersonGridModel
 
@@ -3982,7 +3982,7 @@ namespace ViewComponentsExample.ViewComponents
 
 - 调用视图组件的普通视图Index.cshtml
 
-```C#
+```Csharp
 
 @addTagHelper "*, Microsoft.AspNetCore.Mvc.TagHelpers"
 @addTagHelper "*, ViewComponentsExample"
@@ -4007,7 +4007,7 @@ namespace ViewComponentsExample.ViewComponents
 
 - 模型类PersonGridModel.cs
 
-```C#
+```Csharp
 namespace ViewComponentsExample.Models
 {
   public class Person
@@ -4027,7 +4027,7 @@ namespace ViewComponentsExample.Models
 
 - 控制器HomeController.cs
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 
 namespace ViewComponentsExample.Controllers
@@ -4046,7 +4046,7 @@ namespace ViewComponentsExample.Controllers
 
 - 视图组件类GridViewComponent
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 using ViewComponentsExample.Models;
 
@@ -4065,7 +4065,7 @@ namespace ViewComponentsExample.ViewComponents
 
 - 视图组件对应的部分视图Sample.cshtml
 
-```C#
+```Csharp
 @using ViewComponentsExample.Models
 @model PersonGridModel
 
@@ -4094,7 +4094,7 @@ namespace ViewComponentsExample.ViewComponents
 
 - 调用视图组件并传递参数的普通视图Index.cshtml
 
-```C#
+```Csharp
 
 @addTagHelper "*, Microsoft.AspNetCore.Mvc.TagHelpers"
 @addTagHelper "*, ViewComponentsExample"
@@ -4152,7 +4152,7 @@ namespace ViewComponentsExample.ViewComponents
 
 - 模型类PersonGridModel.cs
 
-```C#
+```Csharp
 namespace ViewComponentsExample.Models
 {
   public class Person
@@ -4172,7 +4172,7 @@ namespace ViewComponentsExample.Models
 
 - 控制器HomeController.cs
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 using ViewComponentsExample.Models;
 
@@ -4209,7 +4209,7 @@ namespace ViewComponentsExample.Controllers
 
 - 视图组件类GridViewComponent
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 using ViewComponentsExample.Models;
 
@@ -4228,7 +4228,7 @@ namespace ViewComponentsExample.ViewComponents
 
 - 视图组件对应的部分视图Sample.cshtml
 
-```C#
+```Csharp
 @using ViewComponentsExample.Models
 @model PersonGridModel
 
@@ -4257,7 +4257,7 @@ namespace ViewComponentsExample.ViewComponents
 
 - 按需请求并调用视图组件的普通视图Index.cshtml
 
-```C#
+```Csharp
 @{
     ViewBag.Title = "Home";
 }
@@ -4400,7 +4400,7 @@ DI：我们使用 依赖注入（Constructor Injection） 来将依赖项传入 
 
 子作用域的创建时机：创建了一个可释放的服务（实现了IDisposable接口），在使用完毕后，服务应尽快被释放。如数据库连接，它应该在打开后，一旦工作完成，数据库连接就应该关闭。
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 using Services;
 using ServiceContracts;
@@ -4450,7 +4450,7 @@ namespace DIExample.Controllers
 
 通常，我们通过创建ServiceDescriptor类的新对象并使用Add方法将服务添加到服务集合中。
 
-```C#
+```Csharp
 builder.Services.Add(new ServiceDescriptor(
   typeof(ICitiesService),
   typeof(CitiesService),
@@ -4460,7 +4460,7 @@ builder.Services.Add(new ServiceDescriptor(
 
 ### 9.8.2 注册服务的简化方式
 
-```C#
+```Csharp
 builder.Services.AddTransient<ICitiesService,CitiesService>();
 builder.Services.AddScoped<ICitiesService,CitiesService>();
 builder.Services.AddSingleton<ICitiesService,CitiesService>();
@@ -4498,7 +4498,7 @@ builder.Services.AddSingleton<ICitiesService,CitiesService>();
 
 - Programs.cs
 
-```C#
+```Csharp
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using ServiceContracts;
@@ -4532,7 +4532,7 @@ app.Run();
 
 - HomeController.cs
 
-```C#
+```Csharp
 using Autofac;
 using Microsoft.AspNetCore.Mvc;
 using ServiceContracts;
@@ -4634,7 +4634,7 @@ namespace DIExample.Controllers
 
 ![2026-06-05-20-47-09](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-05-20-47-09.png)
 
-```C#
+```Csharp
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
@@ -4658,7 +4658,7 @@ app.Run();
 
 ![2026-06-05-20-56-45](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-05-20-56-45.png)
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 
 namespace EnvironmentsExample.Controllers
@@ -4772,7 +4772,7 @@ ASP.NET Core 有一个称为配置设置的系统，用于存储常量键值对�
 
 ![2026-06-12-23-17-10](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-12-23-17-10.png)
 
-```C#
+```Csharp
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 
@@ -4801,7 +4801,7 @@ app.Run();
 
 ![2026-06-12-23-27-20](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-12-23-27-20.png)
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 
 namespace ConfigurationExample.Controllers
@@ -4840,7 +4840,7 @@ namespace ConfigurationExample.Controllers
 
 ![2026-06-12-23-57-41](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-06-12-23-57-41.png)
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 
 namespace ConfigurationExample.Controllers
@@ -4889,7 +4889,7 @@ namespace ConfigurationExample.Controllers
 
 - 创建模型类WeatherApiOptions
 
-```C#
+```Csharp
 namespace ConfigurationExample
 {
   public class WeatherApiOptions
@@ -4906,7 +4906,7 @@ namespace ConfigurationExample
 
 - 使用Get<T>()方法
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 
 namespace ConfigurationExample.Controllers
@@ -4941,7 +4941,7 @@ namespace ConfigurationExample.Controllers
 
 - 使用Bind(object instance)方法
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 
 namespace ConfigurationExample.Controllers
@@ -4989,7 +4989,7 @@ namespace ConfigurationExample.Controllers
 
 - Program.cs
 
-```C#
+```Csharp
 using ConfigurationExample;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5010,7 +5010,7 @@ app.Run();
 
 - HomeController.cs
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
@@ -5155,7 +5155,7 @@ $Env:weatherapi__ClientSecret="ClientSecret from environment variables"
 
 - 加载自定义JSON配置文件
 
-```C#
+```Csharp
 using ConfigurationExample;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5199,11 +5199,11 @@ IHttpClientFactory是一个接口，它提供一个CreateClient()方法用于创
 
 我们需要将HttpClient服务作为服务集合的一部分添加，然后预定义的HttpClient服务可用并可以在整个应用程序中的任何类中注入。
 
-```C#
+```Csharp
 builder.Services.AddHttpClient();
 ```
 
-```C#
+```Csharp
 using StocksApp.ServiceContracts;
 using System.Text.Json;
 
@@ -5295,7 +5295,7 @@ dotnet add test YourProject.Tests Microsoft.NET.Test.Sdk
 
 ### 12.3.1 被测试方法示例
 
-```C#
+```Csharp
 
 using System;
 using System.Collections.Generic;
@@ -5317,7 +5317,7 @@ namespace CRUDTest
 
 ### 12.3.2 测试方法示例
 
-```C#
+```Csharp
 namespace CRUDTest
 {
     public class UnitTest1
@@ -5444,7 +5444,7 @@ namespace CRUDTest
 
 ### 12.6.2 属性路由示例代码
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 using ServiceContracts;
 using ServiceContracts.DTO;
@@ -5632,7 +5632,7 @@ Razor Page 项目中常使用的 Tag Helpers
 
 - 定义 Tag Helpers
 
-```C#
+```Csharp
 [HtmlHelper]
 public class MyCustomTagHelper : TagHelper
 {
@@ -5732,14 +5732,14 @@ EF Core 常用 Code First 模式：先定义实体类，再通过 EF Core 自动
 
 | 场景 | 推荐模式 | 说明 |
 |------|----------|------|
-| ✅ **已有数据库，不会频繁变更** | **Database First** | 适合企业级项目、现有系统集成或后端服务，开发速度较快，结构稳定性强 |
-| ✅ **快速开发、新项目** | **Code First** | 适合开发阶段不明确、模型需要快速迭代的项目，结构更灵活可控 |
-| ✅ **需要高度自定义数据库结构（如表名、列名、索引等）** | **Code First** | 你可以在代码中配置 EF 如何映射表结构，而不是依赖自动反向生成 |
-| ✅ **使用了存储过程、视图或复杂的SQL操作** | **Database First** | EF Core 能很好地处理复杂SQL结构，比如自定义视图、存储过程 |
-| ✅ **团队中只有数据库专家** | **Database First** | 如果你团队中擅长 SQL，但对 C# Entity Framework 不熟悉，这个模式更适合 |
-| ✅ **团队熟悉 C#、面向对象设计** | **Code First** | 适合现代开发中的“前端-后端-数据库”分工协作模式，开发更高效 |
-| ✅ **需要对映射和关系进行高度控制** | **Code First** | 使用 Fluent API 配置实体关系、索引、约束、值生成器等 |
-| ✅ **想要使用 Code First 的迁移机制** | **Code First** | 便于代码部署和版本管理 |
+|  **已有数据库，不会频繁变更** | **Database First** | 适合企业级项目、现有系统集成或后端服务，开发速度较快，结构稳定性强 |
+|  **快速开发、新项目** | **Code First** | 适合开发阶段不明确、模型需要快速迭代的项目，结构更灵活可控 |
+|  **需要高度自定义数据库结构（如表名、列名、索引等）** | **Code First** | 你可以在代码中配置 EF 如何映射表结构，而不是依赖自动反向生成 |
+|  **使用了存储过程、视图或复杂的SQL操作** | **Database First** | EF Core 能很好地处理复杂SQL结构，比如自定义视图、存储过程 |
+|  **团队中只有数据库专家** | **Database First** | 如果你团队中擅长 SQL，但对 C# Entity Framework 不熟悉，这个模式更适合 |
+|  **团队熟悉 C#、面向对象设计** | **Code First** | 适合现代开发中的“前端-后端-数据库”分工协作模式，开发更高效 |
+|  **需要对映射和关系进行高度控制** | **Code First** | 使用 Fluent API 配置实体关系、索引、约束、值生成器等 |
+|  **想要使用 Code First 的迁移机制** | **Code First** | 便于代码部署和版本管理 |
 
 ## 14.3 使用EFCore
 
@@ -5747,7 +5747,7 @@ EF Core 常用 Code First 模式：先定义实体类，再通过 EF Core 自动
 
  - Person模型类
 
- ```C#
+ ```Csharp
 using System;
 using System.ComponentModel.DataAnnotations;
 
@@ -5787,7 +5787,7 @@ namespace Entities
 
  - Country模型类
 
- ```C#
+ ```Csharp
 using System.ComponentModel.DataAnnotations;
 
 namespace Entities
@@ -5823,7 +5823,7 @@ DbContext绑定到特定的数据库，而DbSet绑定到特定的表。
 
 自定义的DbContext上下文类必须继承自Microsoft.EntityFrameworkCore.DbContext类。
 
-```C#
+```Csharp
 using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
@@ -5855,7 +5855,7 @@ namespace Entities
 
 在启动项目的Program.cs文件中将DbContext添加为服务。
 
-```C#
+```Csharp
 builder.Services.AddDbContext<PersonsDbContext>(options => {
   options.UseSqlServer();
 });
@@ -5884,7 +5884,7 @@ builder.Services.AddDbContext<PersonsDbContext>(options => {
 
 #### 14.5.3.2 AddDbContext with Connection String
 
-```C#
+```Csharp
 using ServiceContracts;
 using Services;
 using Microsoft.EntityFrameworkCore;
@@ -6064,7 +6064,7 @@ app.Run();
 
 #### 14.3.6.2 使用种子数据
 
-```C#
+```Csharp
 using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
@@ -6139,7 +6139,7 @@ Update-Database -Verbose
 
 ![2026-10-16-20-22-31](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-16-20-22-31.png)
 
-```C#
+```Csharp
 public class PostController : Controller
 {
     private readonly YourDbContext _context;
@@ -6164,7 +6164,7 @@ public class PostController : Controller
 
 ![2026-10-16-20-23-00](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-16-20-23-00.png)
 
-```C#
+```Csharp
 public IActionResult Index()
 {
     var posts = _context.Posts.ToList(); // 从数据库查询所有数据
@@ -6176,7 +6176,7 @@ public IActionResult Index()
 
 ![2026-10-16-20-23-44](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-16-20-23-44.png)
 
-```C#
+```Csharp
 [HttpPost]
 public IActionResult Edit(int id, Post updatedPost)
 {
@@ -6195,7 +6195,7 @@ public IActionResult Edit(int id, Post updatedPost)
 
 ![2026-10-16-20-24-46](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-10-16-20-24-46.png)
 
-```C#
+```Csharp
 public IActionResult Delete(int id)
 {
     var post = _context.Posts.Find(id);
@@ -6242,7 +6242,7 @@ EF Core 使用 ChangeTracker 来追踪实体的状态（如 Added, Modified, Unc
 #### 14.4.2.4 查询（Read）
 EF Core 通过 LINQ 预约查询（在 DbSet 上），会根据你的查询语法生成 SQL 语句。
 
-```C#
+```Csharp
 var result = _context.Posts.Where(p => p.Author == "John").ToList();
 ```
 
@@ -6353,7 +6353,7 @@ EF Core 支持使用存储过程进行数据操作，主要分为两种使用方
 
 **示例1：** 调用无参数的存储过程
 
-```C#
+```Csharp
 var result = _context.MyStoredProcedure().FromSqlRaw("EXEC MyStoredProc").ToList();
 ```
 
@@ -6361,7 +6361,7 @@ var result = _context.MyStoredProcedure().FromSqlRaw("EXEC MyStoredProc").ToList
 
 **示例2：** 调用有参数的存储过程
 
-```C#
+```Csharp
 var result = _context.MyStoredProcedure().FromSqlRaw("EXEC MyStoredProc @Param1 = {0}, @Param2 = {1}", "val1", "val2").ToList();
 ```
 
@@ -6379,7 +6379,7 @@ var result = _context.MyStoredProcedure().FromSqlRaw("EXEC MyStoredProc @Param1 
 
 **示例：** 在 OnModelCreating 中映射存储过程
 
-```C#
+```Csharp
 protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
     base.OnModelCreating(modelBuilder);
@@ -6403,14 +6403,14 @@ EF Core 支持将查询结果映射到多个 C# 类型，具体方法如下：
 
 1. 调用存储过程返回多种类型对象
 
-```C#
+```Csharp
 var result1 = _context.Database.ExecuteSqlRaw("EXEC InsertData @Id={0}, @Name={1}", 1, "Test");
 var result2 = _context.Customers.FromSqlRaw("EXEC GetCustomers @CustomerId={0}", 1).ToList();
 ```
 
 2. 返回复杂结构（如匿名对象）
 
-```C#
+```Csharp
 var result = _context.Database.FromSqlRaw<CustomersData>("EXEC GetCustomerData @CustomerId = {0}", 1).ToList();
 ```
 
@@ -6428,7 +6428,7 @@ Fluent API 是使用 C# 代码配置 Entity Framework Core 的方式，替代传
 
 ### 14.6.2 Fluent API 的作用
 
-| ✅ 作用 | ✅ 说明 |
+|  作用 |  说明 |
 |--------|--------|
 | **定义实体映射** | 明确指定实体类与数据库表的映射关系 |
 | **配置属性行为** | 设置字段名称、主键、是否可为 null、约束等 |
@@ -6449,7 +6449,7 @@ Fluent API 的配置通常在 DbContext 类的 OnModelCreating(ModelBuilder mode
 
 **示例 1：设置实体的表名和字段名（不使用注解）**
 
-```C#
+```Csharp
 protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
     modelBuilder.Entity<Employee>()
@@ -6461,14 +6461,14 @@ protected override void OnModelCreating(ModelBuilder modelBuilder)
 
 **示例 2：设置主键（典型用法）**
 
-```C#
+```Csharp
 modelBuilder.Entity<Employee>()
     .HasKey(e => e.Id);
 ```
 
 **示例 3：设置主键长度（如使用 GUID）**
 
-```C#
+```Csharp
 modelBuilder.Entity<Employee>()
     .Property(e => e.Id)
     .HasConversion(v => Guid.Parse(v), v => v.ToString())
@@ -6477,7 +6477,7 @@ modelBuilder.Entity<Employee>()
 
 **示例 4：定义一对一关系**
 
-```C#
+```Csharp
 modelBuilder.Entity<Employee>()
     .HasOne(e => e.Profile)
     .WithOne(p => p.Employee)
@@ -6487,7 +6487,7 @@ modelBuilder.Entity<Employee>()
 
 **示例 5：定义一对多关系**
 
-```C#
+```Csharp
 modelBuilder.Entity<Customer>()
     .HasMany(c => c.Orders)
     .WithOne(o => o.Customer)
@@ -6496,7 +6496,7 @@ modelBuilder.Entity<Customer>()
 
 **示例 6：配置索引与唯一约束**
 
-```C#
+```Csharp
 modelBuilder.Entity<Employee>()
     .HasIndex(e => e.Email)
     .IsUnique(); // 设置唯一索引
@@ -6504,7 +6504,7 @@ modelBuilder.Entity<Employee>()
 
 **示例 7：设置字段为可为 null（默认 EF 会根据类型自动配置）**
 
-```C#
+```Csharp
 modelBuilder.Entity<Employee>()
     .Property(e => e.Email)
     .IsRequired(false); // 明确设置字段可为 null
@@ -6512,7 +6512,7 @@ modelBuilder.Entity<Employee>()
 
 ### 14.6.5 Fluent API 的优势
 
-| ✅ 优势 | ✅ 说明 |
+|  优势 |  说明 |
 |--------|--------|
 | **可读性更高** | 配置规则集中写在 `OnModelCreating` 中，不会分散在多个类中 |
 | **可维护性更强** | 适合团队开发，统一风格，避免在实体类中混入配置逻辑 |
@@ -6523,25 +6523,25 @@ modelBuilder.Entity<Employee>()
 
 ### 14.6.6 Fluent API 与 Data Annotations 的差异
 
-| ✅ 类型 | ✅ Fluent API | ✅ Data Annotations（属性） |
+|  类型 |  Fluent API |  Data Annotations（属性） |
 |--------|---------------|-----------------------------|
 | **配置方式** | 使用 C# 方法 | 使用属性标记 |
 | **可读性** | 集中且清晰 | 分散在模型类中 |
 | **灵活性** | 更强，支持更复杂规则 | 相对有限 |
-| **是否覆盖注解** | ✅ 覆盖 | ❌ 被注解覆盖 |
-| **类型安全** | ✅ 类型安全 | ❌ 需要字符串拼写（可能出错） |
+| **是否覆盖注解** |  覆盖 |  被注解覆盖 |
+| **类型安全** |  类型安全 |  需要字符串拼写（可能出错） |
 | **适合的场景** | 复杂的映射、大型项目、团队协作 | 简单的配置、快速开发 |
 
 
 ### 14.6.7 使用场景建议
 
-| ✅ 场景 | ✅ 建议使用 Fluent API |
+|  场景 |  建议使用 Fluent API |
 |--------|-------------------------|
-| 需要复杂的映射规则（如自定义字段名、索引、约束） | ✅ 推荐 |
-| 团队不希望模型类中混入各种注解 | ✅ 推荐 |
-| 需要更灵活、可维护的配置方式 | ✅ 推荐 |
-| 希望避免属性注解冲突 | ✅ 推荐 |
-| 想让模型类更加干净简洁 | ✅ 推荐 |
+| 需要复杂的映射规则（如自定义字段名、索引、约束） |  推荐 |
+| 团队不希望模型类中混入各种注解 |  推荐 |
+| 需要更灵活、可维护的配置方式 |  推荐 |
+| 希望避免属性注解冲突 |  推荐 |
+| 想让模型类更加干净简洁 |  推荐 |
 
 ### 14.6.8 注意事项
 
@@ -6553,17 +6553,17 @@ modelBuilder.Entity<Employee>()
 
 ### 14.6.9 何时应该使用 Fluent API？
 
-| ✅ 场景 | ✅ 是否应该使用 Fluent API |
+|  场景 |  是否应该使用 Fluent API |
 |--------|----------------------------|
-| 仅使用基本配置 | ❌ 无必要 |
-| 数据库表名与实体类名不同 | ✅ 是 |
-| 需要设置特定约束（如 Unique Constraint、Index）| ✅ 是 |
-| 需要设置非数据库字段（如 `Id` 与 `GuidId` 映射） | ✅ 是 |
-| 需要定义复杂对象关系（如查询、逆向关系、多对多） | ✅ 是 |
+| 仅使用基本配置 |  无必要 |
+| 数据库表名与实体类名不同 |  是 |
+| 需要设置特定约束（如 Unique Constraint、Index）|  是 |
+| 需要设置非数据库字段（如 `Id` 与 `GuidId` 映射） |  是 |
+| 需要定义复杂对象关系（如查询、逆向关系、多对多） |  是 |
 
 ### 14.6.10 总结
 
-| ✅ 特点 | ✅ 说明 |
+|  特点 |  说明 |
 |--------|--------|
 | **语法简洁明了** | `modelBuilder.Entity(...).Property(...).HasColumnName(...)` |
 | **支持关系配置** | 可以配置一对多、多对多、一对一关系 |
@@ -6575,7 +6575,7 @@ modelBuilder.Entity<Employee>()
 
 **示例代码总结**
 
-```C#
+```Csharp
 public class EmployeeContext : DbContext
 {
     public DbSet<Employee> Employees { get; set; }
@@ -6615,7 +6615,7 @@ EF Core 的 Fluent API 关系配置，核心是在 OnModelCreating 方法中，�
 
 Fluent API 的关系配置都在 DbContext 的 OnModelCreating() 方法里，基本模式是：
 
-```C#
+```Csharp
 HasXXX(...).WithYYY(...).HasForeignKey(...).IsRequired()...
 ```
 
@@ -6635,7 +6635,7 @@ HasXXX(...).WithYYY(...).HasForeignKey(...).IsRequired()...
 
 **场景：** 一个 User 有多个 Order。
 
-```C#
+```Csharp
 // 方式一：从“多”端（Order）开始配置（推荐）
 modelBuilder.Entity<Order>()
     .HasOne(o => o.User)          // Order 拥有一个 User
@@ -6663,7 +6663,7 @@ modelBuilder.Entity<User>()
 
 **场景：** 一个 User 对应一个 Profile。
 
-```C#
+```Csharp
 modelBuilder.Entity<User>()
     .HasOne(u => u.Profile)           // User 拥有一个 Profile
     .WithOne(p => p.User)             // Profile 拥有一个 User
@@ -6684,7 +6684,7 @@ EF Core 5 及以上版本原生支持多对多关系，无需手动创建连接�
 
 1. 简单配置（自动生成连接表）
 
-```C#
+```Csharp
 modelBuilder.Entity<Student>()
     .HasMany(s => s.Courses)
     .WithMany(c => c.Students);
@@ -6696,7 +6696,7 @@ EF Core 会自动创建一个名为 StudentCourse 的连接表，包含 Students
 
 如果需要指定表名、列名或添加额外属性，可以使用 UsingEntity。
 
-```C#
+```Csharp
 modelBuilder.Entity<Student>()
     .HasMany(s => s.Courses)
     .WithMany(c => c.Students)
@@ -6723,7 +6723,7 @@ UsingEntity 提供了丰富的重载，用于配置连接表的各个方面。
 
 **示例：** 禁止级联删除，改为限制删除。
 
-```C#
+```Csharp
 modelBuilder.Entity<Department>()
     .HasOne(d => d.Administrator)
     .WithMany()
@@ -6734,7 +6734,7 @@ modelBuilder.Entity<Department>()
 
 - **自引用关系：** 配置指向同一实体的导航属性。例如，Category 的父子结构。
 
-```C#
+```Csharp
 modelBuilder.Entity<Category>()
     .HasOne(c => c.Parent)
     .WithMany(c => c.Children)
@@ -6815,7 +6815,7 @@ Rotativa 在运行时，会调用 wkhtmltopdf.exe（Windows）或对应的二进
 
 **在Program主程序中配置**
 
-```C#
+```Csharp
 Rotativa.AspNetCore.RotativaConfiguration.Setup(builder.Environment.WebRootPath, "Rotativa");
 ```
 
@@ -6833,7 +6833,7 @@ Rotativa 底层依赖 wkhtmltopdf 渲染页面。当它处理相对路径（如 
 
 如果你使用的是传统的 ASP.NET MVC，可以通过 Server.MapPath 将虚拟路径转换为服务器上的物理绝对路径。这是社区中验证过能有效解决服务器端样式丢失的方法。
 
-```C#
+```Csharp
 <link href="@Server.MapPath("~/Content/bootstrap.min.css")" rel="stylesheet" />
 ```
 
@@ -6843,7 +6843,7 @@ Rotativa 底层依赖 wkhtmltopdf 渲染页面。当它处理相对路径（如 
 
 如果物理路径不方便，或者你使用的是 ASP.NET Core，另一种可靠的方式是在 <link> 标签中构造完整的绝对 URL。
 
-```C#
+```Csharp
 <link href="@($"{Context.Request.Scheme}://{Context.Request.Host}/css/site.css")" rel="stylesheet" />
 ```
 
@@ -6904,7 +6904,7 @@ Rotativa 底层依赖 wkhtmltopdf 渲染页面。当它处理相对路径（如 
 
 #### 14.9.1.4 控制器调用方法
 
-```C#
+```Csharp
 [Route("[controller]")]
 public class PersonsController : Controller
 {
@@ -6946,7 +6946,7 @@ dotnet package add CsvHelper --version 27.2.1
 
 - **定义接口**
 
-```C#
+```Csharp
 /// <summary>
 /// Returns a MemoryStream containing all persons in CSV format
 /// </summary>
@@ -6960,7 +6960,7 @@ Task<MemoryStream> GetPersonsCSV();
 
 ![2026-11-10-23-20-54](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-10-23-20-54.png)
 
-```C#
+```Csharp
 public async Task<MemoryStream> GetPersonsCSV()
 {
     MemoryStream memoryStream = new MemoryStream();
@@ -6986,7 +6986,7 @@ public async Task<MemoryStream> GetPersonsCSV()
 
 ![2026-11-10-23-21-05](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-10-23-21-05.png)
 
-```C#
+```Csharp
 public async Task<MemoryStream> GetPersonsCSV()
 {
     MemoryStream memoryStream = new MemoryStream();
@@ -7038,7 +7038,7 @@ public async Task<MemoryStream> GetPersonsCSV()
 
 #### 14.9.2.3 控制器调用方法
 
-```C#
+```Csharp
 [Route("[controller]")]
 public class PersonsController : Controller
 {
@@ -7080,7 +7080,7 @@ EPPlus 8 在商业场景下需要设置许可证。自 5 版本起，使用时�
 
 配置方式变为使用 License 静态属性，且非商业使用需声明身份：
 
-```C#
+```Csharp
 
 // 商业用途：填入购买的密钥
 ExcelPackage.License.SetCommercial("你的商业许可证密钥");
@@ -7097,7 +7097,7 @@ ExcelPackage.License.SetNonCommercialPersonal("你的名字");
 
 配置方式为简单的枚举值：
 
-```C#
+```Csharp
 ExcelPackage.LicenseContext = LicenseContext.Commercial; // 商业
 // 或
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial; // 非商业
@@ -7136,7 +7136,7 @@ This might be the easiest way of configuring this. Just as above, set the variab
 
 - **定义接口**
 
-```C#
+```Csharp
 /// <summary>
 /// Returns persons data in Excel format as a MemoryStream
 /// </summary>
@@ -7146,7 +7146,7 @@ Task<MemoryStream> GetPersonsExcel();
 
 - **实现接口**
 
-```C#
+```Csharp
 public async Task<MemoryStream> GetPersonsExcel()
 {
     MemoryStream memoryStream = new MemoryStream();
@@ -7206,7 +7206,7 @@ public async Task<MemoryStream> GetPersonsExcel()
 
 #### 14.9.3.4 控制器调用方法
 
-```C#
+```Csharp
 [Route("[controller]")]
 public class PersonsController : Controller
 {
@@ -7244,7 +7244,7 @@ dotnet package add EPPlus --version 8.7.2
 
 此处，接口参数IFormFile来自于NuGet包Microsoft.AspNetCore.Http。
 
-```C#
+```Csharp
 /// <summary>
 /// Uploads countries from an excel file.
 /// </summary>
@@ -7257,7 +7257,7 @@ Task<int> UploadCountriesFromExcelFile(IFormFile file);
 
 此处，使用ExcelPackage需要安装NuGet包EPPlus。
 
-```C#
+```Csharp
 public async Task<int> UploadCountriesFromExcelFile(IFormFile file)
 {
     MemoryStream memoryStream = new MemoryStream();
@@ -7293,7 +7293,7 @@ public async Task<int> UploadCountriesFromExcelFile(IFormFile file)
 
 ### 14.10.3 控制器调用方法
 
-```C#
+```Csharp
 using Microsoft.AspNetCore.Mvc;
 using ServiceContracts;
 
@@ -7422,7 +7422,7 @@ namespace CRUDExample.Controllers
 
 **示例代码**
 
-```C#
+```Csharp
 
 using System;
 using System.Collections.Generic;
@@ -7481,7 +7481,7 @@ AutoFixture是一个第三方库或包，它能轻松创建模型对象并在其
 
 **手动创建模型对象的示例代码**
 
-```C#
+```Csharp
 using Entities;
 using EntityFrameworkCoreMock;
 using Microsoft.EntityFrameworkCore;
@@ -7556,7 +7556,7 @@ namespace CRUDTest
 
 **使用AutoFixture创建模型对象的示例代码**
 
-```C#
+```Csharp
 using Entities;
 using EntityFrameworkCoreMock;
 using Microsoft.EntityFrameworkCore;
@@ -7663,7 +7663,7 @@ namespace CRUDTest
 
 ### 15.5.1 仓储模式的作用
 
-| ✅ 作用 | ✅ 说明 |
+|  作用 |  说明 |
 |--------|--------|
 | **解耦数据访问与业务逻辑** | 将数据访问逻辑封装，确保业务逻辑不依赖数据库或 ORM 的具体实现 |
 | **提高代码可维护性** | 集中管理数据访问代码，便于后续修改、升级或替换数据库类型 |
@@ -7674,7 +7674,7 @@ namespace CRUDTest
 
 ### 15.5.2 仓储模式的特点
 
-| ✅ 特点 | ✅ 解释 |
+|  特点 |  解释 |
 |--------|--------|
 | **单一职责原则（SRP）** | 每个仓库只负责数据访问，不包含业务逻辑 |
 | **依赖注入（DI）支持** | 仓储接口可以通过 DI 注入到业务层中，便于测试和替换实现 |
@@ -7686,19 +7686,19 @@ namespace CRUDTest
 ### 15.5.3 仓储模式的基本结构 （以 ASP.NET Core 为例）
 
 [业务类] 
-    ✅ 依赖仓储接口（IRepository<T>）
+     依赖仓储接口（IRepository<T>）
 [仓储接口 IRepository<T>]
-    ✅ 定义通用的 CRUD 方法（如 Get、Find、Add、Update、Delete 等）
+     定义通用的 CRUD 方法（如 Get、Find、Add、Update、Delete 等）
 [仓储实现 Repository<T>]
-    ✅ 使用 EF Core、Dapper 等实现具体方法
+     使用 EF Core、Dapper 等实现具体方法
 [数据访问层（Data Access Layer）]
-    ✅ 实现仓储接口，使用数据库连接进行实际操作
+     实现仓储接口，使用数据库连接进行实际操作
 
 ### 15.5.4 仓储模式示例（EF Core 实现）
 
 1. 定义仓储接口
 
-```C#
+```Csharp
 using Entities;
 
 namespace RepositoryContracts
@@ -7716,7 +7716,7 @@ namespace RepositoryContracts
 
 2. 实现仓储接口（使用 EF Core）
 
-```C#
+```Csharp
 using RepositoryContracts;
 using Microsoft.EntityFrameworkCore;
 using Entities;
@@ -7759,7 +7759,7 @@ namespace Repository
 
 3. 在业务类中使用仓储接口
 
-```C#
+```Csharp
 using ServiceContracts;
 using ServiceContracts.DTO;
 using Entities;
@@ -7903,7 +7903,7 @@ namespace Services
 
 1. 注册仓储接口
 
-```C#
+```Csharp
 using ServiceContracts;
 using Services;
 using Microsoft.EntityFrameworkCore;
@@ -7944,7 +7944,7 @@ app.Run();
 
 2. 在单元测试中模拟仓储
 
-```C#
+```Csharp
 using Entities;
 using ServiceContracts;
 using ServiceContracts.DTO;
@@ -8409,7 +8409,7 @@ namespace CRUDTest
 
 ![2026-11-20-14-41-30](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-20-14-41-30.png)
 
-| ✅ 优势 | ✅ 说明 |
+|  优势 |  说明 |
 |--------|--------|
 | **解耦** | 业务层不依赖数据库上下文或 ORM 实现，提高可维护性 |
 | **可扩展性** | 可以在运行时动态切换仓储实现，例如在开发、测试、部署阶段使用不同的仓储 |
@@ -8419,7 +8419,7 @@ namespace CRUDTest
 
 ### 15.5.7 仓储模式适合的场景
 
-| ✅ 适合的场景 | ❌ 不适合的场景 |
+|  适合的场景 |  不适合的场景 |
 |---------------|-----------------|
 | 需要对数据库进行统一的访问抽象 | 只需要简单的 CRUD 操作 |
 | 需要大量复用数据访问逻辑 | 仅仅是为了测试而引入的多余层次 |
@@ -8427,7 +8427,7 @@ namespace CRUDTest
 
 ### 15.5.8 仓储模式的局限性（需注意）
 
-| ❌ 局限性 | ✅ 建议 |
+|  局限性 |  建议 |
 |----------|--------|
 | **可能增加复杂性** | 在简单应用中，可能不值得引入，可以使用简单的 `Context.Products.Find()` |
 | **过早抽象造成维护困难** | 只在需要深入分层或复杂数据操作时使用 |
@@ -8442,7 +8442,7 @@ namespace CRUDTest
 - 单元测试优化：便于 mock 数据访问层，确保测试独立性
 - 支持依赖注入：仓储接口可在 Startup 中注册，通过 DI 注入业务层
 
-```C#
+```Csharp
 // Startup.cs 或 Program.cs 中注册仓储
 services.AddScoped<IProductRepository, ProductRepository>();
 ```
@@ -8465,7 +8465,7 @@ services.AddScoped<IProductRepository, ProductRepository>();
 
 **控制器单元测试示例代码**
 
-```C#
+```Csharp
 using AutoFixture;
 using CRUDExample.Controllers;
 using FluentAssertions;
@@ -8584,7 +8584,7 @@ namespace CRUDTest
 
 1. 改造Program类为分部类
 
-```C#
+```Csharp
 using ServiceContracts;
 using Services;
 using Microsoft.EntityFrameworkCore;
@@ -8682,7 +8682,7 @@ cd 测试项目路径
 dotnet package add Microsoft.AspNetCore.Mvc.Testing --version 10.0.14
 ```
 
-```C#
+```Csharp
 using Entities;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -8726,7 +8726,7 @@ cd 测试项目路径
 dotnet package add Microsoft.EntityFrameworkCore.InMemory --version 10.0.14
 ```
 
-```C#
+```Csharp
 using Entities;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -8766,7 +8766,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 
 使用XUnit中的IClassFixture基于CustomWebApplicationFactory创建CustomWebApplicationFactory对象。总体而言，一旦集成测试开始，它会自动创建CustomWebApplicationFactory的新对象，我们在集成测试的构造函数中接收并使用其CreateClient方法创建HTTP客户端对象。当调用CreateClient方法时，作为ASP.NET Core内置功能的一部分，它会调用CustomWebApplicationFactory中编写的ConfigureWebHost()方法，因此它执行完整program.cs文件中的代码（连接CustomWebApplicationFactory和Program的方法就在创建CustomWebApplicationFactory类时将Program作为泛型参数传递给其基类WebApplicationFactory），如此一来，在Program类中创建的所有服务和请求管道都完全可用。
 
-```C#
+```Csharp
 using System.Net.Http;
 using FluentAssertions;
 using Microsoft.IdentityModel.Tokens;
@@ -8794,7 +8794,7 @@ dotnet package add Fizzler --version 1.3.0
 dotnet package add Fizzler.Systems.HtmlAgilityPack --version 1.2.1
 ```
 
-```C#
+```Csharp
 using System.Net;
 using System.Net.Http;
 using FluentAssertions;
@@ -8838,5 +8838,266 @@ public class PersonsControllerIntegrationTest : IClassFixture<CustomWebApplicati
     #endregion
 }
 
-
 ```
+
+# 第16章 日志记录
+
+在 ASP.NET Core 中，日志记录（Logging） 是一个非常重要的机制，用于跟踪应用运行时发生的各种事件、错误、警告、信息等，以便于调试、监控和维护应用程序。ASP.NET Core 提供了一个统一的、可扩展的日志框架，支持多种日志提供者（如控制台、文件、Serilog、Application Insights 等），可以灵活地配置日志的层级、格式、输出位置等信息。
+
+![2026-11-28-17-38-09](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-28-17-38-09.png)
+
+## 16.1 日志记录的作用
+
+| 作用 | 说明 |
+|--------|--------|
+| **调试和排错** | 记录应用程序运行时的关键信息，方便分析问题 |
+| **监控系统状态** | 记录系统运行情况，如请求处理时间、资源使用等 |
+| **审计追踪** | 记录用户操作、数据变更，用于安全审计 |
+| **性能分析** | 通过日志查看一些耗时操作，优化系统性能 |
+| **分级别日志** | 支持 `Debug`、`Information`、`Warning`、`Error`、`Critical` 等多个日志级别，便于过滤和处理不同重要程度的信息 |
+
+## 16.2 ASP.NET Core 日志记录的特点
+
+1. **支持多种日志提供者（ILoggerProvider）**
+
+比如：ConsoleLoggerProvider（控制台），DebugLoggerProvider（调试输出），SeqLoggerProvider（日志聚合），ApplicationInsights 等
+
+2. **支持日志级别（LogLevel）**
+
+Trace, Debug, Information, Warning, Error, Critical
+
+3. **支持日志分类（Category）**
+
+默认分类为 Microsoft.AspNetCore、YourNamespace.Controllers、YourNamespace.Services 等
+
+4. **支持日志记录的动态配置（Logging.Configure）**
+
+可在 appsettings.json 中配置，也可通过代码进行配置
+
+5. **性能良好**
+
+采用 Caching，减少了底层提供者调用的开销
+
+6. **可扩展性强**
+
+可集成不同的日志记录系统（如 Serilog、NLog、Log4Net 等）
+
+## 16.3 日志记录的基本原理
+
+1. **日志系统架构**
+
+```Text
+ILoggerFactory
+    ├── ILoggerProviders（如 Console, Debug, EventSource, etc.）
+    ├── ILogger（用于记录日志）
+        └── 通过 ILogger 面向接口编程，调用日志方法
+```
+
+2. **日志记录的生命周期**
+
+- 在应用程序启动时，通过 ILoggerFactory 创建日志记录系统
+- 在运行过程中，使用 ILogger 完成日志记录
+- 应用程序关闭时，可以清理日志
+
+## 16.3 如何使用日志记录
+
+1. **在控制器中使用 ILogger**
+
+```Csharp
+public class HomeController : Controller
+{
+    private readonly ILogger<HomeController> _logger;
+    public HomeController(ILogger<HomeController> logger) => _logger = logger;
+
+    [HttpGet]
+    public IActionResult Index()
+    {
+        _logger.LogInformation("Home controller accessed.");
+        return Ok("Welcome to the home page.");
+    }
+
+    [HttpPost]
+    public IActionResult Create(Product product)
+    {
+        _logger.LogWarning("Creating product: {Name} with ID {Id}", product.Name, product.Id);
+        return Ok(product);
+    }
+
+    [HttpGet("{id}")]
+    public IActionResult Get(int id)
+    {
+        _logger.LogDebug("Fetching product with ID {Id}", id);
+        return Ok("Product retrieved.");
+    }
+}
+```
+
+2. **日志层级设置示例**
+
+```Csharp
+_logger.LogTrace("This is a trace message");
+_logger.LogDebug("This is a debug message");
+_logger.LogInformation("This is an information message");
+_logger.LogWarning("This is a warning message");
+_logger.LogError("This is an error message");
+_logger.LogCritical("This is a critical message");
+```
+
+## 16.5 日志记录的配置（通过 appsettings.json）
+
+```Json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore.Mvc.Internal": "Warning",
+      "YourNamespace.Controllers": "Debug"
+    },
+    "IncludeScopes": false,
+    "Debug": {
+      "LogLevel": {
+        "Default": "Debug"
+      }
+    }
+  }
+}
+```
+
+**配置说明**
+
+| 选项 | 说明 |
+|------|------|
+| `Default` | 默认日志级别 |
+| `Microsoft.AspNetCore.Mvc.Internal` | 指定 MVC 内部消息的日志级别 |
+| `YourNamespace.Controllers` | 指定 Controllers 的日志级别 |
+| `IncludeScopes` | 是否记录 `ILoggerScope`，即通过 `ILoggerFactory.CreateLogger()` 创建的日志上下文 |
+| `Debug` | 指定调试级别的日志处理方式 |
+
+## 16.6 日志记录在 ASP.NET Core 中的默认行为
+
+1. **会记录 MVC 的生命周期事件**
+
+比如：请求开始、请求处理、异常、响应发送等
+
+2. **默认输出**
+
+默认将日志记录到 ILogger 接口，并通过默认的提供者写入控制台
+
+3. **日志的结构化输出（Structured Logging）**
+
+```Csharp
+_logger.LogInformation("User {User} accessed {Controller} action.", "John", "Home");
+```
+
+**输出格式类似于：**
+
+```Text
+[2025-04-25 15:00:00.000] Information: User John accessed Home controller action.
+```
+
+## 16.7 日志记录的进阶用法
+
+1. **自定义日志提供者（ILoggerProvider）**
+
+- 实现 ILoggerProvider 接口
+
+- 可用于将日志写入到 文件、数据库、消息队列、第三方服务 等
+
+2. **使用中间件记录日志**
+
+```Csharp
+app.Use(async (context, next) =>
+{
+    _logger.LogInformation("Request received: {Method} {Path}", context.Request.Method, context.Request.Path);
+    await next();
+});
+```
+
+3. **使用依赖注入进行注册**
+
+```Csharp
+// Startup.cs
+services.AddControllers();
+services.AddLogging(config => {
+    config.SetMinimumLevel(LogLevel.Debug);
+});
+```
+
+## 16.8 日志记录的性能优化
+
+| 方法 | 说明 |
+|--------|--------|
+| **过滤日志级别** | 通过 `SetMinimumLevel` 设置日志级别，避免记录低优先级日志 |
+| **避免滥用日志** | 尤其是在关键业务逻辑中频繁记录日志，会影响性能 |
+| **结合性能分析工具** | 时间戳和请求信息可以用于分析性能瓶颈 |
+| **使用日志上下文（Scope）** | 通过 `LoggerFactory.CreateScope()` 记录请求上下文 |
+
+## 16.9 日志记录与调试工具结合使用
+
+**哪些调试工具与日志强关联？**
+
+- Application Insights：用于 Azure 上的性能、错误和日志监控
+
+- Serilog：支持结构化日志和更复杂的输出格式
+
+- Seq：用于日志聚合和可视化分析
+
+- Visual Studio 的 Debug 日志窗口：显示从 Debug 提供者写入的日志
+
+## 16.10 日志记录的最佳实践
+
+1. **在关键路径上记录信息**
+例如：API 请求开始、数据访问方法调用、核心业务逻辑处理、异常捕获位置、服务调用前后等
+
+2. **避免记录敏感信息（如密码、Token、用户隐私等）**
+使用 LogFilter 或自定义提供者做过滤，避免日志泄露
+
+3. **使用结构化日志（Structural Logging）**
+用对象/参数记录日志，便于后续分析
+
+4. **在测试环境中开启最低日志级别**
+避免日志过载，便于调试和维护
+
+## 16.11 日志记录与异常处理结合
+
+ **在异常处理中间件中记录日志**
+
+ ```Csharp
+ app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "An error occurred: {Exception}", ex.Message);
+    }
+});
+```
+
+## 16.12 日志记录的封装建议（常见做法）
+
+**封装日志在服务中**
+
+```Csharp
+public class ProductService
+{
+    private readonly ILogger<ProductService> _logger;
+
+    public ProductService(ILogger<ProductService> logger)
+    {
+        _logger = logger;
+    }
+
+    public async Task AddProductAsync(Product product)
+    {
+        _logger.LogInformation("Adding product: {Name}", product.Name);
+        // 实际添加逻辑
+    }
+}
+```
+
+## 16.13 日志记录总结
+
+ASP.NET Core 的日志记录机制是一种灵活、可扩展、结构化的解决方案，不仅能帮助开发者调试和维护系统，还能实现统一的日志处理、多通道输出和性能优化。

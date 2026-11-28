@@ -8920,6 +8920,8 @@ ILoggerFactory
 
 1. **在控制器中使用 ILogger**
 
+![2026-11-28-20-35-31](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-28-20-35-31.png)
+
 ```Csharp
 public class HomeController : Controller
 {
@@ -9044,7 +9046,61 @@ _logger.LogInformation("User {User} accessed {Controller} action.", "John", "Hom
 [2025-04-25 15:00:00.000] Information: User John accessed Home controller action.
 ```
 
-## 16.7 日志记录的进阶用法
+
+## 16.7 HTTP日志记录 HTTP Logging
+
+HTTP Logging 是在HTTP请求和响应实时发生时立即记录其详细信息的过程。HTTP日志记录是ASP.NET Core的内置功能。
+
+![2026-11-28-22-01-29](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-28-22-01-29.png)
+
+### 16.7.1 启用HTTP日志记录
+
+1. **添加HttpLogging中间件**
+
+```Csharp
+builder.Services.AddHttpLogging();
+var app = builder.Build();
+app.UseHttpLogging();
+```
+
+2. **在开发环境中配置最小日志级别**
+
+```Json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "Microsoft.AspNetCore": "Information"
+    },
+    "EventLog": {
+      "LogLevel": {
+        "Default": "Debug"
+      }
+    }
+  }
+}
+```
+
+### 16.7.2 HTTP日志选项
+
+默认情况下，HTTP Logging会记录请求和响应的所有详细信息（包括请求属性、响应属性、请求头和响应头），除请求休和响应体之外（尝试在日志中记录请求体和响应体，会对服务器性能产生负面影响，因此不建议记录）。
+
+**常见HTTP日志记录字段**
+
+![2026-11-28-22-23-43](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-28-22-23-43.png)
+
+![2026-11-28-22-27-53](https://cdn.jsdelivr.net/gh/ankium/mindnotes@assets/bags/2026-11-28-22-27-53.png)
+
+**配置HTTP日志记录字段**
+
+```Csharp
+builder.Services.AddHttpLogging(options =>
+{
+    options.LoggingFields = Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.RequestProperties | Microsoft.AspNetCore.HttpLogging.HttpLoggingFields.ResponsePropertiesAndHeaders;
+});
+```
+
+## 16.8 日志记录的进阶用法
 
 1. **自定义日志提供者（ILoggerProvider）**
 
@@ -9072,7 +9128,7 @@ services.AddLogging(config => {
 });
 ```
 
-## 16.8 日志记录的性能优化
+## 16.9 日志记录的性能优化
 
 | 方法 | 说明 |
 |--------|--------|
@@ -9081,7 +9137,7 @@ services.AddLogging(config => {
 | **结合性能分析工具** | 时间戳和请求信息可以用于分析性能瓶颈 |
 | **使用日志上下文（Scope）** | 通过 `LoggerFactory.CreateScope()` 记录请求上下文 |
 
-## 16.9 日志记录与调试工具结合使用
+## 16.10 日志记录与调试工具结合使用
 
 **哪些调试工具与日志强关联？**
 
@@ -9093,7 +9149,7 @@ services.AddLogging(config => {
 
 - Visual Studio 的 Debug 日志窗口：显示从 Debug 提供者写入的日志
 
-## 16.10 日志记录的最佳实践
+## 16.11 日志记录的最佳实践
 
 1. **在关键路径上记录信息**
 例如：API 请求开始、数据访问方法调用、核心业务逻辑处理、异常捕获位置、服务调用前后等
@@ -9107,7 +9163,7 @@ services.AddLogging(config => {
 4. **在测试环境中开启最低日志级别**
 避免日志过载，便于调试和维护
 
-## 16.11 日志记录与异常处理结合
+## 16.12 日志记录与异常处理结合
 
  **在异常处理中间件中记录日志**
 
@@ -9125,7 +9181,7 @@ services.AddLogging(config => {
 });
 ```
 
-## 16.12 日志记录的封装建议（常见做法）
+## 16.13 日志记录的封装建议（常见做法）
 
 **封装日志在服务中**
 
@@ -9147,6 +9203,7 @@ public class ProductService
 }
 ```
 
-## 16.13 日志记录总结
+## 16.14 日志记录总结
 
 ASP.NET Core 的日志记录机制是一种灵活、可扩展、结构化的解决方案，不仅能帮助开发者调试和维护系统，还能实现统一的日志处理、多通道输出和性能优化。
+
